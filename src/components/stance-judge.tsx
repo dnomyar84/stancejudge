@@ -1,0 +1,345 @@
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { PoseLandmarker } from "@mediapipe/tasks-vision";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import {
+  analyzeStance,
+  type StanceAnalysis,
+  type StanceCriterion,
+  type StanceMode,
+} from "@/lib/pose/analyze";
+import { drawPose } from "@/lib/pose/draw";
+import { landmarksToKeypoints } from "@/lib/pose/keypoints";
+import { Camera, CameraOff, Loader2 } from "lucide-react";
+
+const WASM_BASE =
+  "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm";
+const MODEL_URL =
+  "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task";
+
+type LoadState = "idle" | "loading" | "ready" | "error";
+
+function statusBadgeVariant(
+  status: StanceCriterion["status"],
+): "default" | "secondary" | "destructive" | "outline" {
+  if (status === "good") return "default";
+  if (status === "warn") return "secondary";
+  if (status === "bad") return "destructive";
+  return "outline";
+}
+
+function statusLabel(status: StanceCriterion["status"]): string {
+  if (status === "good") return "Good";
+  if (status === "warn") return "Adjust";
+  if (status === "bad") return "Fix";
+  return "—";
+}
+
+export function StanceJudge() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const landmarkerRef = useRef<PoseLandmarker | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const rafRef = useRef<number>(0);
+  const lastVideoTimeRef = useRef<number>(-1);
+
+  const [loadState, setLoadState] = useState<LoadState>("idle");
+  const [cameraOn, setCameraOn] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [mode, setMode] = useState<StanceMode>("athletic");
+  const [analysis, setAnalysis] = useState<StanceAnalysis>({
+    overall: 0,
+    criteria: [],
+    ready: false,
+    headline: "Start the camera to begin judging your stance.",
+  });
+
+  const stopCamera = useCallback(() => {
+    cancelAnimationFrame(rafRef.current);
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+    if (videoRef.current) videoRef.current.srcObject = null;
+    lastVideoTimeRef.current = -1;
+    setCameraOn(false);
+  }, []);
+
+  const ensureLandmarker = useCallback(async () => {
+    if (landmarkerRef.current) return landmarkerRef.current;
+    setLoadState("loading");
+    setError(null);
+    try {
+      const { FilesetResolver, PoseLandmarker } = await import(
+        "@mediapipe/tasks-vision"
+      );
+      const vision = await FilesetResolver.forVisionTasks(WASM_BASE);
+      const landmarker = await PoseLandmarker.createFromOptions(vision, {
+        baseOptions: {
+          modelAssetPath: MODEL_URL,
+          delegate: "GPU",
+        },
+        runningMode: "VIDEO",
+        numPoses: 1,
+      });
+      landmarkerRef.current = landmarker;
+      setLoadState("ready");
+      return landmarker;
+    } catch (e) {
+      const message =
+        e instanceof Error ? e.message : "Failed to load pose model.";
+      setError(message);
+      setLoadState("error");
+      throw e;
+    }
+  }, []);
+
+  const startCamera = useCallback(async () => {
+    setError(null);
+    try {
+      await ensureLandmarker();
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: "user",
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+        audio: false,
+      });
+      streamRef.current = stream;
+      const video = videoRef.current;
+      if (!video) return;
+      video.srcObject = stream;
+      await video.play();
+      setCameraOn(true);
+    } catch (e) {
+      const message =
+        e instanceof Error
+          ? e.message
+          : "Camera access denied or unavailable.";
+      setError(message);
+      stopCamera();
+    }
+  }, [ensureLandmarker, stopCamera]);
+
+  useEffect(() => {
+    return () => {
+      stopCamera();
+      landmarkerRef.current?.close();
+      landmarkerRef.current = null;
+    };
+  }, [stopCamera]);
+
+  useEffect(() => {
+    if (!cameraOn) return;
+
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    const landmarker = landmarkerRef.current;
+    if (!video || !canvas || !landmarker) return;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    let running = true;
+
+    const tick = () => {
+      if (!running) return;
+      if (video.readyState >= 2) {
+        const w = video.videoWidth;
+        const h = video.videoHeight;
+        if (w && h) {
+          if (canvas.width !== w) canvas.width = w;
+          if (canvas.height !== h) canvas.height = h;
+
+          if (video.currentTime !== lastVideoTimeRef.current) {
+            lastVideoTimeRef.current = video.currentTime;
+            const result = landmarker.detectForVideo(
+              video,
+              performance.now(),
+            );
+            const landmarks = result.landmarks[0];
+            if (landmarks) {
+              const keypoints = landmarksToKeypoints(landmarks, w, h);
+              drawPose(ctx, keypoints, w, h, true);
+              setAnalysis(analyzeStance(keypoints, mode));
+            }
+          }
+        }
+      }
+      rafRef.current = requestAnimationFrame(tick);
+    };
+
+    rafRef.current = requestAnimationFrame(tick);
+
+    return () => {
+      running = false;
+      cancelAnimationFrame(rafRef.current);
+    };
+  }, [cameraOn, mode]);
+
+  const scoreColor =
+    analysis.overall >= 75
+      ? "text-emerald-400"
+      : analysis.overall >= 45
+        ? "text-amber-400"
+        : "text-rose-400";
+
+  return (
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 md:px-6">
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-sm font-medium uppercase tracking-widest text-cyan-400/90">
+            Stance Judge
+          </p>
+          <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">
+            Real-time pose & stance feedback
+          </h1>
+          <p className="mt-2 max-w-xl text-muted-foreground">
+            Uses your webcam and MediaPipe Pose to score athletic or boxing
+            stance — width, knee bend, alignment, and guard — entirely in the
+            browser.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {(["athletic", "boxing"] as StanceMode[]).map((m) => (
+            <Button
+              key={m}
+              type="button"
+              size="sm"
+              variant={mode === m ? "default" : "outline"}
+              onClick={() => setMode(m)}
+            >
+              {m === "athletic" ? "Athletic" : "Boxing guard"}
+            </Button>
+          ))}
+        </div>
+      </header>
+
+      <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+        <Card className="overflow-hidden border-cyan-500/20 bg-card/80">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">Camera</CardTitle>
+            <CardDescription>
+              Stand facing the camera with your whole body visible, including
+              feet.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-black/80 ring-1 ring-white/10">
+              <video
+                ref={videoRef}
+                className="absolute inset-0 h-full w-full scale-x-[-1] object-cover"
+                playsInline
+                muted
+              />
+              <canvas
+                ref={canvasRef}
+                className="pointer-events-none absolute inset-0 h-full w-full scale-x-[-1] object-cover"
+              />
+              {!cameraOn && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/70 p-6 text-center">
+                  {loadState === "loading" ? (
+                    <>
+                      <Loader2 className="h-10 w-10 animate-spin text-cyan-400" />
+                      <p className="text-sm text-muted-foreground">
+                        Loading pose model…
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      Camera off. Start when you are ready to be scored.
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {error && (
+              <p className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                {error}
+              </p>
+            )}
+
+            <div className="flex flex-wrap gap-3">
+              {!cameraOn ? (
+                <Button type="button" onClick={startCamera} className="gap-2">
+                  <Camera className="h-4 w-4" />
+                  Start camera
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={stopCamera}
+                  className="gap-2"
+                >
+                  <CameraOff className="h-4 w-4" />
+                  Stop camera
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-cyan-500/20 bg-card/80">
+          <CardHeader>
+            <CardTitle className="text-lg">Score</CardTitle>
+            <CardDescription>{analysis.headline}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="flex items-end gap-4">
+              <span
+                className={`text-6xl font-bold tabular-nums ${scoreColor}`}
+              >
+                {cameraOn && analysis.ready ? analysis.overall : "—"}
+              </span>
+              <span className="pb-2 text-muted-foreground">/ 100</span>
+            </div>
+            <Progress
+              value={cameraOn && analysis.ready ? analysis.overall : 0}
+              className="h-2"
+            />
+
+            <ul className="space-y-3">
+              {analysis.criteria.length === 0 ? (
+                <li className="text-sm text-muted-foreground">
+                  Criteria appear once your full body is detected.
+                </li>
+              ) : (
+                analysis.criteria.map((c) => (
+                  <li
+                    key={c.id}
+                    className="rounded-lg border border-border/60 bg-muted/30 px-3 py-2.5"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-medium">{c.label}</span>
+                      <Badge variant={statusBadgeVariant(c.status)}>
+                        {statusLabel(c.status)}
+                      </Badge>
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {c.detail}
+                    </p>
+                  </li>
+                ))
+              )}
+            </ul>
+          </CardContent>
+        </Card>
+      </div>
+
+      <p className="text-center text-xs text-muted-foreground">
+        Processing runs locally on your device. No video is uploaded.
+      </p>
+    </div>
+  );
+}
