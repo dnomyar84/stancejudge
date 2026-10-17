@@ -2,7 +2,7 @@
 
 ## Aesthetic direction
 
-**“Dojo night mode”** — dark, focused, premium athletic UI (not cartoon kids’ app).
+**“Dojo night mode × rhythm game”** — dark athletic UI with **arcade juice** (floaters, combos, screen pulses) tuned for kids but not childish clipart. Spec: [gameplay-ddr.md](./gameplay-ddr.md).
 
 - **Base:** near-black background with subtle cyan/teal atmospheric gradient (keep existing `to-cyan-950/20`).
 - **Accent:** cyan-400 primary actions; emerald = success; amber = in-progress; rose = miss/fix.
@@ -26,7 +26,12 @@
 | `PoseRail` | Built | Horizontal chips, playhead line |
 | `RoutinePicker` | Partial | Two buttons today → segmented control + icons |
 | `PracticeStage` | Planned | Video + canvas stack, permission overlay |
-| `ScoreRing` | Planned | Overall % with color band |
+| `ScoreRing` | Planned | Overall % with color band; pulses on grade |
+| `GradeFloater` | Planned | PERFECT / GOOD / MISS / LOW — DDR-style popups |
+| `ComboMeter` | Planned | Streak multiplier + break animation |
+| `DepthMeter` | Planned | Knee/stance depth bar under active chip |
+| `ResultsScreen` | Planned | Post-run breakdown, per-move grades |
+| `SessionPhaseBanner` | Planned | Ready → Performing → Complete |
 | `CriterionList` | Partial | Live stance criteria |
 | `CoachTipToast` | Planned | Short tip for active move |
 | `EmptyState` | Partial | Illustration + single CTA |

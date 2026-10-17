@@ -1,45 +1,40 @@
 # Roadmap
 
-Phases align with `features.md` IDs. Agents should work **top to bottom** within the active phase unless the user requests otherwise.
+Phases align with `features.md` and [GitHub Issues](https://github.com/dnomyar84/stancejudge/issues). Owner reviews [gameplay-ddr.md](./gameplay-ddr.md) for reward/penalty intensity.
 
 ## Phase 0 — Foundation (complete)
 
-- Static app on GitHub Pages
-- Two routines, pose rail, upload/YouTube, live stance, admin calibration
-- Docs + agent workflow (this folder)
+Static app, pose rail + video scan, live stance %, admin, tests fixture folder.
 
-## Phase 1 — Design & UX (current)
+## Phase 1 — **Wushu DDR** (current priority)
 
-**Theme:** Modern shell, kid-clear flows, no new ML.
+**Theme:** Perform live (or play video) and **feel** each move — rewards, penalties, start/end detection, results screen.
 
-| Week slice | Deliverables |
+| Slice | Features |
 | --- | --- |
-| 1 | F-010 home hub, F-012 live layout, F-013 routine layout |
-| 2 | F-011 onboarding, F-014 i18n basics, F-016 coach tips |
-| 3 | F-015 session reset, F-017 deploy automation, T-04 throttle |
+| 1 | F-044 session FSM, F-042 start, F-043 end, canonical boundary flags |
+| 2 | F-037 grades, F-038 depth penalty, F-046 live rail + camera |
+| 3 | F-040/F-041 juice, F-039 combo |
+| 4 | F-045 results review |
+| Parallel | F-010 home (“Play”), F-012 stage layout for HUD |
 
-**Exit criteria:** New user reaches live score in &lt;30s; routine session looks “shippable” on phone.
+**Exit criteria:** Child can perform 四段剑 opening → closing on camera, see real-time grades, get results breakdown.
 
-## Phase 2 — Live routine coaching
+## Phase 2 — Polish & parity
 
-- F-030 live pose rail
-- F-033 Wushu stance mode
-- F-034 sword/hand hints
-- F-031 audio (optional)
+- F-013 routine layout, F-014 i18n, F-016 coach tips
+- F-031 audio, F-020 fullscreen
+- F-036 video fixture tests, reference MP4s from masters
+- F-047 timing tiers
 
-**Exit criteria:** Student can practice 四段剑 with camera only and see move-by-move rail feedback.
+## Phase 3 — Reach
 
-## Phase 3 — Reliability & reach
-
-- F-035 PWA
-- F-032 clip record
-- T-01 proxy alternatives documented + fallback UX
-- Full calibration for both routines in repo
+- F-035 PWA, F-032 clip record, deploy automation F-017
 
 ## Milestones
 
 | Milestone | Definition |
 | --- | --- |
-| **M1 — Club pilot** | Both routines calibrated; coach admin documented; 5 students use upload path |
-| **M2 — Live duanwei** | F-030 shipped for one routine |
-| **M3 — Public beta** | PWA + i18n + automated Pages deploy |
+| **M1 — DDR alpha** | F-037–F-045 + F-046 on one routine (calibrated) |
+| **M2 — Club pilot** | Both routines + reference test videos |
+| **M3 — Public beta** | PWA, i18n, automated Pages |

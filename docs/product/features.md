@@ -17,6 +17,8 @@
 | T-02 | [#11](https://github.com/dnomyar84/stancejudge/issues/11) |
 | T-03 | [#12](https://github.com/dnomyar84/stancejudge/issues/12) |
 | T-04 | [#13](https://github.com/dnomyar84/stancejudge/issues/13) |
+| F-036 | [#14](https://github.com/dnomyar84/stancejudge/issues/14) |
+| F-037–F-047 | [#15–#25](https://github.com/dnomyar84/stancejudge/issues?q=is%3Aissue+is%3Aopen+F-037) (gameplay DDR) |
 
 - Each feature has an **ID** (`F-###`), **priority** (P0–P3), and **acceptance criteria**.
 - Open/close work on Issues; reference `F-###` in the issue title.
@@ -142,6 +144,88 @@
 
 ---
 
+## P0 gameplay — Wushu DDR (owner-reviewed spec: [gameplay-ddr.md](./gameplay-ddr.md))
+
+### F-037 Live per-move grades (Perfect / Good / Miss)
+- **Status:** `planned`
+- **Priority:** P0 gameplay
+- **Acceptance:**
+  - [ ] Active move window shows grade in real time (live + synced video play)
+  - [ ] Grades map from leg/hand scores + sequence alignment
+  - [ ] `GradeFloater` component per [ui-design-system.md](./ui-design-system.md)
+
+### F-038 Stance depth penalty (not low enough)
+- **Status:** `planned`
+- **Priority:** P0 gameplay
+- **Acceptance:**
+  - [ ] Knee/hip metrics vs per-stance thresholds → Good vs LOW/Miss
+  - [ ] Visible `DepthMeter` + penalty floater when shallow
+
+### F-039 Combo streak & multiplier
+- **Status:** `planned`
+- **Priority:** P1 gameplay
+- **Acceptance:**
+  - [ ] Consecutive Good/Perfect increases multiplier
+  - [ ] Miss breaks combo with clear animation
+
+### F-040 Reward juice (VFX)
+- **Status:** `planned`
+- **Priority:** P1 gameplay
+- **Acceptance:**
+  - [ ] Perfect/Good: screen pulse, chip burst, +points floater
+  - [ ] `prefers-reduced-motion` disables particles
+
+### F-041 Penalty juice (VFX)
+- **Status:** `planned`
+- **Priority:** P1 gameplay
+- **Acceptance:**
+  - [ ] Miss/wrong move: red flash, chip shake, combo break
+  - [ ] Wrong move vs shallow stance visually distinct
+
+### F-042 Detect routine **start** (first move / 起势 / respect)
+- **Status:** `planned`
+- **Priority:** P0 gameplay
+- **Acceptance:**
+  - [ ] Canonical `routineBoundary: start` on first move(s)
+  - [ ] Stable pose match → session `Performing`, scoring/timer starts
+
+### F-043 Detect routine **end** (收势 / closing respect)
+- **Status:** `planned`
+- **Priority:** P0 gameplay
+- **Acceptance:**
+  - [ ] Last move stable match → session `Complete`, stop live grading
+
+### F-044 Session state machine (Ready → Performing → Complete → Review)
+- **Status:** `planned`
+- **Priority:** P0 gameplay
+- **Acceptance:**
+  - [ ] UI banner per phase; no score before start
+  - [ ] Shared between live DDR and video play modes
+
+### F-045 Results / score review screen
+- **Status:** `planned`
+- **Priority:** P0 gameplay
+- **Acceptance:**
+  - [ ] Total score + per-move grade table after Complete
+  - [ ] Stats: Perfect count, max combo, weakest stance
+  - [ ] “Practice again” CTA
+  - [ ] Supersedes minimal F-021 scope
+
+### F-046 Live DDR mode (camera + pose rail + grades)
+- **Status:** `planned`
+- **Priority:** P0 gameplay
+- **Acceptance:**
+  - [ ] Extends F-030: rail + F-037 grades on webcam
+  - [ ] Non-blocking camera loop
+
+### F-047 Early / Late timing windows (optional DDR timing)
+- **Status:** `planned`
+- **Priority:** P2
+- **Acceptance:**
+  - [ ] Optional grade tier when pose correct but outside window
+
+---
+
 ## P2 — Deeper coaching value
 
 ### F-020 Live fullscreen & landscape hint
@@ -152,10 +236,10 @@
   - [ ] Rotate phone prompt when portrait + live active
 
 ### F-021 Live session summary on stop
-- **Status:** `planned`
+- **Status:** `planned` → fold into **F-045**
 - **Priority:** P2
 - **Acceptance:**
-  - [ ] Show avg score + best/worst criterion for last session
+  - [ ] Covered by F-045 results screen
 
 ### F-022 Optional mirror toggle (coach view)
 - **Status:** `planned`
