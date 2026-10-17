@@ -90,7 +90,7 @@ async function evaluateSanDuanFile(
   options?: { sampleWeapon?: "unarmed" | "jian" },
 ): Promise<EvalResult> {
   const page = await browser.newPage();
-  page.setDefaultTimeout(180_000);
+  page.setDefaultTimeout(600_000);
   const weaponQ =
     options?.sampleWeapon === "jian" ? "&sampleWeapon=jian" : "";
   const url = `${ORIGIN}/calibrate/?routine=san-duan-chang-quan&test=1${weaponQ}`;
@@ -109,7 +109,7 @@ async function evaluateSanDuanFile(
       ) as HTMLButtonElement | null;
       return v && v.readyState >= 2 && btn && !btn.disabled;
     },
-    { timeout: 180_000 },
+    { timeout: 600_000 },
   );
   await page.getByTestId("calibrate-run").click();
   await page.getByTestId("calibrate-done").waitFor({ timeout: 600_000 });

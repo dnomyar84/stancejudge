@@ -12,11 +12,15 @@ import {
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { getPoseLandmarker } from "@/lib/pose/landmarker-client";
-import { buildCanonicalFromFrames } from "@/lib/wushu/canonical";
+import {
+  buildCanonicalFromFrames,
+  buildCanonicalTimingsFromFrames,
+} from "@/lib/wushu/canonical";
 import { getReferenceVideo } from "@/lib/wushu/reference-videos";
 import { ROUTINES, getRoutinePackage } from "@/lib/wushu/routines";
 import { evaluateFramesAsSanDuanChangQuan } from "@/lib/wushu/evaluate-san-duan";
 import { sampleVideoPoses } from "@/lib/wushu/sequence";
+import type { CanonicalRoutine } from "@/lib/wushu/types";
 import { parseYouTubeVideoId } from "@/lib/youtube";
 import { Loader2, Upload } from "lucide-react";
 
@@ -105,28 +109,51 @@ export function CalibrateRoutine() {
     setError(null);
     try {
       const landmarker = await getPoseLandmarker();
-      const frames = await sampleVideoPoses(
+      const n = routine.moves.length;
+      const duration = video.duration;
+      const placeholderWindows = routine.moves.map((_, i) => ({
+        start: (duration * i) / n,
+        end: (duration * (i + 1)) / n,
+      }));
+      let frames = await sampleVideoPoses(
         video,
         landmarker,
         sampleWeapon,
-        setProgress,
+        (r) => setProgress(r * 0.85),
+        placeholderWindows,
       );
       const youtubeUrl = refVideo?.youtubeUrl?.trim() || null;
-      const canonical = buildCanonicalFromFrames(
-        routine,
-        frames,
-        video.duration,
-        {
-          youtubeId: youtubeUrl ? parseYouTubeVideoId(youtubeUrl) : null,
-          youtubeUrl,
-          label: refVideo?.label,
-        },
+      const source = {
+        youtubeId: youtubeUrl ? parseYouTubeVideoId(youtubeUrl) : null,
+        youtubeUrl,
+        label: refVideo?.label,
+      };
+      let canonical: CanonicalRoutine =
+        routine.id === "san-duan-chang-quan"
+          ? buildCanonicalTimingsFromFrames(
+              routine,
+              frames,
+              duration,
+              source,
+            )
+          : buildCanonicalFromFrames(routine, frames, duration, source);
+
+      const calibratedWindows = canonical.moves.map((m) => ({
+        start: m.startSec,
+        end: m.endSec,
+      }));
+      frames = await sampleVideoPoses(
+        video,
+        landmarker,
+        sampleWeapon,
+        (r) => setProgress(0.85 + r * 0.15),
+        calibratedWindows,
       );
       setJsonOut(JSON.stringify(canonical, null, 2));
       if (routine.id === "san-duan-chang-quan") {
         setEvalOut(
           JSON.stringify(
-            evaluateFramesAsSanDuanChangQuan(frames, video.duration),
+            evaluateFramesAsSanDuanChangQuan(frames, duration),
           ),
         );
       }

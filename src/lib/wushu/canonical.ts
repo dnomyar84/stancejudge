@@ -1,3 +1,4 @@
+import { scoreLegMatch } from "./classify";
 import type {
   CanonicalMove,
   CanonicalRoutine,
@@ -21,6 +22,53 @@ function majority<T extends string>(values: T[]): T {
     }
   }
   return best;
+}
+
+function peakTimesForMoves(
+  routine: RoutineDefinition,
+  frames: FrameClassification[],
+  durationSec: number,
+): number[] {
+  const n = routine.moves.length;
+  const segLen = durationSec / n;
+  const peaks: number[] = [];
+
+  for (let i = 0; i < n; i++) {
+    const center = (i + 0.5) * segLen;
+    const searchStart = Math.max(0, center - segLen * 0.65);
+    const searchEnd = Math.min(durationSec, center + segLen * 0.65);
+    const move = routine.moves[i];
+    let bestT = center;
+    let best = -1;
+    for (const f of frames) {
+      if (f.timeSec < searchStart || f.timeSec > searchEnd) continue;
+      const leg = scoreLegMatch(f.leg, move.expectedLeg);
+      const score = leg + f.legConfidence * 15;
+      if (score > best) {
+        best = score;
+        bestT = f.timeSec;
+      }
+    }
+    peaks.push(bestT);
+  }
+  return peaks;
+}
+
+function boundariesFromPeaks(
+  peaks: number[],
+  durationSec: number,
+): number[] {
+  const n = peaks.length;
+  const bounds = [0];
+  for (let i = 0; i < n - 1; i++) {
+    const mid = (peaks[i] + peaks[i + 1]) / 2;
+    bounds.push(Math.max(bounds[bounds.length - 1] + 0.15, mid));
+  }
+  bounds.push(durationSec);
+  for (let i = 1; i < bounds.length - 1; i++) {
+    bounds[i] = Math.min(bounds[i], durationSec - 0.15 * (bounds.length - 1 - i));
+  }
+  return bounds;
 }
 
 function findSplitTimes(
@@ -61,6 +109,39 @@ function findSplitTimes(
     picks.push(best);
   }
   return picks.sort((a, b) => a - b);
+}
+
+/** Keep syllabus enums; refresh start/end from a reference performance. */
+export function buildCanonicalTimingsFromFrames(
+  routine: RoutineDefinition,
+  frames: FrameClassification[],
+  durationSec: number,
+  source: {
+    youtubeId: string | null;
+    youtubeUrl: string | null;
+    label?: string;
+  },
+): CanonicalRoutine {
+  const peaks = peakTimesForMoves(routine, frames, durationSec);
+  const boundaries = boundariesFromPeaks(peaks, durationSec);
+  const n = routine.moves.length;
+
+  const moves: CanonicalMove[] = routine.moves.map((template, index) => ({
+    ...template,
+    startSec: boundaries[index] ?? 0,
+    endSec: boundaries[index + 1] ?? durationSec,
+  }));
+
+  return {
+    routineId: routine.id,
+    calibrated: true,
+    sourceYouTubeId: source.youtubeId,
+    sourceYouTubeUrl: source.youtubeUrl,
+    sourceLabel: source.label ?? null,
+    referenceDurationSec: durationSec,
+    calibratedAt: new Date().toISOString(),
+    moves,
+  };
 }
 
 export function buildCanonicalFromFrames(

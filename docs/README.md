@@ -19,6 +19,8 @@ Read this file first. **Work from [GitHub Issues](https://github.com/dnomyar84/s
 | [product/live-practice-spec.md](./product/live-practice-spec.md) | Live camera UX and UI requirements |
 | [product/routine-video-spec.md](./product/routine-video-spec.md) | Recorded routine / pose-rail UX |
 | [architecture/overview.md](./architecture/overview.md) | Technical boundaries (static, MediaPipe, data) |
+| [routines/san-duan-chang-quan-gold-standard.md](./routines/san-duan-chang-quan-gold-standard.md) | 三段长拳 syllabus (trusted source alignment) |
+| [routines/app-vs-gold-standard.md](./routines/app-vs-gold-standard.md) | Video scoring vs syllabus; frame picking |
 | [decisions/README.md](./decisions/README.md) | Architecture decision records (ADRs) |
 | [../.github/DEPLOY.md](../.github/DEPLOY.md) | GitHub Pages deploy & preview |
 | [../AGENTS.md](../AGENTS.md) | Coding agents: conventions + feature workflow |

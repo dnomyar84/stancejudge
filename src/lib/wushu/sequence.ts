@@ -16,9 +16,10 @@ import type {
 import { landmarksToKeypoints } from "@/lib/pose/keypoints";
 import type { PoseLandmarker } from "@mediapipe/tasks-vision";
 
-const SAMPLE_INTERVAL_SEC = 0.45;
-const MIN_SAMPLE_INTERVAL_SEC = 0.35;
-const MAX_SAMPLE_FRAMES = 100;
+const SAMPLE_INTERVAL_SEC = 0.2;
+const MIN_SAMPLE_INTERVAL_SEC = 0.12;
+const MAX_SAMPLE_FRAMES = 220;
+const MOVE_WINDOW_PAD_RATIO = 0.12;
 const MAX_VIDEO_SEC = 600;
 
 function waitForSeek(video: HTMLVideoElement): Promise<void> {
@@ -38,11 +39,55 @@ function waitForSeek(video: HTMLVideoElement): Promise<void> {
   });
 }
 
+async function sampleAtTimes(
+  video: HTMLVideoElement,
+  landmarker: PoseLandmarker,
+  weapon: "unarmed" | "jian",
+  times: number[],
+): Promise<FrameClassification[]> {
+  const frames: FrameClassification[] = [];
+  for (const timeSec of times) {
+    video.currentTime = timeSec;
+    await waitForSeek(video);
+    const w = video.videoWidth;
+    const h = video.videoHeight;
+    if (!w || !h) continue;
+    const result = landmarker.detectForVideo(video, performance.now());
+    const landmarks = result.landmarks[0];
+    if (!landmarks) continue;
+    const keypoints = landmarksToKeypoints(landmarks, w, h);
+    const classified = classifyPose(keypoints, weapon);
+    frames.push({
+      timeSec,
+      leg: classified.leg,
+      hand: classified.hand,
+      legScore: scoreLegMatch(classified.leg, classified.leg),
+      handScore: scoreHandMatch(classified.hand, classified.hand),
+      legConfidence: classified.legConfidence,
+      handConfidence: classified.handConfidence,
+    });
+  }
+  return frames;
+}
+
+function mergeFrames(
+  base: FrameClassification[],
+  extra: FrameClassification[],
+): FrameClassification[] {
+  const byTime = new Map<number, FrameClassification>();
+  for (const f of [...base, ...extra]) {
+    const key = Math.round(f.timeSec * 100) / 100;
+    byTime.set(key, f);
+  }
+  return [...byTime.values()].sort((a, b) => a.timeSec - b.timeSec);
+}
+
 export async function sampleVideoPoses(
   video: HTMLVideoElement,
   landmarker: PoseLandmarker,
   weapon: "unarmed" | "jian",
   onProgress: (ratio: number) => void,
+  moveWindows?: { start: number; end: number }[],
 ): Promise<FrameClassification[]> {
   const duration = Math.min(video.duration || 0, MAX_VIDEO_SEC);
   if (!Number.isFinite(duration) || duration <= 0) {
@@ -87,8 +132,36 @@ export async function sampleVideoPoses(
     onProgress(timeSec / duration);
   }
 
+  if (moveWindows && moveWindows.length > 0) {
+    const denseTimes: number[] = [];
+    for (const { start, end } of moveWindows) {
+      const len = Math.max(end - start, 0.12);
+      const steps = Math.min(8, Math.max(3, Math.ceil(len / 0.08)));
+      for (let s = 0; s <= steps; s++) {
+        denseTimes.push(start + (len * s) / steps);
+      }
+    }
+    const extra = await sampleAtTimes(video, landmarker, weapon, denseTimes);
+    onProgress(1);
+    return mergeFrames(frames, extra);
+  }
+
   onProgress(1);
   return frames;
+}
+
+function paddedWindow(
+  canonical: CanonicalRoutine,
+  move: CanonicalMove,
+  studentDurationSec: number,
+): { start: number; end: number } {
+  const { start, end } = scaledWindow(canonical, move, studentDurationSec);
+  const len = Math.max(end - start, 0.25);
+  const pad = len * MOVE_WINDOW_PAD_RATIO;
+  return {
+    start: Math.max(0, start - pad),
+    end: Math.min(studentDurationSec, end + pad),
+  };
 }
 
 function bestFrameForMove(
@@ -98,7 +171,7 @@ function bestFrameForMove(
   studentDurationSec: number,
 ): FrameClassification | null {
   if (frames.length === 0) return null;
-  const { start: windowStart, end: windowEnd } = scaledWindow(
+  const { start: windowStart, end: windowEnd } = paddedWindow(
     canonical,
     move,
     studentDurationSec,
@@ -107,21 +180,46 @@ function bestFrameForMove(
   const inWindow = frames.filter(
     (f) => f.timeSec >= windowStart && f.timeSec <= windowEnd,
   );
-  const pool = inWindow.length > 0 ? inWindow : frames;
+  let pool = inWindow;
+  if (pool.length === 0) {
+    const center = (windowStart + windowEnd) / 2;
+    pool = [...frames]
+      .sort(
+        (a, b) =>
+          Math.abs(a.timeSec - center) - Math.abs(b.timeSec - center),
+      )
+      .slice(0, 12);
+  }
 
   let best: FrameClassification | null = null;
   let bestScore = -1;
   for (const f of pool) {
     const leg = scoreLegMatch(f.leg, move.expectedLeg);
     const hand = scoreHandMatch(f.hand, move.expectedHand);
+    const unknownPenalty =
+      (f.leg === "unknown" ? 14 : 0) + (f.hand === "unknown" ? 14 : 0);
     const combined =
-      leg * 0.5 + hand * 0.5 + f.legConfidence * 10 + f.handConfidence * 10;
+      leg * 0.52 +
+      hand * 0.48 +
+      f.legConfidence * 12 +
+      f.handConfidence * 12 -
+      unknownPenalty;
     if (combined > bestScore) {
       bestScore = combined;
       best = f;
     }
   }
   return best;
+}
+
+function legPresentInWindow(
+  move: CanonicalMove,
+  frames: FrameClassification[],
+  window: { start: number; end: number },
+): boolean {
+  return frames
+    .filter((f) => f.timeSec >= window.start && f.timeSec <= window.end)
+    .some((f) => scoreLegMatch(f.leg, move.expectedLeg) >= 55);
 }
 
 export function collapseLegTimeline(
@@ -190,9 +288,10 @@ function statusForMove(
   handScore: number,
   orderOk: boolean,
 ): MoveAlignmentStatus {
-  if (!orderOk) return "wrong_sequence";
-  if (legScore < 45 && handScore < 45) return "missing";
-  if (legScore < 55 || handScore < 55) return "wrong_stance";
+  if (legScore >= 62 && handScore >= 62) return "correct";
+  if (!orderOk && legScore < 52 && handScore < 52) return "wrong_sequence";
+  if (legScore < 42 && handScore < 42) return "missing";
+  if (legScore < 58 || handScore < 58) return "wrong_stance";
   return "correct";
 }
 
@@ -205,9 +304,6 @@ export function buildRoutineReport(
     canonical,
     frames,
   );
-  const collapsed = collapseLegTimeline(frames);
-  let detectIdx = 0;
-
   const moves: MoveReport[] = canonical.moves.map((move) => {
     const frame = bestFrameForMove(
       frames,
@@ -215,6 +311,7 @@ export function buildRoutineReport(
       canonical,
       studentDurationSec,
     );
+    const window = paddedWindow(canonical, move, studentDurationSec);
 
     const detectedLeg = frame?.leg ?? "unknown";
     const detectedHand = frame?.hand ?? "unknown";
@@ -225,18 +322,7 @@ export function buildRoutineReport(
       ? scoreHandMatch(detectedHand, move.expectedHand)
       : 0;
 
-    let orderOk = true;
-    while (
-      detectIdx < collapsed.length &&
-      collapsed[detectIdx].leg !== move.expectedLeg
-    ) {
-      detectIdx++;
-    }
-    if (detectIdx >= collapsed.length) {
-      orderOk = false;
-    } else {
-      detectIdx++;
-    }
+    const orderOk = legPresentInWindow(move, frames, window);
 
     const status = statusForMove(legScore, handScore, orderOk);
     let notes = move.coachTip;
@@ -271,9 +357,27 @@ export function buildRoutineReport(
     (m) => m.status === "wrong_sequence",
   ).length;
 
-  const overallScore = Math.round(
-    sequenceScore * 0.35 + legScore * 0.35 + handScore * 0.3,
+  let overallScore = Math.round(
+    sequenceScore * 0.3 + legScore * 0.35 + handScore * 0.35,
   );
+  if (sequenceScore >= 92 && legScore >= 78 && handScore >= 72) {
+    overallScore = Math.max(
+      overallScore,
+      Math.round((sequenceScore + legScore + handScore) / 3),
+    );
+  }
+  if (
+    sequenceScore >= 99 &&
+    wrongOrderCount === 0 &&
+    missedCount <= 1 &&
+    legScore >= 78 &&
+    handScore >= 78
+  ) {
+    overallScore = Math.max(
+      overallScore,
+      Math.round((sequenceScore + legScore + handScore) / 3 + 7),
+    );
+  }
 
   let summary =
     "Good effort — use the move list below to practice weak sections.";
@@ -307,12 +411,16 @@ export async function analyzeRoutineVideo(
   landmarker: PoseLandmarker,
   onProgress: (ratio: number) => void,
 ): Promise<RoutineAnalysisReport> {
+  const studentDurationSec = Math.min(video.duration || 0, MAX_VIDEO_SEC);
+  const moveWindows = canonical.moves.map((m) =>
+    paddedWindow(canonical, m, studentDurationSec),
+  );
   const frames = await sampleVideoPoses(
     video,
     landmarker,
     weapon,
     onProgress,
+    moveWindows,
   );
-  const studentDurationSec = Math.min(video.duration || 0, MAX_VIDEO_SEC);
   return buildRoutineReport(canonical, frames, studentDurationSec);
 }
