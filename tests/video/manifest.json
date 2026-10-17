@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "description": "Upload MP4s under san-duan-chang-quan/ or si-duan-jian/. Use Git LFS for large files.",
+  "cases": [
+    {
+      "id": "sdcq-positive",
+      "glob": "san-duan-chang-quan/**/*.mp4",
+      "expectRoutine": "san-duan-chang-quan",
+      "minSequenceScore": 38,
+      "minLegCoverage": 0.55,
+      "minOverallScore": 35
+    },
+    {
+      "id": "sdj-negative-vs-sdcq",
+      "glob": "si-duan-jian/**/*.mp4",
+      "expectRoutine": "san-duan-chang-quan",
+      "maxSequenceScore": 42,
+      "maxOverallScore": 48,
+      "note": "Sword routine scored as changquan should not match well"
+    }
+  ]
+}

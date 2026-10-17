@@ -3,7 +3,8 @@
 ## Layers
 
 1. **Unit tests** (`npm test`) — pure logic (YouTube URLs, manifest, classifiers). Run in CI without videos.
-2. **Reference video fixtures** — MP4s you upload under `tests/fixtures/reference-videos/`; registered in `manifest.json`.
+2. **Reference video fixtures** — MP4s under **`tests/video/san-duan-chang-quan/`** and **`tests/video/si-duan-jian/`**; run `npm run test:video` (with `npm run dev`).
+3. Legacy path `tests/fixtures/reference-videos/` still supported for manifest-only metadata.
 3. **Future:** frame samples → MediaPipe → compare leg/hand/move vs `expect` in manifest (local or CI with LFS checkout).
 
 ## Your workflow (master videos from YouTube)

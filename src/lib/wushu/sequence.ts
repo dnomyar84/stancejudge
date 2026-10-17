@@ -118,7 +118,7 @@ function bestFrameForMove(
   return best;
 }
 
-function collapseLegTimeline(
+export function collapseLegTimeline(
   frames: FrameClassification[],
 ): { leg: FrameClassification["leg"]; timeSec: number }[] {
   const out: { leg: FrameClassification["leg"]; timeSec: number }[] = [];
@@ -132,7 +132,7 @@ function collapseLegTimeline(
   return out;
 }
 
-function sequenceOrderScore(
+export function sequenceOrderScore(
   canonical: CanonicalRoutine,
   frames: FrameClassification[],
 ): { score: number; wrongOrder: number } {
