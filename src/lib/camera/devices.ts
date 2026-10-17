@@ -72,8 +72,21 @@ export function pickVideoDeviceId(
 
   const wantWide = prefs.lens === "wide";
 
+  const hasLabeledFacing = classified.some((d) => d.facing === prefs.facing);
+
   let best: { id: string; score: number } | null = null;
   for (const d of classified) {
+    if (d.facing !== "unknown" && d.facing !== prefs.facing) {
+      continue;
+    }
+    if (
+      d.facing === "unknown" &&
+      hasLabeledFacing &&
+      prefs.lens !== "wide"
+    ) {
+      continue;
+    }
+
     let score = 0;
     if (d.facing === prefs.facing) score += 20;
     else if (d.facing === "unknown") score += 2;

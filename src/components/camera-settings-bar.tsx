@@ -32,7 +32,7 @@ export function CameraSettingsBar({
         variant="outline"
         disabled={disabled}
         className="gap-2"
-        onClick={onFlipFacing}
+        onClick={() => onFlipFacing()}
       >
         <SwitchCamera className="h-4 w-4" />
         {facingLabel(prefs.facing)}

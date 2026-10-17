@@ -66,4 +66,12 @@ describe("pickVideoDeviceId", () => {
     });
     expect(id).toBe("c");
   });
+
+  it("never picks front when rear is requested", () => {
+    const id = pickVideoDeviceId(devices, {
+      facing: "environment",
+      lens: "standard",
+    });
+    expect(id).not.toBe("c");
+  });
 });

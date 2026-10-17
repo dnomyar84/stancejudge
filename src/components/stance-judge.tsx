@@ -23,9 +23,10 @@ import { useThrottledValue } from "@/lib/hooks/use-throttled-value";
 import { drawPose } from "@/lib/pose/draw";
 import { landmarksToKeypoints } from "@/lib/pose/keypoints";
 import { CameraSettingsBar } from "@/components/camera-settings-bar";
-import { setLens, toggleFacing } from "@/lib/camera/prefs";
+import { loadCameraPrefs, setLens, toggleFacing } from "@/lib/camera/prefs";
 import {
   getCameraVideoStream,
+  readActiveFacingMode,
   stopMediaStream,
 } from "@/lib/camera/stream";
 import type { CameraLensProfile, CameraPrefs } from "@/lib/camera/types";
@@ -73,8 +74,13 @@ export function StanceJudge() {
   const analysis = useThrottledValue(analysisRaw, 120);
 
   const attachStream = useCallback(async (cameraPrefs: CameraPrefs) => {
-    const stream = await getCameraVideoStream(cameraPrefs);
-    stopMediaStream(streamRef.current);
+    const previous = streamRef.current;
+    streamRef.current = null;
+    if (videoRef.current) videoRef.current.srcObject = null;
+
+    const stream = await getCameraVideoStream(cameraPrefs, {
+      releaseStream: previous,
+    });
     streamRef.current = stream;
     const video = videoRef.current;
     if (!video) {
@@ -83,6 +89,13 @@ export function StanceJudge() {
     }
     video.srcObject = stream;
     await video.play();
+
+    const active = readActiveFacingMode(stream);
+    if (active && active !== cameraPrefs.facing) {
+      throw new Error(
+        `Browser opened ${active === "user" ? "front" : "rear"} camera instead of ${cameraPrefs.facing === "user" ? "front" : "rear"}. Try stopping the camera, flip again, and start.`,
+      );
+    }
   }, []);
 
   const applyCameraPrefs = useCallback(
@@ -130,7 +143,7 @@ export function StanceJudge() {
     setError(null);
     try {
       await ensureLandmarker();
-      await attachStream(prefs);
+      await attachStream(loadCameraPrefs());
       setCameraOn(true);
     } catch (e) {
       const message =

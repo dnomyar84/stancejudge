@@ -12,9 +12,10 @@ import { ResultsScreen } from "@/components/results-screen";
 import { drawPose } from "@/lib/pose/draw";
 import { landmarksToKeypoints } from "@/lib/pose/keypoints";
 import { CameraSettingsBar } from "@/components/camera-settings-bar";
-import { setLens, toggleFacing } from "@/lib/camera/prefs";
+import { loadCameraPrefs, setLens, toggleFacing } from "@/lib/camera/prefs";
 import {
   getCameraVideoStream,
+  readActiveFacingMode,
   stopMediaStream,
 } from "@/lib/camera/stream";
 import type { CameraLensProfile, CameraPrefs } from "@/lib/camera/types";
@@ -79,8 +80,13 @@ export function LiveRoutinePractice({ onBack }: { onBack: () => void }) {
   }, [routineId]);
 
   const attachStream = useCallback(async (cameraPrefs: CameraPrefs) => {
-    const stream = await getCameraVideoStream(cameraPrefs);
-    stopMediaStream(streamRef.current);
+    const previous = streamRef.current;
+    streamRef.current = null;
+    if (videoRef.current) videoRef.current.srcObject = null;
+
+    const stream = await getCameraVideoStream(cameraPrefs, {
+      releaseStream: previous,
+    });
     streamRef.current = stream;
     const video = videoRef.current;
     if (!video) {
@@ -89,6 +95,13 @@ export function LiveRoutinePractice({ onBack }: { onBack: () => void }) {
     }
     video.srcObject = stream;
     await video.play();
+
+    const active = readActiveFacingMode(stream);
+    if (active && active !== cameraPrefs.facing) {
+      throw new Error(
+        `Could not switch to ${cameraPrefs.facing === "user" ? "front" : "rear"} camera.`,
+      );
+    }
   }, []);
 
   const applyCameraPrefs = useCallback(
@@ -128,7 +141,7 @@ export function LiveRoutinePractice({ onBack }: { onBack: () => void }) {
       if (!landmarkerRef.current) {
         landmarkerRef.current = await getPoseLandmarker();
       }
-      await attachStream(prefs);
+      await attachStream(loadCameraPrefs());
       setCameraOn(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Camera unavailable");
