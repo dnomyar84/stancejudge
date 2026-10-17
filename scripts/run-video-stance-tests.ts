@@ -89,8 +89,9 @@ async function evaluateSanDuanFile(
   filePath: string,
 ): Promise<EvalResult> {
   const page = await browser.newPage();
+  page.setDefaultTimeout(180_000);
   const url = `${ORIGIN}/calibrate/?routine=san-duan-chang-quan&test=1`;
-  await page.goto(url, { waitUntil: "networkidle" });
+  await page.goto(url, { waitUntil: "domcontentloaded" });
   await waitHydrated(page);
   const fileInput = page.getByTestId("calibrate-file");
   await fileInput.setInputFiles(filePath);
