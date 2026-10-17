@@ -3,13 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { PoseLandmarker } from "@mediapipe/tasks-vision";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -18,11 +11,13 @@ import {
   type StanceCriterion,
   type StanceMode,
 } from "@/lib/pose/analyze";
+import { LiveCameraDock } from "@/components/live-camera-dock";
+import { LiveFullscreenShell } from "@/components/live-fullscreen-shell";
+import { LiveRecordButton } from "@/components/live-record-button";
 import { PracticeStage } from "@/components/practice-stage";
 import { useThrottledValue } from "@/lib/hooks/use-throttled-value";
 import { drawPose } from "@/lib/pose/draw";
 import { landmarksToKeypoints } from "@/lib/pose/keypoints";
-import { CameraSettingsBar } from "@/components/camera-settings-bar";
 import { loadCameraPrefs, setLens, toggleFacing } from "@/lib/camera/prefs";
 import { cameraStageFit } from "@/lib/camera/video-fit";
 import {
@@ -33,7 +28,8 @@ import {
 import type { CameraLensProfile, CameraPrefs } from "@/lib/camera/types";
 import { useCameraPrefs } from "@/lib/hooks/use-camera-prefs";
 import { getPoseLandmarker } from "@/lib/pose/landmarker-client";
-import { Camera, CameraOff, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Loader2 } from "lucide-react";
 
 type LoadState = "idle" | "loading" | "ready" | "error";
 
@@ -53,7 +49,7 @@ function statusLabel(status: StanceCriterion["status"]): string {
   return "—";
 }
 
-export function StanceJudge() {
+export function StanceJudge({ onBack }: { onBack?: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const landmarkerRef = useRef<PoseLandmarker | null>(null);
@@ -64,6 +60,7 @@ export function StanceJudge() {
   const { prefs, setPrefs } = useCameraPrefs();
   const [loadState, setLoadState] = useState<LoadState>("idle");
   const [cameraOn, setCameraOn] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mode, setMode] = useState<StanceMode>("athletic");
   const [analysisRaw, setAnalysisRaw] = useState<StanceAnalysis>({
@@ -142,6 +139,7 @@ export function StanceJudge() {
 
   const startCamera = useCallback(async () => {
     setError(null);
+    setLoading(true);
     try {
       await ensureLandmarker();
       await attachStream(loadCameraPrefs());
@@ -153,8 +151,10 @@ export function StanceJudge() {
           : "Camera access denied or unavailable.";
       setError(message);
       stopCamera();
+    } finally {
+      setLoading(false);
     }
-  }, [attachStream, ensureLandmarker, prefs, stopCamera]);
+  }, [attachStream, ensureLandmarker, stopCamera]);
 
   useEffect(() => {
     return () => {
@@ -195,7 +195,6 @@ export function StanceJudge() {
             const landmarks = result.landmarks[0];
             if (landmarks) {
               const keypoints = landmarksToKeypoints(landmarks, w, h);
-              // Video + canvas use CSS mirror; MediaPipe coords stay in raw frame space.
               drawPose(ctx, keypoints, w, h, false);
               setAnalysisRaw(analyzeStance(keypoints, mode));
             }
@@ -220,160 +219,141 @@ export function StanceJudge() {
         ? "text-amber-400"
         : "text-rose-400";
 
+  const showScore = cameraOn && analysis.ready;
+  const displayScore = showScore ? analysis.overall : null;
+
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 md:px-6">
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-sm font-medium uppercase tracking-widest text-cyan-400/90">
-            Stance Judge
-          </p>
-          <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">
-            Real-time pose & stance feedback
-          </h1>
-          <p className="mt-2 max-w-xl text-muted-foreground">
-            Uses your webcam and MediaPipe Pose to score athletic or boxing
-            stance — width, knee bend, alignment, and guard — entirely in the
-            browser.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
+    <LiveFullscreenShell
+      onBack={onBack}
+      title="Stance Judge"
+      subtitle={
+        cameraOn
+          ? analysis.headline
+          : "Full body in frame · tap Go live"
+      }
+      topOverlay={
+        <div className="flex gap-2 overflow-x-auto px-3 pb-2 pt-1">
           {(["athletic", "boxing"] as StanceMode[]).map((m) => (
             <Button
               key={m}
               type="button"
               size="sm"
-              variant={mode === m ? "default" : "outline"}
+              disabled={cameraOn}
+              variant={mode === m ? "default" : "secondary"}
+              className={cn(
+                "shrink-0 rounded-full",
+                mode !== m && "bg-black/40 text-white hover:bg-black/55",
+              )}
               onClick={() => setMode(m)}
             >
               {m === "athletic" ? "Athletic" : "Boxing guard"}
             </Button>
           ))}
         </div>
-      </header>
-
-      <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-        <Card className="overflow-hidden border-cyan-500/20 bg-card/80">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Camera</CardTitle>
-            <CardDescription>
-              Stand facing the camera with your whole body visible, including
-              feet.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <PracticeStage
-              videoRef={videoRef}
-              canvasRef={canvasRef}
-              fit={cameraStageFit(prefs)}
-              mirrored={prefs.facing === "user"}
-              overlay={
-                !cameraOn ? (
-                  <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-black/70 p-6 text-center">
-                    {loadState === "loading" ? (
-                      <>
-                        <Loader2 className="h-10 w-10 animate-spin text-cyan-400" />
-                        <p className="text-sm text-muted-foreground">
-                          Loading pose model…
-                        </p>
-                      </>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">
-                        Camera off. Start when you are ready to be scored.
-                      </p>
-                    )}
-                  </div>
-                ) : null
-              }
-            />
-
-            {error && (
-              <p className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                {error}
-              </p>
-            )}
-
-            <CameraSettingsBar
-              prefs={prefs}
-              disabled={loadState === "loading"}
-              onFlipFacing={() =>
-                applyCameraPrefs(toggleFacing(prefs))
-              }
-              onLensChange={(lens: CameraLensProfile) =>
-                applyCameraPrefs(setLens(prefs, lens))
-              }
-            />
-
-            <div className="flex flex-wrap gap-3">
-              {!cameraOn ? (
-                <Button type="button" onClick={startCamera} className="gap-2">
-                  <Camera className="h-4 w-4" />
-                  Start camera
-                </Button>
-              ) : (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={stopCamera}
-                  className="gap-2"
+      }
+      rightDock={
+        <LiveCameraDock
+          prefs={prefs}
+          disabled={loading || loadState === "loading"}
+          onFlipFacing={() => applyCameraPrefs(toggleFacing(prefs))}
+          onLensChange={(lens: CameraLensProfile) =>
+            applyCameraPrefs(setLens(prefs, lens))
+          }
+        />
+      }
+      bottomPanel={
+        cameraOn && analysis.criteria.length > 0
+          ? (
+              <div className="space-y-2 rounded-2xl bg-black/55 p-3 backdrop-blur-md">
+                <Progress
+                  value={showScore ? analysis.overall : 0}
+                  className="h-1.5 bg-white/20"
+                />
+                <ul className="max-h-[28vh] space-y-2 overflow-y-auto">
+                  {analysis.criteria.map((c) => (
+                    <li
+                      key={c.id}
+                      className="rounded-xl border border-white/10 bg-black/30 px-3 py-2"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-sm font-medium text-white">
+                          {c.label}
+                        </span>
+                        <Badge variant={statusBadgeVariant(c.status)}>
+                          {statusLabel(c.status)}
+                        </Badge>
+                      </div>
+                      <p className="mt-0.5 text-xs text-white/70">{c.detail}</p>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )
+          : undefined
+      }
+      bottomBar={
+        <div className="flex flex-col items-center gap-2">
+          {error && (
+            <p className="max-w-sm rounded-lg bg-red-950/80 px-3 py-2 text-center text-xs text-red-200">
+              {error}
+            </p>
+          )}
+          <LiveRecordButton
+            active={cameraOn}
+            loading={loading || loadState === "loading"}
+            label="Go live"
+            onClick={() => {
+              if (!cameraOn) void startCamera();
+              else stopCamera();
+            }}
+          />
+          <p className="text-[10px] text-white/50">
+            Runs on your device · no upload
+          </p>
+        </div>
+      }
+      stage={
+        <PracticeStage
+          videoRef={videoRef}
+          canvasRef={canvasRef}
+          fullscreen
+          fit={cameraStageFit(prefs)}
+          mirrored={prefs.facing === "user"}
+          overlay={
+            <>
+              {displayScore !== null && (
+                <div
+                  className="pointer-events-none absolute left-4 top-[max(5.5rem,env(safe-area-inset-top))] z-20 flex flex-col items-start"
+                  aria-live="polite"
                 >
-                  <CameraOff className="h-4 w-4" />
-                  Stop camera
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-cyan-500/20 bg-card/80">
-          <CardHeader>
-            <CardTitle className="text-lg">Score</CardTitle>
-            <CardDescription>{analysis.headline}</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="flex items-end gap-4">
-              <span
-                className={`text-6xl font-bold tabular-nums ${scoreColor}`}
-              >
-                {cameraOn && analysis.ready ? analysis.overall : "—"}
-              </span>
-              <span className="pb-2 text-muted-foreground">/ 100</span>
-            </div>
-            <Progress
-              value={cameraOn && analysis.ready ? analysis.overall : 0}
-              className="h-2"
-            />
-
-            <ul className="space-y-3">
-              {analysis.criteria.length === 0 ? (
-                <li className="text-sm text-muted-foreground">
-                  Criteria appear once your full body is detected.
-                </li>
-              ) : (
-                analysis.criteria.map((c) => (
-                  <li
-                    key={c.id}
-                    className="rounded-lg border border-border/60 bg-muted/30 px-3 py-2.5"
+                  <span
+                    className={cn(
+                      "text-5xl font-bold tabular-nums drop-shadow-lg",
+                      scoreColor,
+                    )}
                   >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="font-medium">{c.label}</span>
-                      <Badge variant={statusBadgeVariant(c.status)}>
-                        {statusLabel(c.status)}
-                      </Badge>
-                    </div>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {c.detail}
-                    </p>
-                  </li>
-                ))
+                    {displayScore}
+                  </span>
+                  <span className="text-xs font-medium text-white/80">
+                    / 100
+                  </span>
+                </div>
               )}
-            </ul>
-          </CardContent>
-        </Card>
-      </div>
-
-      <p className="text-center text-xs text-muted-foreground">
-        Processing runs locally on your device. No video is uploaded.
-      </p>
-    </div>
+              {!cameraOn && !loading && loadState !== "loading" && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/50 p-6 text-center text-sm text-white/80">
+                  Stand facing the camera · feet visible
+                </div>
+              )}
+              {(loading || loadState === "loading") && (
+                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-black/60">
+                  <Loader2 className="h-10 w-10 animate-spin text-cyan-400" />
+                  <p className="text-sm text-white/70">Loading pose model…</p>
+                </div>
+              )}
+            </>
+          }
+        />
+      }
+    />
   );
 }

@@ -3,15 +3,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { PoseLandmarker } from "@mediapipe/tasks-vision";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GradeFloater } from "@/components/grade-floater";
+import { LiveCameraDock } from "@/components/live-camera-dock";
+import { LiveFullscreenShell } from "@/components/live-fullscreen-shell";
+import { LiveRecordButton } from "@/components/live-record-button";
 import { ScreenJuice } from "@/components/screen-juice";
 import { PoseRail } from "@/components/pose-rail";
 import { PracticeStage } from "@/components/practice-stage";
 import { ResultsScreen } from "@/components/results-screen";
 import { drawPose } from "@/lib/pose/draw";
 import { landmarksToKeypoints } from "@/lib/pose/keypoints";
-import { CameraSettingsBar } from "@/components/camera-settings-bar";
 import { loadCameraPrefs, setLens, toggleFacing } from "@/lib/camera/prefs";
 import { cameraStageFit } from "@/lib/camera/video-fit";
 import {
@@ -31,7 +32,8 @@ import {
   type PracticePhase,
 } from "@/lib/wushu/session-phase";
 import { ROUTINES, getRoutinePackage } from "@/lib/wushu/routines";
-import { Camera, CameraOff, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const ROUTINE_STORAGE_KEY = "stancejudge.routineId";
 
@@ -220,9 +222,18 @@ export function LiveRoutinePractice({ onBack }: { onBack: () => void }) {
     };
   }, [cameraOn, canonical, routine.weapon]);
 
+  const phaseSubtitle =
+    session.phase === "performing"
+      ? `Move ${session.moveIndex + 1}/${canonical.moves.length}${
+          session.combo > 1 ? ` · combo ×${session.combo}` : ""
+        }`
+      : sessionToPhaseLabel(session.phase);
+
   if (phase === "review") {
     return (
-      <div className="space-y-4">
+      <div
+        className="fixed inset-0 z-50 overflow-y-auto bg-background px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))]"
+      >
         <ResultsScreen
           routine={canonical}
           session={session}
@@ -237,107 +248,103 @@ export function LiveRoutinePractice({ onBack }: { onBack: () => void }) {
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <PoseRail moves={railMoves} scrollProgress={scrollProgress} scanning={session.phase === "performing"} />
-
-      <div className="flex flex-wrap gap-2">
-        {ROUTINES.map((r) => (
-          <Button
-            key={r.id}
-            type="button"
-            size="sm"
-            variant={routineId === r.id ? "default" : "outline"}
-            disabled={cameraOn}
-            onClick={() => setRoutineId(r.id)}
-          >
-            {r.nameZh}
-          </Button>
-        ))}
-      </div>
-
-      <p className="text-center text-sm font-medium text-cyan-300/90">
-        {sessionToPhaseLabel(session.phase)}
-        {session.phase === "performing" && (
-          <span className="text-muted-foreground">
-            {" "}
-            · move {session.moveIndex + 1}/{canonical.moves.length}
-            {session.combo > 1 && (
-              <span className="text-amber-300/90">
-                {" "}
-                · combo ×{session.combo}
-                {session.combo >= 3 ? " 🔥" : ""}
-              </span>
-            )}
-          </span>
-        )}
-      </p>
-
-      <Card className="border-cyan-500/20">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg">Live routine (DDR)</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <PracticeStage
-            videoRef={videoRef}
-            canvasRef={canvasRef}
-            fit={cameraStageFit(prefs)}
-            mirrored={prefs.facing === "user"}
-            className={shakeStage ? "animate-stage-shake" : undefined}
-            overlay={
-              <>
-                <ScreenJuice grade={juiceGrade} />
-                <GradeFloater text={floater.text} grade={floater.grade} />
-                {session.phase === "performing" && session.combo >= 2 && (
-                  <div
-                    className="pointer-events-none absolute right-3 top-3 z-20 rounded-full bg-black/50 px-3 py-1 text-sm font-bold tabular-nums text-amber-300 ring-1 ring-amber-400/40"
-                    aria-live="polite"
-                  >
-                    ×{session.combo}
-                  </div>
-                )}
-                {!cameraOn && (
-                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/70 p-4 text-center text-sm text-muted-foreground">
-                    {loading ? (
-                      <Loader2 className="h-8 w-8 animate-spin text-cyan-400" />
-                    ) : (
-                      `${prefs.facing === "user" ? "Front" : "Rear"} camera — whole body visible. Tap start.`
-                    )}
-                  </div>
-                )}
-              </>
-            }
+    <LiveFullscreenShell
+      onBack={onBack}
+      title={routine.nameZh}
+      subtitle={phaseSubtitle}
+      topOverlay={
+        <>
+          <PoseRail
+            variant="overlay"
+            moves={railMoves}
+            scrollProgress={scrollProgress}
+            scanning={session.phase === "performing"}
           />
-          {error && (
-            <p className="text-sm text-destructive">{error}</p>
-          )}
-          <CameraSettingsBar
-            prefs={prefs}
-            disabled={loading}
-            onFlipFacing={() => applyCameraPrefs(toggleFacing(prefs))}
-            onLensChange={(lens: CameraLensProfile) =>
-              applyCameraPrefs(setLens(prefs, lens))
-            }
-          />
-
-          <div className="flex flex-wrap gap-3">
-            {!cameraOn ? (
-              <Button type="button" className="min-h-12 min-w-[8rem] gap-2" onClick={startCamera}>
-                <Camera className="h-5 w-5" />
-                Start
+          <div className="flex gap-2 overflow-x-auto px-3 pb-2 pt-1">
+            {ROUTINES.map((r) => (
+              <Button
+                key={r.id}
+                type="button"
+                size="sm"
+                disabled={cameraOn}
+                variant={routineId === r.id ? "default" : "secondary"}
+                className={cn(
+                  "shrink-0 rounded-full",
+                  routineId !== r.id && "bg-black/40 text-white hover:bg-black/55",
+                )}
+                onClick={() => setRoutineId(r.id)}
+              >
+                {r.nameZh}
               </Button>
-            ) : (
-              <Button type="button" variant="outline" className="gap-2" onClick={() => {
+            ))}
+          </div>
+        </>
+      }
+      rightDock={
+        <LiveCameraDock
+          prefs={prefs}
+          disabled={loading}
+          onFlipFacing={() => applyCameraPrefs(toggleFacing(prefs))}
+          onLensChange={(lens: CameraLensProfile) =>
+            applyCameraPrefs(setLens(prefs, lens))
+          }
+        />
+      }
+      bottomBar={
+        <div className="flex flex-col items-center gap-2">
+          {error && (
+            <p className="max-w-sm rounded-lg bg-red-950/80 px-3 py-2 text-center text-xs text-red-200">
+              {error}
+            </p>
+          )}
+          <LiveRecordButton
+            active={cameraOn}
+            loading={loading}
+            label="Go live"
+            onClick={() => {
+              if (!cameraOn) void startCamera();
+              else {
                 stopCamera();
                 setSession((s) => ({ ...s, phase: "review" }));
-              }}>
-                <CameraOff className="h-4 w-4" />
-                Finish & review
-              </Button>
-            )}
-            <Button type="button" variant="ghost" onClick={onBack}>Back</Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+              }
+            }}
+          />
+        </div>
+      }
+      stage={
+        <PracticeStage
+          videoRef={videoRef}
+          canvasRef={canvasRef}
+          fullscreen
+          fit={cameraStageFit(prefs)}
+          mirrored={prefs.facing === "user"}
+          className={shakeStage ? "animate-stage-shake" : undefined}
+          overlay={
+            <>
+              <ScreenJuice grade={juiceGrade} />
+              <GradeFloater text={floater.text} grade={floater.grade} />
+              {session.phase === "performing" && session.combo >= 2 && (
+                <div
+                  className="pointer-events-none absolute left-4 top-[max(5rem,env(safe-area-inset-top))] z-20 rounded-full bg-black/50 px-3 py-1 text-sm font-bold tabular-nums text-amber-300 ring-1 ring-amber-400/40"
+                  aria-live="polite"
+                >
+                  ×{session.combo}
+                </div>
+              )}
+              {!cameraOn && !loading && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/50 p-6 text-center text-sm text-white/80">
+                  Whole body in frame · tap Go live
+                </div>
+              )}
+              {loading && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/60">
+                  <Loader2 className="h-10 w-10 animate-spin text-cyan-400" />
+                </div>
+              )}
+            </>
+          }
+        />
+      }
+    />
   );
 }

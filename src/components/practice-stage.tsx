@@ -9,6 +9,8 @@ type PracticeStageProps = {
   mirrored?: boolean;
   /** object-contain keeps skeleton aligned with letterboxed video (T-03). */
   fit?: "cover" | "contain";
+  /** Edge-to-edge camera (live / mobile). */
+  fullscreen?: boolean;
   className?: string;
   overlay?: React.ReactNode;
 };
@@ -18,6 +20,7 @@ export function PracticeStage({
   canvasRef,
   mirrored = true,
   fit = "contain",
+  fullscreen = false,
   className,
   overlay,
 }: PracticeStageProps) {
@@ -86,7 +89,9 @@ export function PracticeStage({
     <div
       ref={containerRef}
       className={cn(
-        "relative aspect-[3/4] w-full overflow-hidden rounded-xl bg-black ring-1 ring-white/10 sm:aspect-video",
+        fullscreen
+          ? "relative h-full w-full overflow-hidden bg-black"
+          : "relative aspect-[3/4] w-full overflow-hidden rounded-xl bg-black ring-1 ring-white/10 sm:aspect-video",
         className,
       )}
     >

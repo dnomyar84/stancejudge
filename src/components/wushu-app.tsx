@@ -18,25 +18,27 @@ export function WushuApp() {
     );
   }
 
+  if (mode === "live-routine") {
+    return <LiveRoutinePractice onBack={() => setMode("home")} />;
+  }
+
+  if (mode === "live-stance") {
+    return <StanceJudge onBack={() => setMode("home")} />;
+  }
+
   return (
     <div className="min-h-full bg-gradient-to-b from-background via-background to-cyan-950/20">
       <div className="mx-auto max-w-6xl px-4 pt-4 md:px-6">
-        {mode !== "live-routine" && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="mb-2"
-            onClick={() => setMode("home")}
-          >
-            ← Home
-          </Button>
-        )}
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="mb-2"
+          onClick={() => setMode("home")}
+        >
+          ← Home
+        </Button>
         {mode === "routine-video" && <RoutineJudge />}
-        {mode === "live-stance" && <StanceJudge />}
-        {mode === "live-routine" && (
-          <LiveRoutinePractice onBack={() => setMode("home")} />
-        )}
       </div>
     </div>
   );

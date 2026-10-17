@@ -8,19 +8,41 @@ type PoseRailProps = {
   moves: RailMove[];
   scrollProgress: number;
   scanning: boolean;
+  variant?: "default" | "overlay";
 };
 
-export function PoseRail({ moves, scrollProgress, scanning }: PoseRailProps) {
+export function PoseRail({
+  moves,
+  scrollProgress,
+  scanning,
+  variant = "default",
+}: PoseRailProps) {
+  const overlay = variant === "overlay";
   const translatePercent = scrollProgress * Math.max(0, moves.length - 4) * 12;
 
   return (
-    <div className="sticky top-0 z-40 border-b border-cyan-500/20 bg-background/95 backdrop-blur-md">
-      <div className="mx-auto max-w-6xl px-2 py-2 md:px-4">
-        <div className="mb-1 flex items-center justify-between text-[10px] uppercase tracking-wider text-muted-foreground">
-          <span>Routine poses</span>
-          <span>{scanning ? "Scanning… keep playing" : "Play — green = met, red = missed"}</span>
-        </div>
-        <div className="relative overflow-hidden rounded-lg bg-muted/40 py-3">
+    <div
+      className={cn(
+        overlay
+          ? "border-b border-white/10 bg-black/45 backdrop-blur-md"
+          : "sticky top-0 z-40 border-b border-cyan-500/20 bg-background/95 backdrop-blur-md",
+      )}
+    >
+      <div className={cn("px-2 py-2", !overlay && "mx-auto max-w-6xl md:px-4")}>
+        {!overlay && (
+          <div className="mb-1 flex items-center justify-between text-[10px] uppercase tracking-wider text-muted-foreground">
+            <span>Routine poses</span>
+            <span>
+              {scanning ? "Scanning… keep playing" : "Play — green = met, red = missed"}
+            </span>
+          </div>
+        )}
+        <div
+          className={cn(
+            "relative overflow-hidden py-2",
+            overlay ? "bg-black/30" : "rounded-lg bg-muted/40 py-3",
+          )}
+        >
           <div
             className="flex gap-2 px-3 transition-transform duration-150 ease-linear will-change-transform"
             style={{ transform: `translateX(-${translatePercent}%)` }}
