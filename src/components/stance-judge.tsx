@@ -22,6 +22,14 @@ import { PracticeStage } from "@/components/practice-stage";
 import { useThrottledValue } from "@/lib/hooks/use-throttled-value";
 import { drawPose } from "@/lib/pose/draw";
 import { landmarksToKeypoints } from "@/lib/pose/keypoints";
+import { CameraSettingsBar } from "@/components/camera-settings-bar";
+import { setLens, toggleFacing } from "@/lib/camera/prefs";
+import {
+  getCameraVideoStream,
+  stopMediaStream,
+} from "@/lib/camera/stream";
+import type { CameraLensProfile, CameraPrefs } from "@/lib/camera/types";
+import { useCameraPrefs } from "@/lib/hooks/use-camera-prefs";
 import { getPoseLandmarker } from "@/lib/pose/landmarker-client";
 import { Camera, CameraOff, Loader2 } from "lucide-react";
 
@@ -51,6 +59,7 @@ export function StanceJudge() {
   const rafRef = useRef<number>(0);
   const lastVideoTimeRef = useRef<number>(-1);
 
+  const { prefs, setPrefs } = useCameraPrefs();
   const [loadState, setLoadState] = useState<LoadState>("idle");
   const [cameraOn, setCameraOn] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -63,9 +72,36 @@ export function StanceJudge() {
   });
   const analysis = useThrottledValue(analysisRaw, 120);
 
+  const attachStream = useCallback(async (cameraPrefs: CameraPrefs) => {
+    const stream = await getCameraVideoStream(cameraPrefs);
+    stopMediaStream(streamRef.current);
+    streamRef.current = stream;
+    const video = videoRef.current;
+    if (!video) {
+      stopMediaStream(stream);
+      return;
+    }
+    video.srcObject = stream;
+    await video.play();
+  }, []);
+
+  const applyCameraPrefs = useCallback(
+    (next: CameraPrefs) => {
+      setPrefs(next);
+      if (cameraOn) {
+        void attachStream(next).catch((e) => {
+          setError(
+            e instanceof Error ? e.message : "Could not switch camera.",
+          );
+        });
+      }
+    },
+    [attachStream, cameraOn, setPrefs],
+  );
+
   const stopCamera = useCallback(() => {
     cancelAnimationFrame(rafRef.current);
-    streamRef.current?.getTracks().forEach((t) => t.stop());
+    stopMediaStream(streamRef.current);
     streamRef.current = null;
     if (videoRef.current) videoRef.current.srcObject = null;
     lastVideoTimeRef.current = -1;
@@ -94,19 +130,7 @@ export function StanceJudge() {
     setError(null);
     try {
       await ensureLandmarker();
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: "user",
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-        },
-        audio: false,
-      });
-      streamRef.current = stream;
-      const video = videoRef.current;
-      if (!video) return;
-      video.srcObject = stream;
-      await video.play();
+      await attachStream(prefs);
       setCameraOn(true);
     } catch (e) {
       const message =
@@ -116,7 +140,7 @@ export function StanceJudge() {
       setError(message);
       stopCamera();
     }
-  }, [ensureLandmarker, stopCamera]);
+  }, [attachStream, ensureLandmarker, prefs, stopCamera]);
 
   useEffect(() => {
     return () => {
@@ -227,6 +251,7 @@ export function StanceJudge() {
               videoRef={videoRef}
               canvasRef={canvasRef}
               fit="contain"
+              mirrored={prefs.facing === "user"}
               overlay={
                 !cameraOn ? (
                   <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-black/70 p-6 text-center">
@@ -252,6 +277,17 @@ export function StanceJudge() {
                 {error}
               </p>
             )}
+
+            <CameraSettingsBar
+              prefs={prefs}
+              disabled={loadState === "loading"}
+              onFlipFacing={() =>
+                applyCameraPrefs(toggleFacing(prefs))
+              }
+              onLensChange={(lens: CameraLensProfile) =>
+                applyCameraPrefs(setLens(prefs, lens))
+              }
+            />
 
             <div className="flex flex-wrap gap-3">
               {!cameraOn ? (

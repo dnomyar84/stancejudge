@@ -10,6 +10,14 @@ import { PracticeStage } from "@/components/practice-stage";
 import { ResultsScreen } from "@/components/results-screen";
 import { drawPose } from "@/lib/pose/draw";
 import { landmarksToKeypoints } from "@/lib/pose/keypoints";
+import { CameraSettingsBar } from "@/components/camera-settings-bar";
+import { setLens, toggleFacing } from "@/lib/camera/prefs";
+import {
+  getCameraVideoStream,
+  stopMediaStream,
+} from "@/lib/camera/stream";
+import type { CameraLensProfile, CameraPrefs } from "@/lib/camera/types";
+import { useCameraPrefs } from "@/lib/hooks/use-camera-prefs";
 import { getPoseLandmarker } from "@/lib/pose/landmarker-client";
 import { buildLiveRail, liveRailScrollProgress } from "@/lib/wushu/live-rail";
 import {
@@ -33,6 +41,7 @@ export function LiveRoutinePractice({ onBack }: { onBack: () => void }) {
   const lastVideoTimeRef = useRef(-1);
   const sessionRef = useRef<LiveSessionState>(initialLiveSession());
 
+  const { prefs, setPrefs } = useCameraPrefs();
   const [routineId, setRoutineId] = useState(() => {
     if (typeof window === "undefined") return ROUTINES[0].id;
     return localStorage.getItem(ROUTINE_STORAGE_KEY) ?? ROUTINES[0].id;
@@ -64,9 +73,36 @@ export function LiveRoutinePractice({ onBack }: { onBack: () => void }) {
     localStorage.setItem(ROUTINE_STORAGE_KEY, routineId);
   }, [routineId]);
 
+  const attachStream = useCallback(async (cameraPrefs: CameraPrefs) => {
+    const stream = await getCameraVideoStream(cameraPrefs);
+    stopMediaStream(streamRef.current);
+    streamRef.current = stream;
+    const video = videoRef.current;
+    if (!video) {
+      stopMediaStream(stream);
+      return;
+    }
+    video.srcObject = stream;
+    await video.play();
+  }, []);
+
+  const applyCameraPrefs = useCallback(
+    (next: CameraPrefs) => {
+      setPrefs(next);
+      if (cameraOn) {
+        void attachStream(next).catch((e) => {
+          setError(
+            e instanceof Error ? e.message : "Could not switch camera.",
+          );
+        });
+      }
+    },
+    [attachStream, cameraOn, setPrefs],
+  );
+
   const stopCamera = useCallback(() => {
     cancelAnimationFrame(rafRef.current);
-    streamRef.current?.getTracks().forEach((t) => t.stop());
+    stopMediaStream(streamRef.current);
     streamRef.current = null;
     if (videoRef.current) videoRef.current.srcObject = null;
     setCameraOn(false);
@@ -87,19 +123,7 @@ export function LiveRoutinePractice({ onBack }: { onBack: () => void }) {
       if (!landmarkerRef.current) {
         landmarkerRef.current = await getPoseLandmarker();
       }
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: { ideal: "user" },
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-        },
-        audio: false,
-      });
-      streamRef.current = stream;
-      const video = videoRef.current;
-      if (!video) return;
-      video.srcObject = stream;
-      await video.play();
+      await attachStream(prefs);
       setCameraOn(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Camera unavailable");
@@ -107,7 +131,7 @@ export function LiveRoutinePractice({ onBack }: { onBack: () => void }) {
     } finally {
       setLoading(false);
     }
-  }, [resetSession, stopCamera]);
+  }, [attachStream, prefs, resetSession, stopCamera]);
 
   useEffect(() => () => {
     stopCamera();
@@ -227,6 +251,7 @@ export function LiveRoutinePractice({ onBack }: { onBack: () => void }) {
             videoRef={videoRef}
             canvasRef={canvasRef}
             fit="contain"
+            mirrored={prefs.facing === "user"}
             overlay={
               <>
                 <GradeFloater text={floater.text} grade={floater.grade} />
@@ -235,7 +260,7 @@ export function LiveRoutinePractice({ onBack }: { onBack: () => void }) {
                     {loading ? (
                       <Loader2 className="h-8 w-8 animate-spin text-cyan-400" />
                     ) : (
-                      "Front camera — whole body visible. Tap start."
+                      `${prefs.facing === "user" ? "Front" : "Rear"} camera — whole body visible. Tap start.`
                     )}
                   </div>
                 )}
@@ -245,6 +270,15 @@ export function LiveRoutinePractice({ onBack }: { onBack: () => void }) {
           {error && (
             <p className="text-sm text-destructive">{error}</p>
           )}
+          <CameraSettingsBar
+            prefs={prefs}
+            disabled={loading}
+            onFlipFacing={() => applyCameraPrefs(toggleFacing(prefs))}
+            onLensChange={(lens: CameraLensProfile) =>
+              applyCameraPrefs(setLens(prefs, lens))
+            }
+          />
+
           <div className="flex flex-wrap gap-3">
             {!cameraOn ? (
               <Button type="button" className="min-h-12 min-w-[8rem] gap-2" onClick={startCamera}>
