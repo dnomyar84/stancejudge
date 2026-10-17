@@ -1,0 +1,158 @@
+import type {
+  CanonicalMove,
+  CanonicalRoutine,
+  FrameClassification,
+  HandProfileType,
+  LegStanceType,
+  RoutineDefinition,
+} from "./types";
+
+function majority<T extends string>(values: T[]): T {
+  const counts = new Map<T, number>();
+  for (const v of values) {
+    counts.set(v, (counts.get(v) ?? 0) + 1);
+  }
+  let best = values[0];
+  let bestN = 0;
+  for (const [v, n] of counts) {
+    if (n > bestN) {
+      best = v;
+      bestN = n;
+    }
+  }
+  return best;
+}
+
+function findSplitTimes(
+  frames: FrameClassification[],
+  segments: number,
+  durationSec: number,
+): number[] {
+  const transitions: { timeSec: number; weight: number }[] = [];
+  let prev = frames[0]?.leg;
+  for (const f of frames) {
+    if (f.leg === "unknown" || f.leg === "walking") continue;
+    if (prev && f.leg !== prev) {
+      transitions.push({ timeSec: f.timeSec, weight: 1 });
+    }
+    prev = f.leg;
+  }
+
+  if (transitions.length < segments - 1 || segments <= 1) {
+    const splits: number[] = [];
+    for (let i = 1; i < segments; i++) {
+      splits.push((durationSec * i) / segments);
+    }
+    return splits;
+  }
+
+  const picks: number[] = [];
+  for (let i = 1; i < segments; i++) {
+    const target = (durationSec * i) / segments;
+    let best = transitions[0].timeSec;
+    let bestDist = Infinity;
+    for (const t of transitions) {
+      const d = Math.abs(t.timeSec - target);
+      if (d < bestDist) {
+        bestDist = d;
+        best = t.timeSec;
+      }
+    }
+    picks.push(best);
+  }
+  return picks.sort((a, b) => a - b);
+}
+
+export function buildCanonicalFromFrames(
+  routine: RoutineDefinition,
+  frames: FrameClassification[],
+  durationSec: number,
+  source: {
+    youtubeId: string | null;
+    youtubeUrl: string | null;
+    label?: string;
+  },
+): CanonicalRoutine {
+  const n = routine.moves.length;
+  const splits = findSplitTimes(frames, n, durationSec);
+  const boundaries = [0, ...splits, durationSec];
+
+  const moves: CanonicalMove[] = routine.moves.map((template, index) => {
+    const startSec = boundaries[index] ?? 0;
+    const endSec = boundaries[index + 1] ?? durationSec;
+    const inSegment = frames.filter(
+      (f) => f.timeSec >= startSec && f.timeSec < endSec,
+    );
+    const pool = inSegment.length > 0 ? inSegment : frames;
+
+    const legs = pool.map((f) => f.leg).filter((l) => l !== "unknown");
+    const hands = pool.map((f) => f.hand).filter((h) => h !== "unknown");
+
+    const expectedLeg = (
+      legs.length > 0 ? majority(legs) : template.expectedLeg
+    ) as LegStanceType;
+    const expectedHand = (
+      hands.length > 0 ? majority(hands) : template.expectedHand
+    ) as HandProfileType;
+
+    return {
+      ...template,
+      expectedLeg,
+      expectedHand,
+      startSec,
+      endSec,
+    };
+  });
+
+  return {
+    routineId: routine.id,
+    calibrated: true,
+    sourceYouTubeId: source.youtubeId,
+    sourceYouTubeUrl: source.youtubeUrl,
+    sourceLabel: source.label ?? null,
+    referenceDurationSec: durationSec,
+    calibratedAt: new Date().toISOString(),
+    moves,
+  };
+}
+
+export function placeholderCanonical(
+  routine: RoutineDefinition,
+  source?: {
+    youtubeId: string | null;
+    youtubeUrl: string | null;
+    label?: string;
+  },
+): CanonicalRoutine {
+  const durationSec = 90;
+  const n = routine.moves.length;
+  return {
+    routineId: routine.id,
+    calibrated: false,
+    sourceYouTubeId: source?.youtubeId ?? null,
+    sourceYouTubeUrl: source?.youtubeUrl ?? null,
+    sourceLabel: source?.label ?? null,
+    referenceDurationSec: durationSec,
+    calibratedAt: null,
+    moves: routine.moves.map((m, i) => ({
+      ...m,
+      startSec: (durationSec * i) / n,
+      endSec: (durationSec * (i + 1)) / n,
+    })),
+  };
+}
+
+export function scaledWindow(
+  canonical: CanonicalRoutine,
+  move: CanonicalMove,
+  studentDurationSec: number,
+): { start: number; end: number } {
+  const scale =
+    canonical.referenceDurationSec > 0
+      ? studentDurationSec / canonical.referenceDurationSec
+      : 1;
+  return {
+    start: move.startSec * scale,
+    end: move.endSec * scale,
+  };
+}

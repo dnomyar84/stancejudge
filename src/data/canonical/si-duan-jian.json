@@ -1,0 +1,99 @@
+{
+  "routineId": "si-duan-jian",
+  "calibrated": false,
+  "sourceYouTubeId": null,
+  "sourceYouTubeUrl": null,
+  "sourceLabel": "Coach reference — 四段剑 Si Duan Jian",
+  "referenceDurationSec": 90,
+  "calibratedAt": null,
+  "moves": [
+    {
+      "id": "sdj-1",
+      "order": 1,
+      "name": "Carry sword salute",
+      "nameZh": "持剑礼",
+      "expectedLeg": "feet_together",
+      "expectedHand": "jian_guard",
+      "coachTip": "Feet together, sword hand near the shoulder.",
+      "startSec": 0,
+      "endSec": 11.25
+    },
+    {
+      "id": "sdj-2",
+      "order": 2,
+      "name": "Horse stance hold",
+      "nameZh": "马步持剑",
+      "expectedLeg": "ma_bu",
+      "expectedHand": "jian_guard",
+      "coachTip": "Low horse stance, sword vertical at the guard.",
+      "startSec": 11.25,
+      "endSec": 22.5
+    },
+    {
+      "id": "sdj-3",
+      "order": 3,
+      "name": "Bow stance point",
+      "nameZh": "弓步刺剑",
+      "expectedLeg": "gong_bu",
+      "expectedHand": "jian_point",
+      "coachTip": "Bow stance with the sword arm extended toward target.",
+      "startSec": 22.5,
+      "endSec": 33.75
+    },
+    {
+      "id": "sdj-4",
+      "order": 4,
+      "name": "Withdraw to guard",
+      "nameZh": "收剑护胸",
+      "expectedLeg": "gong_bu",
+      "expectedHand": "jian_guard",
+      "coachTip": "Pull sword back to guard without losing bow stance.",
+      "startSec": 33.75,
+      "endSec": 45
+    },
+    {
+      "id": "sdj-5",
+      "order": 5,
+      "name": "Empty stance parry",
+      "nameZh": "虚步格剑",
+      "expectedLeg": "xu_bu",
+      "expectedHand": "jian_guard",
+      "coachTip": "Empty stance, blade guarding the center line.",
+      "startSec": 45,
+      "endSec": 56.25
+    },
+    {
+      "id": "sdj-6",
+      "order": 6,
+      "name": "Side point",
+      "nameZh": "侧身点剑",
+      "expectedLeg": "gong_bu",
+      "expectedHand": "jian_point",
+      "coachTip": "Point with a clear line from hand through the blade.",
+      "startSec": 56.25,
+      "endSec": 67.5
+    },
+    {
+      "id": "sdj-7",
+      "order": 7,
+      "name": "Horse stance sweep",
+      "nameZh": "马步扫剑",
+      "expectedLeg": "ma_bu",
+      "expectedHand": "arms_spread",
+      "coachTip": "Wide horse stance, arms open for the sweep.",
+      "startSec": 67.5,
+      "endSec": 78.75
+    },
+    {
+      "id": "sdj-8",
+      "order": 8,
+      "name": "Closing carry",
+      "nameZh": "收剑礼",
+      "expectedLeg": "feet_together",
+      "expectedHand": "jian_guard",
+      "coachTip": "Feet together, sword carried at the shoulder to close.",
+      "startSec": 78.75,
+      "endSec": 90
+    }
+  ]
+}

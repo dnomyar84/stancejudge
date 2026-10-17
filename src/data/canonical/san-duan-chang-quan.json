@@ -1,0 +1,99 @@
+{
+  "routineId": "san-duan-chang-quan",
+  "calibrated": false,
+  "sourceYouTubeId": null,
+  "sourceYouTubeUrl": null,
+  "sourceLabel": "Coach reference — 三段长拳 San Duan Chang Quan",
+  "referenceDurationSec": 90,
+  "calibratedAt": null,
+  "moves": [
+    {
+      "id": "sdcq-1",
+      "order": 1,
+      "name": "Opening salute",
+      "nameZh": "起势抱拳",
+      "expectedLeg": "feet_together",
+      "expectedHand": "salute",
+      "coachTip": "Feet together, fists or palms at chest height.",
+      "startSec": 0,
+      "endSec": 11.25
+    },
+    {
+      "id": "sdcq-2",
+      "order": 2,
+      "name": "Horse stance ready",
+      "nameZh": "马步架掌",
+      "expectedLeg": "ma_bu",
+      "expectedHand": "guard_chest",
+      "coachTip": "Wide horse stance, hands guarding the chest.",
+      "startSec": 11.25,
+      "endSec": 22.5
+    },
+    {
+      "id": "sdcq-3",
+      "order": 3,
+      "name": "Bow stance punch",
+      "nameZh": "弓步冲拳",
+      "expectedLeg": "gong_bu",
+      "expectedHand": "punch_forward",
+      "coachTip": "Front knee bent in bow stance, punch straight ahead.",
+      "startSec": 22.5,
+      "endSec": 33.75
+    },
+    {
+      "id": "sdcq-4",
+      "order": 4,
+      "name": "Return fists to waist",
+      "nameZh": "收拳于腰",
+      "expectedLeg": "gong_bu",
+      "expectedHand": "fist_waist",
+      "coachTip": "Keep bow stance while both fists return to the waist.",
+      "startSec": 33.75,
+      "endSec": 45
+    },
+    {
+      "id": "sdcq-5",
+      "order": 5,
+      "name": "Empty stance block",
+      "nameZh": "虚步格挡",
+      "expectedLeg": "xu_bu",
+      "expectedHand": "guard_chest",
+      "coachTip": "Weight on rear leg, blocking hand in front of chest.",
+      "startSec": 45,
+      "endSec": 56.25
+    },
+    {
+      "id": "sdcq-6",
+      "order": 6,
+      "name": "Horse stance cross punch",
+      "nameZh": "马步冲拳",
+      "expectedLeg": "ma_bu",
+      "expectedHand": "punch_forward",
+      "coachTip": "Stable horse stance before the cross punch.",
+      "startSec": 56.25,
+      "endSec": 67.5
+    },
+    {
+      "id": "sdcq-7",
+      "order": 7,
+      "name": "Bow stance palm",
+      "nameZh": "弓步推掌",
+      "expectedLeg": "gong_bu",
+      "expectedHand": "punch_forward",
+      "coachTip": "Push palm forward with a clear bow stance.",
+      "startSec": 67.5,
+      "endSec": 78.75
+    },
+    {
+      "id": "sdcq-8",
+      "order": 8,
+      "name": "Closing salute",
+      "nameZh": "收势抱拳",
+      "expectedLeg": "feet_together",
+      "expectedHand": "salute",
+      "coachTip": "Return to center and salute to finish.",
+      "startSec": 78.75,
+      "endSec": 90
+    }
+  ]
+}

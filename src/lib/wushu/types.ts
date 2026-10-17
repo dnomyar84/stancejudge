@@ -28,6 +28,22 @@ export type RoutineMove = {
   coachTip: string;
 };
 
+export type CanonicalMove = RoutineMove & {
+  startSec: number;
+  endSec: number;
+};
+
+export type CanonicalRoutine = {
+  routineId: string;
+  calibrated: boolean;
+  sourceYouTubeId: string | null;
+  sourceYouTubeUrl: string | null;
+  sourceLabel: string | null;
+  referenceDurationSec: number;
+  calibratedAt: string | null;
+  moves: CanonicalMove[];
+};
+
 export type RoutineDefinition = {
   id: string;
   name: string;

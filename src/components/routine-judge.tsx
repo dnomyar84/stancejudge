@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,14 +12,16 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { getPoseLandmarker } from "@/lib/pose/landmarker-client";
-import { ROUTINES, getRoutineById } from "@/lib/wushu/routines";
+import { ROUTINES, getRoutinePackage } from "@/lib/wushu/routines";
+import {
+  getReferenceEmbedUrl,
+  getReferenceVideo,
+} from "@/lib/wushu/reference-videos";
 import { analyzeRoutineVideo } from "@/lib/wushu/sequence";
 import type { MoveAlignmentStatus, RoutineAnalysisReport } from "@/lib/wushu/types";
-import { isYouTubeUrl } from "@/lib/youtube";
-import { FileVideo, Link2, Loader2, Play, Upload } from "lucide-react";
+import { FileVideo, Loader2, Play, Upload } from "lucide-react";
 
 function moveStatusVariant(
   status: MoveAlignmentStatus,
@@ -42,16 +45,16 @@ export function RoutineJudge() {
   const objectUrlRef = useRef<string | null>(null);
 
   const [routineId, setRoutineId] = useState(ROUTINES[0].id);
-  const [youtubeUrl, setYoutubeUrl] = useState("");
   const [videoReady, setVideoReady] = useState(false);
-  const [loadingVideo, setLoadingVideo] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [report, setReport] = useState<RoutineAnalysisReport | null>(null);
   const [videoLabel, setVideoLabel] = useState<string | null>(null);
 
-  const routine = getRoutineById(routineId) ?? ROUTINES[0];
+  const { routine, canonical } = getRoutinePackage(routineId);
+  const refConfig = getReferenceVideo(routineId);
+  const embedUrl = getReferenceEmbedUrl(routineId);
 
   const revokeObjectUrl = useCallback(() => {
     if (objectUrlRef.current) {
@@ -82,46 +85,15 @@ export function RoutineJudge() {
         setError("Please choose a video file (MP4, WebM, etc.).");
         return;
       }
-      const url = URL.createObjectURL(file);
-      attachVideoSrc(url, file.name);
+      attachVideoSrc(URL.createObjectURL(file), file.name);
     },
     [attachVideoSrc],
   );
 
-  const loadYouTube = useCallback(async () => {
-    if (!isYouTubeUrl(youtubeUrl)) {
-      setError("Paste a valid YouTube link (watch or youtu.be).");
-      return;
-    }
-    setLoadingVideo(true);
-    setError(null);
-    try {
-      const res = await fetch(
-        `/api/youtube?url=${encodeURIComponent(youtubeUrl.trim())}`,
-      );
-      if (!res.ok) {
-        const body = (await res.json().catch(() => null)) as {
-          error?: string;
-        } | null;
-        throw new Error(
-          body?.error ??
-            "Could not import YouTube video. Upload the file instead.",
-        );
-      }
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      attachVideoSrc(url, "YouTube import");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "YouTube import failed.");
-    } finally {
-      setLoadingVideo(false);
-    }
-  }, [youtubeUrl, attachVideoSrc]);
-
   const runAnalysis = useCallback(async () => {
     const video = videoRef.current;
     if (!video || !videoReady) {
-      setError("Load a video first and wait until it is ready to play.");
+      setError("Load a student video first and wait until it is ready.");
       return;
     }
     setAnalyzing(true);
@@ -132,7 +104,8 @@ export function RoutineJudge() {
       const landmarker = await getPoseLandmarker();
       const result = await analyzeRoutineVideo(
         video,
-        routine,
+        canonical,
+        routine.weapon,
         landmarker,
         setProgress,
       );
@@ -142,27 +115,43 @@ export function RoutineJudge() {
     } finally {
       setAnalyzing(false);
     }
-  }, [routine, videoReady]);
+  }, [canonical, routine.weapon, videoReady]);
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-4 md:px-6">
       <Alert className="border-cyan-500/30 bg-cyan-950/20">
-        <AlertTitle>Kids practice coach (beta)</AlertTitle>
+        <AlertTitle>Kids practice coach</AlertTitle>
         <AlertDescription>
-          This checks three things:{" "}
-          <strong>step order</strong>, <strong>leg stance</strong>, and{" "}
-          <strong>hand / sword shape</strong>. Film from the front with the
-          full body in frame. Routine lists are simplified teaching guides —
-          not official competition judging.
+          Known sequence comes from the reference YouTube performance (see below).
+          Upload your child&apos;s video to check step order, leg stance, and
+          hand/sword shape. GitHub Pages runs fully in the browser — upload MP4,
+          not YouTube links, for student clips.
         </AlertDescription>
       </Alert>
+
+      {!canonical.calibrated && (
+        <Alert>
+          <AlertTitle>Reference not calibrated yet</AlertTitle>
+          <AlertDescription>
+            Add your coach YouTube URL in{" "}
+            <code className="text-xs">reference-videos.json</code>, run{" "}
+            <code className="text-xs">npm run calibrate</code>, then redeploy.{" "}
+            <Link href="/calibrate/" className="text-cyan-400 underline">
+              Calibrate tool
+            </Link>
+          </AlertDescription>
+        </Alert>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-[1fr_1.1fr]">
         <Card className="border-cyan-500/20">
           <CardHeader>
-            <CardTitle>Routine & video</CardTitle>
+            <CardTitle>Routine & student video</CardTitle>
             <CardDescription>
-              San Duan Chang Quan (三段长拳) or Si Duan Jian (四段剑).
+              {routine.nameZh} — scores vs reference sequence
+              {canonical.calibrated && canonical.calibratedAt
+                ? ` (calibrated ${new Date(canonical.calibratedAt).toLocaleDateString()})`
+                : ""}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -182,35 +171,31 @@ export function RoutineJudge() {
                 </Button>
               ))}
             </div>
-            <p className="text-sm text-muted-foreground">{routine.description}</p>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">YouTube link</label>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="https://www.youtube.com/watch?v=..."
-                  value={youtubeUrl}
-                  onChange={(e) => setYoutubeUrl(e.target.value)}
-                />
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="shrink-0 gap-2"
-                  disabled={loadingVideo}
-                  onClick={loadYouTube}
-                >
-                  {loadingVideo ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Link2 className="h-4 w-4" />
-                  )}
-                  Import
-                </Button>
-              </div>
+              <p className="text-sm font-medium">Reference (YouTube)</p>
+              {embedUrl ? (
+                <div className="aspect-video overflow-hidden rounded-lg ring-1 ring-white/10">
+                  <iframe
+                    title={refConfig?.label ?? "Reference routine"}
+                    src={embedUrl}
+                    className="h-full w-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Set{" "}
+                  <code className="text-xs">youtubeUrl</code> in{" "}
+                  <code className="text-xs">src/data/reference-videos.json</code>{" "}
+                  for this routine.
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Or upload video</label>
+              <p className="text-sm font-medium">Student performance (upload)</p>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -225,7 +210,7 @@ export function RoutineJudge() {
                 onClick={() => fileInputRef.current?.click()}
               >
                 <Upload className="h-4 w-4" />
-                Choose file
+                Choose student video
               </Button>
             </div>
 
@@ -253,7 +238,7 @@ export function RoutineJudge() {
               ) : (
                 <Play className="h-4 w-4" />
               )}
-              Analyze routine
+              Analyze vs reference sequence
             </Button>
 
             {analyzing && (
@@ -269,10 +254,8 @@ export function RoutineJudge() {
 
         <Card className="border-cyan-500/20">
           <CardHeader>
-            <CardTitle>Preview</CardTitle>
-            <CardDescription>
-              Use a clear side-on or front view; avoid cropping feet or hands.
-            </CardDescription>
+            <CardTitle>Student preview</CardTitle>
+            <CardDescription>Full body visible, similar angle to reference.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="aspect-video overflow-hidden rounded-xl bg-black ring-1 ring-white/10">
@@ -343,13 +326,21 @@ export function RoutineJudge() {
 
       <Card className="border-dashed">
         <CardHeader>
-          <CardTitle className="text-base">Expected sequence (reference)</CardTitle>
+          <CardTitle className="text-base">
+            Known sequence (from reference)
+          </CardTitle>
+          <CardDescription>
+            {canonical.sourceYouTubeUrl
+              ? `Established from: ${canonical.sourceLabel ?? canonical.sourceYouTubeUrl}`
+              : "Equal-time placeholder until calibrated."}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <ol className="list-decimal space-y-1 pl-5 text-sm text-muted-foreground">
-            {routine.moves.map((m) => (
+            {canonical.moves.map((m) => (
               <li key={m.id}>
-                {m.nameZh} — {m.name}
+                {m.nameZh} — {m.name} ({m.startSec.toFixed(1)}s–
+                {m.endSec.toFixed(1)}s ref) · {m.expectedLeg} / {m.expectedHand}
               </li>
             ))}
           </ol>
