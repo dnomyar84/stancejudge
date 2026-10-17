@@ -1,4 +1,8 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { getReferenceVideoBlobUrl } from "@/lib/admin/store";
 import { getReferenceVideo, getReferenceYouTubeId } from "@/lib/wushu/reference-videos";
 import { ExternalLink } from "lucide-react";
 
@@ -6,8 +10,21 @@ type ReferenceVideoLinkProps = {
   routineId: string;
 };
 
-/** Reference clip without iframe — thumbnail + link, or local MP4 in public/. */
+/** Reference clip without iframe — thumbnail + link, local MP4, or coach upload in browser. */
 export function ReferenceVideoLink({ routineId }: ReferenceVideoLinkProps) {
+  const [browserRefUrl, setBrowserRefUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    let url: string | null = null;
+    getReferenceVideoBlobUrl(routineId).then((u) => {
+      url = u;
+      setBrowserRefUrl(u);
+    });
+    return () => {
+      if (url) URL.revokeObjectURL(url);
+    };
+  }, [routineId]);
+
   const ref = getReferenceVideo(routineId);
   if (!ref) {
     return (
@@ -33,7 +50,15 @@ export function ReferenceVideoLink({ routineId }: ReferenceVideoLinkProps) {
 
   return (
     <div className="space-y-3">
-      {localSrc ? (
+      {browserRefUrl ? (
+        <video
+          src={browserRefUrl}
+          className="aspect-video w-full rounded-lg bg-black ring-1 ring-white/10"
+          controls
+          playsInline
+          preload="metadata"
+        />
+      ) : localSrc ? (
         <video
           src={localSrc}
           className="aspect-video w-full rounded-lg bg-black ring-1 ring-white/10"

@@ -11,10 +11,18 @@ Browser app for kids’ **Wushu** practice: compare a **student video** to a **k
 
 These are **武术段位制** exam forms, not IWUF optional-competition custom routines. Timing is refined from your champion calibration videos.
 
-## How the known sequence is set
+## Coach admin (no backend)
+
+Open **`/admin/`** on the site (optional `NEXT_PUBLIC_COACH_PIN` in the build):
+
+- Upload champion **MP4** or **Stream** a YouTube link → bytes on `<video>` (same input as student analysis)
+- **Build sequence** from that video, review timings
+- **Save to this browser** or **download JSON** → commit to `src/data/canonical/`
+
+## How the known sequence is set (repo)
 
 1. Pick the official/coach **YouTube** for each routine in  
-   `src/data/reference-videos.json`:
+   `src/data/reference-videos.json` or via Admin:
 
    ```json
    {

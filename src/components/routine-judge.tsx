@@ -209,8 +209,8 @@ export function RoutineJudge() {
             <AlertDescription>
               Move names follow the duanwei syllabus. Add champion YouTube URLs
               in <code className="text-xs">reference-videos.json</code> and{" "}
-              <Link href="/calibrate/" className="text-cyan-400 underline">
-                calibrate
+              <Link href="/admin/" className="text-cyan-400 underline">
+                Admin
               </Link>{" "}
               to sync windows.
             </AlertDescription>

@@ -10,12 +10,11 @@ export function WushuApp() {
     <div className="min-h-full bg-gradient-to-b from-background via-background to-cyan-950/20">
       <div className="mx-auto max-w-6xl px-4 pt-6 md:px-6">
         <p className="mb-4 text-center text-xs text-muted-foreground">
-          Coaches: set reference YouTube in{" "}
-          <code>reference-videos.json</code>, then{" "}
-          <Link href="/calibrate/" className="text-cyan-400 underline">
-            calibrate
+          Coaches:{" "}
+          <Link href="/admin/" className="text-cyan-400 underline">
+            Admin / settings
           </Link>{" "}
-          and redeploy to GitHub Pages.
+          — upload reference video, calibrate sequence, save or export JSON.
         </p>
         <Tabs defaultValue="routine" className="gap-6">
           <TabsList className="grid w-full max-w-md grid-cols-2">

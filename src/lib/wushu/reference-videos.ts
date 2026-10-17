@@ -1,3 +1,4 @@
+import { getReferenceConfigOverride } from "@/lib/admin/store";
 import referenceVideos from "@/data/reference-videos.json";
 import { parseYouTubeVideoId } from "@/lib/youtube";
 
@@ -11,7 +12,11 @@ export type ReferenceVideoConfig = {
 export function getReferenceVideo(
   routineId: string,
 ): ReferenceVideoConfig | undefined {
-  const entry = referenceVideos[routineId as keyof typeof referenceVideos];
+  const overrides =
+    typeof window !== "undefined" ? getReferenceConfigOverride() : null;
+  const entry =
+    overrides?.[routineId] ??
+    referenceVideos[routineId as keyof typeof referenceVideos];
   if (!entry) return undefined;
   return entry;
 }
