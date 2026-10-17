@@ -31,9 +31,12 @@ Or in **Cursor**: link the project to `dnomyar84/stancejudge` and push `main` (P
 ```bash
 npm ci
 npm run generate-canonical
-rm -rf src/app/api
 GITHUB_PAGES=true npm run build
-npx serve out
+npx serve out -l 4322
 ```
 
-Open http://localhost:3000/stancejudge/
+Open http://localhost:4322/stancejudge/ — 四段剑 should show the `c1cgyuk-r7o` reference thumbnail and a **Coach link** button (not on older deploys).
+
+## Cloud agent cannot push?
+
+If `git push github main` fails with **401 / invalid token**, reconnect GitHub in **Cursor → Integrations** (repo + `workflow` scope for Actions), start a new agent or reply **retry push**. Code may still be on Cursor `origin` at the latest `main` commit.
