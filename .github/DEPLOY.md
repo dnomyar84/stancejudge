@@ -1,5 +1,7 @@
 # Deploy to GitHub Pages
 
+Product docs and feature backlog: [`docs/README.md`](../docs/README.md).
+
 ## Why you see 404
 
 `https://dnomyar84.github.io/stancejudge/` only works after:

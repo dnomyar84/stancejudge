@@ -13,4 +13,8 @@
 | [product/routine-video-spec.md](./product/routine-video-spec.md) | Recorded routine / pose-rail UX |
 | [architecture/overview.md](./architecture/overview.md) | Technical boundaries (static, MediaPipe, data) |
 
-Human-readable README for setup/deploy remains at repo root [`README.md`](../README.md).
+| [../.github/DEPLOY.md](../.github/DEPLOY.md) | GitHub Pages deploy & preview |
+| [../AGENTS.md](../AGENTS.md) | Coding agents: conventions + feature workflow |
+| [../CONTRIBUTING.md](../CONTRIBUTING.md) | How to propose changes and update the backlog |
+
+Human setup summary: repo root [`README.md`](../README.md).

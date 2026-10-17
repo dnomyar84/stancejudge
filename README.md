@@ -1,5 +1,7 @@
 # Stance Judge
 
+**Product & UX plan (for humans and coding agents):** [`docs/README.md`](docs/README.md) · [Feature catalog](docs/product/features.md) · [Roadmap](docs/product/roadmap.md)
+
 Browser app for kids’ **Wushu** practice: compare a **student video** to a **known sequence** from a coach’s **YouTube reference** — step order, leg stance, and hand/sword shape.
 
 **Live site (GitHub Pages):** https://dnomyar84.github.io/stancejudge/
@@ -86,6 +88,15 @@ Set repo variable `YOUTUBE_PROXY_URL` (e.g. `https://your-proxy.vercel.app/api/y
 
 - Next.js static export, MediaPipe Pose (browser)
 - Canonical sequences in `src/data/canonical/`
+
+## Documentation
+
+| Doc | Description |
+| --- | --- |
+| [docs/README.md](docs/README.md) | Full documentation index |
+| [docs/product/features.md](docs/product/features.md) | Feature catalog (agent-friendly) |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Contribute & update backlog |
+| [AGENTS.md](AGENTS.md) | Agent implementation guide |
 
 ## Repo
 
