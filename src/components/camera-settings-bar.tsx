@@ -50,7 +50,7 @@ export function CameraSettingsBar({
             size="sm"
             variant={prefs.lens === id ? "default" : "ghost"}
             disabled={disabled}
-            className="h-8 px-3 text-xs"
+            className="h-8 min-w-[5.75rem] px-3 text-xs"
             onClick={() => onLensChange(id)}
           >
             {label}
@@ -59,7 +59,7 @@ export function CameraSettingsBar({
       </div>
       <span className="text-xs text-muted-foreground">
         {prefs.facing === "environment" && prefs.lens === "wide"
-          ? "Rear wide works best for full-body coaching."
+          ? "Wide uses the ultra-wide rear lens when available; preview fills the frame."
           : prefs.facing === "user"
             ? "Front camera is mirrored like a selfie."
             : "Rear camera is not mirrored."}

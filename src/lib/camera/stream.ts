@@ -13,6 +13,21 @@ export function readActiveFacingMode(
   return undefined;
 }
 
+function videoSizeConstraints(prefs: CameraPrefs): MediaTrackConstraints {
+  if (prefs.lens === "wide") {
+    return {
+      width: { ideal: 1920, min: 1280 },
+      height: { ideal: 1440, min: 720 },
+      aspectRatio: { ideal: 4 / 3 },
+    };
+  }
+  return {
+    width: { ideal: 1280 },
+    height: { ideal: 720 },
+    aspectRatio: { ideal: 16 / 9 },
+  };
+}
+
 /**
  * Open a camera stream. Pass `releaseStream` so the previous device is freed
  * before requesting another (required on iOS / iPad when flipping cameras).
@@ -30,19 +45,21 @@ export async function getCameraVideoStream(
     await new Promise((r) => setTimeout(r, 80));
   }
 
-  const size = {
-    width: { ideal: prefs.lens === "wide" ? 1920 : 1280 },
-    height: { ideal: prefs.lens === "wide" ? 1080 : 720 },
-  };
-
-  const attempts: MediaTrackConstraints[] = [
-    { ...size, facingMode: { exact: prefs.facing } },
-    { ...size, facingMode: { ideal: prefs.facing } },
-  ];
+  const size = videoSizeConstraints(prefs);
+  const attempts: MediaTrackConstraints[] = [];
 
   const devices = await navigator.mediaDevices.enumerateDevices();
   const deviceId = pickVideoDeviceId(devices, prefs);
-  if (deviceId) {
+
+  if (prefs.lens === "wide" && deviceId) {
+    attempts.push({ ...size, deviceId: { exact: deviceId } });
+    attempts.push({ ...size, deviceId: { ideal: deviceId } });
+  }
+
+  attempts.push({ ...size, facingMode: { exact: prefs.facing } });
+  attempts.push({ ...size, facingMode: { ideal: prefs.facing } });
+
+  if (prefs.lens !== "wide" && deviceId) {
     attempts.push({ ...size, deviceId: { exact: deviceId } });
     attempts.push({ ...size, deviceId: { ideal: deviceId } });
   }

@@ -13,6 +13,7 @@ import { drawPose } from "@/lib/pose/draw";
 import { landmarksToKeypoints } from "@/lib/pose/keypoints";
 import { CameraSettingsBar } from "@/components/camera-settings-bar";
 import { loadCameraPrefs, setLens, toggleFacing } from "@/lib/camera/prefs";
+import { cameraStageFit } from "@/lib/camera/video-fit";
 import {
   getCameraVideoStream,
   readActiveFacingMode,
@@ -279,7 +280,7 @@ export function LiveRoutinePractice({ onBack }: { onBack: () => void }) {
           <PracticeStage
             videoRef={videoRef}
             canvasRef={canvasRef}
-            fit="contain"
+            fit={cameraStageFit(prefs)}
             mirrored={prefs.facing === "user"}
             className={shakeStage ? "animate-stage-shake" : undefined}
             overlay={
