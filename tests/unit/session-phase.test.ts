@@ -6,14 +6,8 @@ import {
 } from "@/lib/wushu/session-phase";
 import { sanDuanChangQuan } from "@/lib/wushu/routines/san-duan-chang-quan";
 import type { PoseKeypoint } from "@/lib/pose/types";
-import { KP } from "@/lib/pose/keypoints";
-
 function fakeKeypoints(): PoseKeypoint[] {
-  const pts: PoseKeypoint[] = [];
-  for (let i = 0; i <= 32; i++) {
-    pts.push({ x: 320, y: 240, score: 0.9, name: String(i) });
-  }
-  return pts;
+  return Array.from({ length: 33 }, () => ({ x: 320, y: 240, score: 0.9 }));
 }
 
 describe("live session FSM", () => {

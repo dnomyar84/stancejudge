@@ -1,5 +1,4 @@
-import { placeholderCanonical } from "./canonical";
-import { sanDuanChangQuan } from "./routines/san-duan-chang-quan";
+import { getCanonicalRoutine } from "./canonical-store";
 import {
   buildRoutineReport,
   collapseLegTimeline,
@@ -27,11 +26,7 @@ export function evaluateFramesAsSanDuanChangQuan(
   frames: FrameClassification[],
   studentDurationSec: number,
 ): SanDuanVideoEvaluation {
-  const canonical = placeholderCanonical(sanDuanChangQuan, {
-    youtubeId: null,
-    youtubeUrl: null,
-    label: "test-fixture",
-  });
+  const canonical = getCanonicalRoutine("san-duan-chang-quan");
 
   const { score: sequenceScore, wrongOrder } = sequenceOrderScore(
     canonical,

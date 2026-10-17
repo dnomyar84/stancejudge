@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +15,7 @@ import { getPoseLandmarker } from "@/lib/pose/landmarker-client";
 import { buildCanonicalFromFrames } from "@/lib/wushu/canonical";
 import { getReferenceVideo } from "@/lib/wushu/reference-videos";
 import { ROUTINES, getRoutinePackage } from "@/lib/wushu/routines";
+import { evaluateFramesAsSanDuanChangQuan } from "@/lib/wushu/evaluate-san-duan";
 import { sampleVideoPoses } from "@/lib/wushu/sequence";
 import { parseYouTubeVideoId } from "@/lib/youtube";
 import { Loader2, Upload } from "lucide-react";
@@ -22,6 +23,11 @@ import { Loader2, Upload } from "lucide-react";
 export function CalibrateRoutine() {
   const searchParams = useSearchParams();
   const initialId = searchParams.get("routine") ?? ROUTINES[0].id;
+  const testHarness = searchParams.get("test") === "1";
+
+  useEffect(() => {
+    document.body.dataset.stanceJudgeHydrated = "1";
+  }, []);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -31,17 +37,57 @@ export function CalibrateRoutine() {
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [jsonOut, setJsonOut] = useState<string | null>(null);
+  const [evalOut, setEvalOut] = useState<string | null>(null);
   const [videoReady, setVideoReady] = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
 
   const { routine } = getRoutinePackage(routineId);
   const refVideo = getReferenceVideo(routineId);
 
-  const onFile = useCallback((file: File | null) => {
-    if (!file || !videoRef.current) return;
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !pendingFile) return;
     setJsonOut(null);
+    setEvalOut(null);
     setError(null);
-    videoRef.current.src = URL.createObjectURL(file);
     setVideoReady(false);
+    video.src = URL.createObjectURL(pendingFile);
+  }, [pendingFile]);
+
+  useEffect(() => {
+    const input = fileInputRef.current;
+    if (!input) return;
+    const onNativeChange = () => {
+      const file = input.files?.[0];
+      if (file) setPendingFile(file);
+    };
+    input.addEventListener("change", onNativeChange);
+    return () => input.removeEventListener("change", onNativeChange);
+  }, []);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    const markReady = () => setVideoReady(true);
+    video.addEventListener("loadeddata", markReady);
+    video.addEventListener("canplay", markReady);
+    return () => {
+      video.removeEventListener("loadeddata", markReady);
+      video.removeEventListener("canplay", markReady);
+    };
+  }, []);
+
+  const onFile = useCallback((file: File | null) => {
+    if (!file) return;
+    setPendingFile(file);
+  }, []);
+
+  const syncInputFile = useCallback(() => {
+    const input = document.querySelector<HTMLInputElement>(
+      "[data-testid=calibrate-file]",
+    );
+    const file = input?.files?.[0] ?? fileInputRef.current?.files?.[0];
+    if (file) setPendingFile(file);
   }, []);
 
   const run = useCallback(async () => {
@@ -73,6 +119,13 @@ export function CalibrateRoutine() {
         },
       );
       setJsonOut(JSON.stringify(canonical, null, 2));
+      if (routine.id === "san-duan-chang-quan") {
+        setEvalOut(
+          JSON.stringify(
+            evaluateFramesAsSanDuanChangQuan(frames, video.duration),
+          ),
+        );
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Calibration failed.");
     } finally {
@@ -82,6 +135,16 @@ export function CalibrateRoutine() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 px-4 py-8">
+      {testHarness && (
+        <button
+          type="button"
+          data-testid="calibrate-sync-input"
+          className="hidden"
+          onClick={syncInputFile}
+        >
+          Sync file input
+        </button>
+      )}
       <div>
         <h1 className="text-2xl font-semibold">Calibrate reference sequence</h1>
         <p className="mt-2 text-sm text-muted-foreground">
@@ -139,7 +202,10 @@ export function CalibrateRoutine() {
             type="file"
             accept="video/*"
             className="hidden"
-            onChange={(e) => onFile(e.target.files?.[0] ?? null)}
+            onChange={() => {
+              const file = fileInputRef.current?.files?.[0] ?? null;
+              onFile(file);
+            }}
           />
           <Button
             variant="outline"
@@ -154,7 +220,6 @@ export function CalibrateRoutine() {
             className="aspect-video w-full rounded-lg bg-black"
             controls
             playsInline
-            onLoadedData={() => setVideoReady(true)}
           />
           <Button
             data-testid="calibrate-run"
@@ -173,6 +238,12 @@ export function CalibrateRoutine() {
           )}
         </CardContent>
       </Card>
+
+      {evalOut && (
+        <pre data-testid="calibrate-eval" className="hidden">
+          {evalOut}
+        </pre>
+      )}
 
       {jsonOut && (
         <Card>

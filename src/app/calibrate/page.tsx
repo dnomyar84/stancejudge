@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { CalibrateRoutine } from "@/components/calibrate-routine";
+import { Suspense } from "react";
 
 export default function CalibratePage() {
-  const router = useRouter();
-  useEffect(() => {
-    router.replace("/admin/");
-  }, [router]);
-  return <div className="p-8 text-muted-foreground">Redirecting to admin…</div>;
+  return (
+    <Suspense fallback={<div className="p-8 text-muted-foreground">Loading…</div>}>
+      <CalibrateRoutine />
+    </Suspense>
+  );
 }

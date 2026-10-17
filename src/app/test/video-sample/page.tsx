@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { getPoseLandmarker } from "@/lib/pose/landmarker-client";
 import { evaluateFramesAsSanDuanChangQuan } from "@/lib/wushu/evaluate-san-duan";
 import { sampleVideoPoses } from "@/lib/wushu/sequence";
@@ -8,12 +8,26 @@ import { sampleVideoPoses } from "@/lib/wushu/sequence";
 /** Playwright-only harness: sample poses and score vs 三段长拳. */
 export default function VideoSampleTestPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
   const [result, setResult] = useState<string>("");
+  const [videoReady, setVideoReady] = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+
+  useEffect(() => {
+    document.body.dataset.stanceJudgeHydrated = "1";
+  }, []);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !pendingFile) return;
+    setVideoReady(false);
+    setResult("");
+    video.src = URL.createObjectURL(pendingFile);
+  }, [pendingFile]);
 
   const onFile = useCallback((file: File | null) => {
-    if (!file || !videoRef.current) return;
-    videoRef.current.src = URL.createObjectURL(file);
-    setResult("");
+    if (!file) return;
+    setPendingFile(file);
   }, []);
 
   const run = useCallback(async () => {
@@ -47,10 +61,11 @@ export default function VideoSampleTestPage() {
   return (
     <div className="p-4">
       <input
+        ref={fileRef}
         data-testid="video-file"
         type="file"
         accept="video/*"
-        onChange={(e) => onFile(e.target.files?.[0] ?? null)}
+        onChange={() => onFile(fileRef.current?.files?.[0] ?? null)}
       />
       <video
         ref={videoRef}
@@ -58,8 +73,11 @@ export default function VideoSampleTestPage() {
         className="max-w-md"
         muted
         playsInline
-        onLoadedData={() => {}}
+        onLoadedMetadata={() => setVideoReady(true)}
       />
+      <span data-testid="video-ready" aria-hidden="true">
+        {videoReady ? "1" : "0"}
+      </span>
       <button type="button" data-testid="video-run" onClick={run}>
         Run
       </button>

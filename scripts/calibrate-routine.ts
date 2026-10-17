@@ -78,7 +78,7 @@ async function main() {
   }
 
   const base = process.env.GITHUB_PAGES === "true" ? "/stancejudge" : "";
-  const appUrl = `http://127.0.0.1:4317${base}/calibrate/?routine=${routineId}`;
+  const appUrl = `http://127.0.0.1:4317${base}/calibrate/?routine=${routineId}&test=1`;
 
   console.log("Waiting for dev server…");
   await waitForServer(`http://127.0.0.1:4317${base}/`);
@@ -86,7 +86,20 @@ async function main() {
   const browser = await chromium.launch();
   const page = await browser.newPage();
   await page.goto(appUrl);
-  await page.getByTestId("calibrate-file").setInputFiles(videoPath);
+  const fileInput = page.getByTestId("calibrate-file");
+  await fileInput.setInputFiles(videoPath);
+  await page.getByTestId("calibrate-sync-input").evaluate((el) => {
+    (el as HTMLButtonElement).click();
+  });
+  await page.waitForFunction(
+    () => {
+      const btn = document.querySelector(
+        "[data-testid=calibrate-run]",
+      ) as HTMLButtonElement | null;
+      return btn && !btn.disabled;
+    },
+    { timeout: 180_000 },
+  );
   await page.getByTestId("calibrate-run").click();
   await page.getByTestId("calibrate-done").waitFor({ timeout: 600_000 });
   const json = await page.getByTestId("calibrate-json").textContent();
