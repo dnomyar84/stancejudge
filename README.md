@@ -95,8 +95,8 @@ Set repo variable `YOUTUBE_PROXY_URL` (e.g. `https://your-proxy.vercel.app/api/y
 | --- | --- |
 | [docs/README.md](docs/README.md) | Full documentation index |
 | [docs/product/features.md](docs/product/features.md) | Feature catalog (agent-friendly) |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | Contribute & update backlog |
-| [AGENTS.md](AGENTS.md) | Agent implementation guide |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | GitHub-only dev workflow |
+| [AGENTS.md](AGENTS.md) | Sole developer (agent) guide |
 
 ## Repo
 

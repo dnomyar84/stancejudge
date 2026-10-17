@@ -6,6 +6,7 @@ Read this file first, then implement from [`product/features.md`](./product/feat
 
 | Doc | Purpose |
 | --- | --- |
+| [product/governance.md](./product/governance.md) | Who reviews design vs who ships code |
 | [product/vision.md](./product/vision.md) | Who we build for, principles, success metrics |
 | [product/ux-flows.md](./product/ux-flows.md) | End-to-end journeys, screen map, states |
 | [product/ui-design-system.md](./product/ui-design-system.md) | Visual language, layout, motion, components |

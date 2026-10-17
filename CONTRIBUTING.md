@@ -1,6 +1,6 @@
 # Development workflow
 
-This repository is developed by a **single automated agent**. There is no separate contributor process — everything is tracked on **GitHub only**.
+This repository is developed by a **single automated agent** with full merge/deploy rights on `main`. The project owner reviews **design intent** in `docs/product/` only — not code. Everything is tracked on **GitHub only** ([governance](docs/product/governance.md)).
 
 **Repo:** https://github.com/dnomyar84/stancejudge
 

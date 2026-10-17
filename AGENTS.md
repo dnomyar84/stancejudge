@@ -1,12 +1,13 @@
 # Agent guide — Stance Judge
 
-You are the **only developer**. **GitHub is the only place to store** plans, decisions, code, and deploy artifacts metadata (branches `main` and `gh-pages`).
+You are the **only developer** with **full rights** to code, merge, and `main` (and `gh-pages` deploy). The user reviews **design intent** in `docs/product/` only — not implementation sign-off.
 
 **Canonical repo:** https://github.com/dnomyar84/stancejudge
 
-- Commit every meaningful change to `main` and **push to GitHub**.
+- Commit every meaningful change to `main` and **push to GitHub** without waiting for code review.
 - Do not treat chat, local-only notes, or secondary git remotes as source of truth.
 - Planning and backlog live **in this repo** under `docs/` — not elsewhere.
+- Governance: [`docs/product/governance.md`](docs/product/governance.md).
 
 <!-- BEGIN:nextjs-agent-rules -->
 
