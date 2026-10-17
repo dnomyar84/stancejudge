@@ -4,8 +4,8 @@
 
 | Role | Owner | Responsibility |
 | --- | --- | --- |
-| **Product / design intent** | Raymond (user) | Review vision, UX flows, UI direction, feature priorities in `docs/product/`. Feedback in chat or by editing docs on GitHub. |
-| **Implementation** | Cursor agent (sole developer) | All coding, tests, commits, merge to `main`, `gh-pages` deploy, backlog updates in `features.md`. |
+| **Product / design intent** | Raymond (user) | Review vision, UX flows, UI direction in `docs/product/`. Reprioritize via Issues labels/comments. |
+| **Implementation** | Cursor agent (sole developer) | Code, test, **GitHub Issues** (features + bugs), commits to `main`, deploy. Close issues when verified. |
 
 ## What the user does *not* gate
 
@@ -19,9 +19,15 @@
 - Changing priorities in `docs/product/roadmap.md` or feature order
 - Secrets/credentials (never in repo; user provides via secure channels if needed)
 
+## Backlog: Issues + docs
+
+- **GitHub Issues** = what to build/fix next ([workflow](./issues-workflow.md)).
+- **`features.md`** = stable F-### IDs and acceptance templates; link issue numbers when seeded.
+- Testing finds a problem → **open a bug issue**; iterate until milestone P1 issues are closed.
+
 ## Agent default when design is silent
 
-Follow `docs/product/features.md` priority order. If ambiguous, pick the smallest shippable slice that matches `vision.md` and `ui-design-system.md`, implement, push `main`, deploy `gh-pages` if UI changed.
+Pick highest-priority **open issue** (`priority:P1` first). If none, follow `features.md` for the next F-###. Implement, test, push `main`, close issue, deploy if UI changed.
 
 ## Changing this model
 

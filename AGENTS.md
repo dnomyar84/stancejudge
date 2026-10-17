@@ -22,16 +22,17 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 ## What to read first
 
 1. [`docs/README.md`](docs/README.md)
-2. [`docs/product/features.md`](docs/product/features.md) — pick highest **P** priority with status `planned` (or finish `in_progress`)
-3. UX: [`docs/product/ux-flows.md`](docs/product/ux-flows.md), [`live-practice-spec.md`](docs/product/live-practice-spec.md), [`routine-video-spec.md`](docs/product/routine-video-spec.md)
-4. UI: [`docs/product/ui-design-system.md`](docs/product/ui-design-system.md)
-5. Deploy: [`.github/DEPLOY.md`](.github/DEPLOY.md)
+2. **Open GitHub Issues** — [`docs/product/issues-workflow.md`](docs/product/issues-workflow.md) (`gh issue list --label priority:P1`)
+3. [`docs/product/features.md`](docs/product/features.md) — F-### IDs and specs when no issue exists yet
+4. UX: [`docs/product/ux-flows.md`](docs/product/ux-flows.md), [`live-practice-spec.md`](docs/product/live-practice-spec.md), [`routine-video-spec.md`](docs/product/routine-video-spec.md)
+5. UI: [`docs/product/ui-design-system.md`](docs/product/ui-design-system.md)
+6. Deploy: [`.github/DEPLOY.md`](.github/DEPLOY.md)
 
 ## Implementation conventions
 
 - **Stack:** Next.js static export, TypeScript, Tailwind, shadcn/ui, MediaPipe (client-only).
 - **Commands:** `npm run dev` (4317), `npm run build:pages`, `npm run preview:pages`.
-- **Features:** one `F-###` per change when possible; update status and checkboxes in `features.md` on `main`.
+- **Backlog:** file bugs as Issues when testing; close with `Fixes #n` in commit; sync `features.md` for F-### status.
 - **Secrets:** never commit tokens or PATs.
 
 ## Repo map

@@ -1,11 +1,11 @@
 # Feature catalog
 
-**Backlog on `main` only** (no external tracker).
+**Execution backlog: [GitHub Issues](https://github.com/dnomyar84/stancejudge/issues)** ([workflow](./issues-workflow.md)). This file is the **ID catalog** and spec reference.
 
-- Each feature has an **ID** (`F-###`), **priority** (P0–P3), **status**, and **acceptance criteria** (checkboxes).
-- Implement one feature (or one sub-slice) per commit series when possible.
-- When starting: set status → `in_progress`. When shipped: → `done` and check criteria on GitHub `main`.
-- Link code paths in **Implementation notes** when done.
+- Each feature has an **ID** (`F-###`), **priority** (P0–P3), and **acceptance criteria**.
+- Open/close work on Issues; reference `F-###` in the issue title.
+- When an issue closes, set **Status** here to `done` and note **Issue #** in Implementation notes.
+- Bugs from testing → new Issues (`type:bug`), not only chat.
 
 **Status values:** `planned` | `in_progress` | `done` | `deferred`
 

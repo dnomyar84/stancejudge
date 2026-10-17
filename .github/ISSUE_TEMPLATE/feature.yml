@@ -1,0 +1,41 @@
+name: Feature
+description: New capability or planned improvement (use F-### ID if listed in features.md)
+title: "[F-XXX] "
+labels: ["enhancement", "type:feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Link spec in `docs/product/` if it exists. Agent implements from open issues on `main`.
+  - type: input
+    id: feature_id
+    attributes:
+      label: Feature ID
+      description: e.g. F-010 (from docs/product/features.md)
+      placeholder: F-010
+    validations:
+      required: true
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - P1
+        - P2
+        - P3
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Checklist the agent can verify before closing
+      value: |
+        - [ ]
+    validations:
+      required: true
+  - type: textarea
+    id: spec
+    attributes:
+      label: Spec / notes
+      description: UX, files, dependencies

@@ -2,7 +2,7 @@
 
 **Stored only on GitHub:** https://github.com/dnomyar84/stancejudge (`main` branch).
 
-Read this file first, then implement from [`product/features.md`](./product/features.md) (highest-priority `planned` or `in_progress`). Commit doc updates with code on `main` — no external backlog.
+Read this file first. **Work from [GitHub Issues](https://github.com/dnomyar84/stancejudge/issues)** ([issues-workflow.md](./product/issues-workflow.md)); use [`product/features.md`](./product/features.md) for F-### specs.
 
 | Doc | Purpose |
 | --- | --- |
@@ -10,7 +10,8 @@ Read this file first, then implement from [`product/features.md`](./product/feat
 | [product/vision.md](./product/vision.md) | Who we build for, principles, success metrics |
 | [product/ux-flows.md](./product/ux-flows.md) | End-to-end journeys, screen map, states |
 | [product/ui-design-system.md](./product/ui-design-system.md) | Visual language, layout, motion, components |
-| [product/features.md](./product/features.md) | **Feature catalog** (IDs, priority, acceptance criteria) |
+| [product/issues-workflow.md](./product/issues-workflow.md) | Issues-driven iteration loop |
+| [product/features.md](./product/features.md) | Feature catalog (F-### IDs; Issues are backlog) |
 | [product/roadmap.md](./product/roadmap.md) | Phases and milestones |
 | [product/live-practice-spec.md](./product/live-practice-spec.md) | Live camera UX and UI requirements |
 | [product/routine-video-spec.md](./product/routine-video-spec.md) | Recorded routine / pose-rail UX |

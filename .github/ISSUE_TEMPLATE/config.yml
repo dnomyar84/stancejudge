@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Product vision & UX specs
+    url: https://github.com/dnomyar84/stancejudge/tree/main/docs/product
+    about: Design intent lives in docs/product (owner reviews here)
+  - name: Feature catalog (IDs)
+    url: https://github.com/dnomyar84/stancejudge/blob/main/docs/product/features.md
+    about: Stable feature IDs (F-###) referenced by issues

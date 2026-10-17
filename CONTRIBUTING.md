@@ -8,7 +8,8 @@ This repository is developed by a **single automated agent** with full merge/dep
 
 | What | Where |
 | --- | --- |
-| Product vision, UX, features, roadmap | `docs/product/` |
+| **Backlog (build/fix next)** | [GitHub Issues](https://github.com/dnomyar84/stancejudge/issues) |
+| Product vision, UX, feature IDs, roadmap | `docs/product/` |
 | Architecture & ADRs | `docs/architecture/`, `docs/decisions/` |
 | Implementation guide | `AGENTS.md` |
 | Deploy steps | `.github/DEPLOY.md` |
@@ -27,5 +28,6 @@ npm run preview:pages    # http://127.0.0.1:4322/stancejudge/
 ## Changing the product
 
 1. Edit or extend specs under `docs/product/` when the plan changes.
-2. Update [`docs/product/features.md`](docs/product/features.md) (ID, status, acceptance criteria).
-3. Implement on `main`, push to GitHub, deploy static site when needed (see `.github/DEPLOY.md`).
+2. Open or update a **GitHub Issue** (feature or bug); see [`docs/product/issues-workflow.md`](docs/product/issues-workflow.md).
+3. Update [`docs/product/features.md`](docs/product/features.md) when an F-### ships.
+4. Implement on `main`, close issues when verified, deploy when needed (`.github/DEPLOY.md`).
