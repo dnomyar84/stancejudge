@@ -4,10 +4,12 @@ Browser app for kids’ **Wushu** practice: compare a **student video** to a **k
 
 **Live site (GitHub Pages):** https://dnomyar84.github.io/stancejudge/
 
-## Routines
+## Routines (duanwei syllabus)
 
-- **三段长拳** San Duan Chang Quan  
-- **四段剑** Si Duan Jian  
+- **三段长拳** — 22-move duanwei changquan solo (起势 … 收势)  
+- **四段剑** — 32-form taiji sword (太极剑32式) + 起势 / 收势 on the pose rail  
+
+These are **武术段位制** exam forms, not IWUF optional-competition custom routines. Timing is refined from your champion calibration videos.
 
 ## How the known sequence is set
 
