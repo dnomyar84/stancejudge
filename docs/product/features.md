@@ -157,7 +157,7 @@
 ## P0 gameplay — Wushu DDR (owner-reviewed spec: [gameplay-ddr.md](./gameplay-ddr.md))
 
 ### F-037 Live per-move grades (Perfect / Good / Miss)
-- **Status:** `planned`
+- **Status:** `done`
 - **Priority:** P0 gameplay
 - **Acceptance:**
   - [ ] Active move window shows grade in real time (live + synced video play)

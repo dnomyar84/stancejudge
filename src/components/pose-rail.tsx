@@ -1,5 +1,6 @@
 "use client";
 
+import { PoseThumbnail } from "@/components/pose-thumbnail";
 import type { RailMove } from "@/lib/wushu/playback";
 import { cn } from "@/lib/utils";
 
@@ -24,8 +25,18 @@ export function PoseRail({ moves, scrollProgress, scanning }: PoseRailProps) {
             className="flex gap-2 px-3 transition-transform duration-150 ease-linear will-change-transform"
             style={{ transform: `translateX(-${translatePercent}%)` }}
           >
-            {moves.map((item) => (
-              <PoseChip key={item.move.id} item={item} />
+            {moves.map((item, index) => (
+              <PoseChip
+                key={item.move.id}
+                item={item}
+                showNextLabel={
+                  item.state === "upcoming" &&
+                  index > 0 &&
+                  (moves[index - 1]?.isActive ||
+                    moves[index - 1]?.state === "scanning" ||
+                    moves[index - 1]?.state === "active")
+                }
+              />
             ))}
           </div>
           <div
@@ -39,12 +50,22 @@ export function PoseRail({ moves, scrollProgress, scanning }: PoseRailProps) {
   );
 }
 
-function PoseChip({ item }: { item: RailMove }) {
+function PoseChip({
+  item,
+  showNextLabel,
+}: {
+  item: RailMove;
+  showNextLabel?: boolean;
+}) {
   const { move, state } = item;
+  const isNow =
+    item.isActive ||
+    state === "scanning" ||
+    state === "active";
   return (
     <div
       className={cn(
-        "flex min-w-[4.5rem] shrink-0 flex-col items-center rounded-md border px-1.5 py-1.5 text-center transition-colors md:min-w-[5.5rem]",
+        "flex min-w-[5.25rem] shrink-0 flex-col items-center rounded-md border px-1.5 py-1.5 text-center transition-colors md:min-w-[6.25rem]",
         state === "upcoming" && "border-border/50 bg-background/60 text-muted-foreground",
         item.isActive &&
           "scale-105 border-cyan-400 bg-cyan-950/50 ring-2 ring-cyan-400/60",
@@ -54,12 +75,33 @@ function PoseChip({ item }: { item: RailMove }) {
       )}
       title={move.name}
     >
+      <PoseThumbnail
+        leg={move.expectedLeg}
+        hand={move.expectedHand}
+        size={item.isActive ? 56 : 48}
+        highlight={item.isActive}
+        className="mb-1"
+      />
       <span className="text-[10px] font-medium leading-tight text-foreground/90">
         {move.nameZh}
       </span>
-      <span className="mt-0.5 line-clamp-2 text-[9px] leading-tight opacity-80">
-        {move.order > 0 ? move.order : "·"}
-      </span>
+      {isNow && (
+        <span className="mt-0.5 text-[9px] font-semibold uppercase tracking-wide text-cyan-300">
+          Now
+        </span>
+      )}
+      {showNextLabel && (
+        <span className="mt-0.5 text-[9px] uppercase tracking-wide text-muted-foreground">
+          Next
+        </span>
+      )}
+      {!isNow &&
+        !showNextLabel &&
+        state !== "scanning" && (
+          <span className="mt-0.5 text-[9px] leading-tight opacity-70">
+            {move.order > 0 ? `#${move.order}` : "·"}
+          </span>
+        )}
     </div>
   );
 }

@@ -1,0 +1,63 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+import { drawPose } from "@/lib/pose/draw";
+import { buildStanceTemplateKeypoints } from "@/lib/pose/stance-template";
+import type { HandProfileType, LegStanceType } from "@/lib/wushu/types";
+import { cn } from "@/lib/utils";
+
+type PoseThumbnailProps = {
+  leg: LegStanceType;
+  hand: HandProfileType;
+  size?: number;
+  className?: string;
+  highlight?: boolean;
+};
+
+export function PoseThumbnail({
+  leg,
+  hand,
+  size = 52,
+  className,
+  highlight,
+}: PoseThumbnailProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const px = Math.round(size * 2);
+    canvas.width = px;
+    canvas.height = px;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const template = buildStanceTemplateKeypoints(leg, hand);
+    const scaled = template.map((kp) =>
+      kp
+        ? {
+            ...kp,
+            x: (kp.x / 128) * px,
+            y: (kp.y / 128) * px,
+          }
+        : kp,
+    );
+
+    ctx.fillStyle = "rgba(0,0,0,0.35)";
+    ctx.fillRect(0, 0, px, px);
+    drawPose(ctx, scaled, px, px, false);
+  }, [hand, leg, size]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      aria-hidden
+      className={cn(
+        "rounded-md ring-1 ring-white/10",
+        highlight && "ring-cyan-400/70",
+        className,
+      )}
+      style={{ width: size, height: size }}
+    />
+  );
+}
