@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Stance Judge reference video fixtures",
+  "type": "object",
+  "required": ["version", "fixtures"],
+  "properties": {
+    "version": { "type": "integer", "minimum": 1 },
+    "fixtures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "routineId",
+          "relativePath",
+          "label",
+          "role",
+          "enabled"
+        ],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "routineId": {
+            "enum": ["san-duan-chang-quan", "si-duan-jian"]
+          },
+          "relativePath": { "type": "string", "minLength": 1 },
+          "label": { "type": "string" },
+          "sourceYouTubeUrl": { "type": "string" },
+          "role": { "enum": ["reference", "student"] },
+          "enabled": { "type": "boolean" },
+          "expect": { "type": "object" }
+        }
+      }
+    }
+  }
+}

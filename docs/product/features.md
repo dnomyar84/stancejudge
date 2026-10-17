@@ -2,6 +2,22 @@
 
 **Execution backlog: [GitHub Issues](https://github.com/dnomyar84/stancejudge/issues)** ([workflow](./issues-workflow.md)). This file is the **ID catalog** and spec reference.
 
+| ID | Issue |
+| --- | --- |
+| F-010 | [#1](https://github.com/dnomyar84/stancejudge/issues/1) |
+| F-011 | [#2](https://github.com/dnomyar84/stancejudge/issues/2) |
+| F-012 | [#3](https://github.com/dnomyar84/stancejudge/issues/3) |
+| F-013 | [#4](https://github.com/dnomyar84/stancejudge/issues/4) |
+| F-014 | [#5](https://github.com/dnomyar84/stancejudge/issues/5) |
+| F-015 | [#6](https://github.com/dnomyar84/stancejudge/issues/6) |
+| F-016 | [#7](https://github.com/dnomyar84/stancejudge/issues/7) |
+| F-017 | [#8](https://github.com/dnomyar84/stancejudge/issues/8) |
+| F-030 | [#9](https://github.com/dnomyar84/stancejudge/issues/9) |
+| T-01 | [#10](https://github.com/dnomyar84/stancejudge/issues/10) |
+| T-02 | [#11](https://github.com/dnomyar84/stancejudge/issues/11) |
+| T-03 | [#12](https://github.com/dnomyar84/stancejudge/issues/12) |
+| T-04 | [#13](https://github.com/dnomyar84/stancejudge/issues/13) |
+
 - Each feature has an **ID** (`F-###`), **priority** (P0–P3), and **acceptance criteria**.
 - Open/close work on Issues; reference `F-###` in the issue title.
 - When an issue closes, set **Status** here to `done` and note **Issue #** in Implementation notes.

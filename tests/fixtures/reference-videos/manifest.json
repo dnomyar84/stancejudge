@@ -1,0 +1,29 @@
+{
+  "$schema": "./manifest.schema.json",
+  "version": 1,
+  "description": "Register each uploaded reference MP4. Set enabled:true after the file exists in this repo.",
+  "fixtures": [
+    {
+      "id": "sdj-example-placeholder",
+      "routineId": "si-duan-jian",
+      "relativePath": "si-duan-jian/.gitkeep",
+      "label": "REPLACE: upload MP4 and update relativePath",
+      "sourceYouTubeUrl": "",
+      "role": "reference",
+      "enabled": false,
+      "expect": {
+        "notes": "Optional: minDurationSec, expectedMoveIds at timestamps — fill after calibration review"
+      }
+    },
+    {
+      "id": "sdcq-example-placeholder",
+      "routineId": "san-duan-chang-quan",
+      "relativePath": "san-duan-chang-quan/.gitkeep",
+      "label": "REPLACE: upload MP4 and update relativePath",
+      "sourceYouTubeUrl": "",
+      "role": "reference",
+      "enabled": false,
+      "expect": {}
+    }
+  ]
+}

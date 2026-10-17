@@ -10,6 +10,7 @@ Read this file first. **Work from [GitHub Issues](https://github.com/dnomyar84/s
 | [product/vision.md](./product/vision.md) | Who we build for, principles, success metrics |
 | [product/ux-flows.md](./product/ux-flows.md) | End-to-end journeys, screen map, states |
 | [product/ui-design-system.md](./product/ui-design-system.md) | Visual language, layout, motion, components |
+| [product/testing.md](./product/testing.md) | Unit tests + reference video fixtures |
 | [product/issues-workflow.md](./product/issues-workflow.md) | Issues-driven iteration loop |
 | [product/features.md](./product/features.md) | Feature catalog (F-### IDs; Issues are backlog) |
 | [product/roadmap.md](./product/roadmap.md) | Phases and milestones |

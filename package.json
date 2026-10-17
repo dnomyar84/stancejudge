@@ -10,7 +10,9 @@
     "generate-canonical": "tsx scripts/generate-canonical.ts",
     "calibrate": "tsx scripts/calibrate-routine.ts",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
@@ -27,14 +29,15 @@
   "devDependencies": {
     "@distube/ytdl-core": "^4.16.12",
     "@tailwindcss/turbopack": "^4",
-    "playwright": "^1.52.0",
-    "tsx": "^4.19.4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.4.2",
+    "playwright": "^1.52.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "tsx": "^4.19.4",
+    "typescript": "^5",
+    "vitest": "^3.2.7"
   }
 }

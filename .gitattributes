@@ -1,0 +1,4 @@
+# Reference videos for pose/routine tests (use Git LFS — see tests/fixtures/reference-videos/README.md)
+tests/fixtures/reference-videos/**/*.mp4 filter=lfs diff=lfs merge=lfs -text
+tests/fixtures/reference-videos/**/*.webm filter=lfs diff=lfs merge=lfs -text
+tests/fixtures/reference-videos/**/*.mov filter=lfs diff=lfs merge=lfs -text
