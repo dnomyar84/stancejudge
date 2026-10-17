@@ -9,13 +9,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Camera, FileVideo, Sparkles } from "lucide-react";
+import { BookOpen, Camera, FileVideo, Sparkles } from "lucide-react";
 
 export type PracticeMode =
   | "home"
   | "routine-video"
   | "live-stance"
-  | "live-routine";
+  | "live-routine"
+  | "syllabus";
 
 type PracticeHomeProps = {
   onSelect: (mode: Exclude<PracticeMode, "home">) => void;
@@ -97,6 +98,26 @@ export function PracticeHome({ onSelect }: PracticeHomeProps) {
           </CardContent>
         </Card>
       </div>
+
+      <Card
+        className="cursor-pointer border-border/80 transition hover:border-cyan-500/40"
+        onClick={() => onSelect("syllabus")}
+      >
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <BookOpen className="h-5 w-5 text-cyan-400" />
+            Syllabus
+          </CardTitle>
+          <CardDescription>
+            Official move list with leg and hand tags — 三段长拳 & 四段剑.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button type="button" variant="ghost" className="w-full sm:w-auto">
+            View 22 moves
+          </Button>
+        </CardContent>
+      </Card>
 
       <p className="text-center text-xs text-muted-foreground">
         Coaches:{" "}

@@ -1,52 +1,35 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Input } from "@/components/ui/input";
+import { LiveFullscreenShell } from "@/components/live-fullscreen-shell";
 import { PoseRail } from "@/components/pose-rail";
+import { RoutineAnalysisResults } from "@/components/routine-analysis-results";
+import { ReferenceVideoLink } from "@/components/reference-video-link";
 import { getPoseLandmarker } from "@/lib/pose/landmarker-client";
 import { ROUTINES, getRoutinePackage } from "@/lib/wushu/routines";
-import { ReferenceVideoLink } from "@/components/reference-video-link";
 import { getReferenceVideo } from "@/lib/wushu/reference-videos";
 import {
   buildRailFromReport,
   railScrollProgress,
 } from "@/lib/wushu/playback";
 import { analyzeRoutineVideo } from "@/lib/wushu/sequence";
-import type { MoveAlignmentStatus, RoutineAnalysisReport } from "@/lib/wushu/types";
-import { SYLLABUS_NOTES } from "@/lib/wushu/competition/sources";
+import type { RoutineAnalysisReport } from "@/lib/wushu/types";
 import { loadYouTubeAsBlobUrl } from "@/lib/load-youtube-video";
 import { isYouTubeUrl, normalizeYouTubeUrl } from "@/lib/youtube";
-import { FileVideo, Link2, Loader2, Upload } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import {
+  FileVideo,
+  Link2,
+  Loader2,
+  PanelBottomOpen,
+  Upload,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
-function moveStatusVariant(
-  status: MoveAlignmentStatus,
-): "default" | "secondary" | "destructive" | "outline" {
-  if (status === "correct") return "default";
-  if (status === "wrong_stance") return "secondary";
-  if (status === "wrong_sequence") return "outline";
-  return "destructive";
-}
-
-function moveStatusLabel(status: MoveAlignmentStatus): string {
-  if (status === "correct") return "Good";
-  if (status === "wrong_stance") return "Adjust form";
-  if (status === "wrong_sequence") return "Order";
-  return "Missed";
-}
-
-export function RoutineJudge() {
+export function RoutineJudge({ onBack }: { onBack?: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const objectUrlRef = useRef<string | null>(null);
@@ -64,6 +47,7 @@ export function RoutineJudge() {
   const [youtubeProgress, setYoutubeProgress] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [sourceOpen, setSourceOpen] = useState(true);
 
   const { routine, canonical } = getRoutinePackage(routineId);
   const scanComplete = report !== null && !scanning;
@@ -113,6 +97,7 @@ export function RoutineJudge() {
       );
       if (token === scanTokenRef.current) {
         setReport(result);
+        setSourceOpen(false);
       }
     } catch (e) {
       if (token === scanTokenRef.current) {
@@ -144,6 +129,7 @@ export function RoutineJudge() {
       setCurrentTime(0);
       setDuration(0);
       setError(null);
+      setSourceOpen(true);
     },
     [revokeObjectUrl],
   );
@@ -183,242 +169,206 @@ export function RoutineJudge() {
     }
   }, [youtubeUrl, attachVideoSrc]);
 
+  const subtitle = scanning
+    ? `Scanning ${Math.round(scanProgress * 100)}%`
+    : report
+      ? `Overall ${report.overallScore} · tap scores below`
+      : videoLabel ?? "Upload or stream your performance";
+
+  const showSourcePanel = sourceOpen && !scanning;
+
   return (
-    <>
-      {videoReady && (
-        <PoseRail
-          moves={railMoves}
-          scrollProgress={scrollProgress}
-          scanning={scanning}
-        />
-      )}
-
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-4 md:px-6">
-        <Alert className="border-cyan-500/30 bg-cyan-950/20">
-          <AlertTitle>Same pose engine as the live camera</AlertTitle>
-          <AlertDescription>
-            We do not use YouTube iframes. Reference is a thumbnail link or a
-            file in <code className="text-xs">public/</code>. Student clips use
-            upload or YouTube Stream (blob on <code className="text-xs">video</code>
-            ) — same MediaPipe path as the webcam.
-          </AlertDescription>
-        </Alert>
-
-        {!canonical.calibrated && (
-          <Alert>
-            <AlertTitle>Timing not locked to reference yet</AlertTitle>
-            <AlertDescription>
-              Move names follow the duanwei syllabus. Add champion YouTube URLs
-              in <code className="text-xs">reference-videos.json</code> and{" "}
-              <Link href="/admin/" className="text-cyan-400 underline">
-                Admin
-              </Link>{" "}
-              to sync windows.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        <div className="grid gap-6 lg:grid-cols-[1fr_1.1fr]">
-          <Card className="border-cyan-500/20">
-            <CardHeader>
-              <CardTitle>Routine & student video</CardTitle>
-              <CardDescription>
-                {routine.nameZh} · {canonical.moves.length} poses on the rail
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex flex-wrap gap-2">
-                {ROUTINES.map((r) => (
-                  <Button
-                    key={r.id}
-                    type="button"
-                    size="sm"
-                    variant={routineId === r.id ? "default" : "outline"}
-                    onClick={() => {
-                      setRoutineId(r.id);
-                      setReport(null);
-                    }}
-                  >
-                    {r.nameZh}
-                  </Button>
-                ))}
-              </div>
-
-              <div className="space-y-2">
-                <p className="text-sm font-medium">Reference (no iframe)</p>
-                <ReferenceVideoLink routineId={routineId} />
-              </div>
-
-              <div className="space-y-2">
-                <p className="text-sm font-medium">Student video — YouTube or file</p>
-                <div className="flex flex-wrap gap-2">
-                  <Input
-                    className="min-w-[12rem] flex-1"
-                    placeholder="youtube.com/watch?v=… (https optional)"
-                    value={youtubeUrl}
-                    onChange={(e) => setYoutubeUrl(e.target.value)}
+    <LiveFullscreenShell
+      onBack={onBack}
+      title="Routine video"
+      subtitle={subtitle}
+      topOverlay={
+        <>
+          {videoReady && (
+            <PoseRail
+              variant="overlay"
+              moves={railMoves}
+              scrollProgress={scrollProgress}
+              scanning={scanning}
+            />
+          )}
+          <div className="flex gap-2 overflow-x-auto px-3 pb-2 pt-1">
+            {ROUTINES.map((r) => (
+              <Button
+                key={r.id}
+                type="button"
+                size="sm"
+                disabled={scanning}
+                variant={routineId === r.id ? "default" : "secondary"}
+                className={cn(
+                  "shrink-0 rounded-full",
+                  routineId !== r.id && "bg-black/40 text-white hover:bg-black/55",
+                )}
+                onClick={() => {
+                  setRoutineId(r.id);
+                  setReport(null);
+                }}
+              >
+                {r.nameZh}
+              </Button>
+            ))}
+          </div>
+        </>
+      }
+      bottomPanel={
+        report
+          ? (
+              <RoutineAnalysisResults
+                variant="overlay"
+                routineNameZh={routine.nameZh}
+                report={report}
+              />
+            )
+          : showSourcePanel
+            ? (
+                <div className="space-y-3 rounded-2xl bg-black/60 p-4 backdrop-blur-md">
+                  <p className="text-xs text-white/70">
+                    Same pose engine as live camera — upload MP4 or stream YouTube
+                    (no iframe).
+                  </p>
+                  <ReferenceVideoLink routineId={routineId} />
+                  <div className="flex flex-wrap gap-2">
+                    <Input
+                      className="min-w-[10rem] flex-1 border-white/20 bg-black/40 text-white"
+                      placeholder="youtube.com/watch?v=…"
+                      value={youtubeUrl}
+                      onChange={(e) => setYoutubeUrl(e.target.value)}
+                    />
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      disabled={!getReferenceVideo(routineId)?.youtubeUrl?.trim()}
+                      onClick={() => {
+                        const ref = getReferenceVideo(routineId)?.youtubeUrl?.trim();
+                        if (ref) setYoutubeUrl(ref);
+                      }}
+                    >
+                      Coach link
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="gap-1"
+                      disabled={youtubeLoading}
+                      onClick={loadYouTube}
+                    >
+                      {youtubeLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Link2 className="h-4 w-4" />
+                      )}
+                      Stream
+                    </Button>
+                  </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="video/*"
+                    className="hidden"
+                    onChange={(e) => onFileChange(e.target.files?.[0] ?? null)}
                   />
                   <Button
                     type="button"
                     variant="outline"
-                    className="shrink-0"
-                    disabled={!getReferenceVideo(routineId)?.youtubeUrl?.trim()}
-                    onClick={() => {
-                      const ref = getReferenceVideo(routineId)?.youtubeUrl?.trim();
-                      if (ref) setYoutubeUrl(ref);
-                    }}
+                    className="w-full gap-2 border-white/25 bg-black/30 text-white"
+                    onClick={() => fileInputRef.current?.click()}
                   >
-                    Coach link
+                    <Upload className="h-4 w-4" />
+                    Upload MP4
                   </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    className="shrink-0 gap-2"
-                    disabled={youtubeLoading}
-                    onClick={loadYouTube}
-                  >
-                    {youtubeLoading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Link2 className="h-4 w-4" />
-                    )}
-                    Stream
-                  </Button>
-                </div>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="video/*"
-                  className="hidden"
-                  onChange={(e) => onFileChange(e.target.files?.[0] ?? null)}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="gap-2"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <Upload className="h-4 w-4" />
-                  Or upload MP4
-                </Button>
-                {youtubeLoading && (
-                  <Progress value={youtubeProgress * 100} className="h-1" />
-                )}
-              </div>
-
-              {videoLabel && (
-                <p className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <FileVideo className="h-3.5 w-3.5" />
-                  {videoLabel}
-                  {scanning && (
-                    <span className="text-amber-400">
-                      · scanning {Math.round(scanProgress * 100)}%
-                    </span>
+                  {youtubeLoading && (
+                    <Progress value={youtubeProgress * 100} className="h-1" />
                   )}
-                </p>
-              )}
-
-              {scanning && (
-                <Progress value={scanProgress * 100} className="h-1" />
-              )}
-
-              {error && (
-                <p className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                  {error}
-                </p>
-              )}
-
-              {videoReady && (
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="sm"
-                  disabled={scanning}
-                  onClick={startScan}
-                >
-                  Rescan poses
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card className="border-cyan-500/20">
-            <CardHeader>
-              <CardTitle>Play</CardTitle>
-              <CardDescription>
-                Watch the pose rail while the video runs.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="aspect-video overflow-hidden rounded-xl bg-black ring-1 ring-white/10">
-                <video
-                  ref={videoRef}
-                  className="h-full w-full object-contain"
-                  controls
-                  playsInline
-                  crossOrigin="anonymous"
-                  onLoadedData={() => setVideoReady(true)}
-                  onLoadedMetadata={(e) => {
-                    setDuration(e.currentTarget.duration);
-                  }}
-                  onTimeUpdate={(e) => {
-                    setCurrentTime(e.currentTarget.currentTime);
-                  }}
-                  onError={() => {
-                    setVideoReady(false);
-                    setError("This video could not be played in the browser.");
-                  }}
-                />
-              </div>
-            </CardContent>
-          </Card>
+                  {error && (
+                    <p className="text-xs text-red-300">{error}</p>
+                  )}
+                </div>
+              )
+            : undefined
+      }
+      bottomBar={
+        <div className="flex flex-col items-center gap-2">
+          {videoLabel && (
+            <p className="flex max-w-sm items-center gap-2 truncate text-xs text-white/70">
+              <FileVideo className="h-3.5 w-3.5 shrink-0" />
+              {videoLabel}
+            </p>
+          )}
+          {scanning && (
+            <Progress value={scanProgress * 100} className="h-1 w-full max-w-xs" />
+          )}
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            {videoReady && (
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                className="rounded-full bg-black/50 text-white"
+                disabled={scanning}
+                onClick={() => setSourceOpen((o) => !o)}
+              >
+                <PanelBottomOpen className="mr-1 h-4 w-4" />
+                Source
+              </Button>
+            )}
+            {videoReady && (
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                className="rounded-full bg-black/50 text-white"
+                disabled={scanning}
+                onClick={startScan}
+              >
+                Rescan
+              </Button>
+            )}
+            {report && (
+              <Badge className="bg-emerald-600/90 text-white">
+                {report.overallScore} overall
+              </Badge>
+            )}
+          </div>
         </div>
-
-        {report && (
-          <Card className="border-cyan-500/20">
-            <CardHeader>
-              <CardTitle>Summary — {routine.nameZh}</CardTitle>
-              <CardDescription>{report.summary}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid gap-4 sm:grid-cols-4">
-                <ScoreTile label="Overall" value={report.overallScore} />
-                <ScoreTile label="Sequence" value={report.sequenceScore} />
-                <ScoreTile label="Leg stance" value={report.legScore} />
-                <ScoreTile label="Hands / sword" value={report.handScore} />
-              </div>
-
-              <ol className="max-h-64 space-y-2 overflow-y-auto">
-                {report.moves.map((m) => (
-                  <li
-                    key={m.move.id}
-                    className="flex items-center justify-between gap-2 rounded-md border border-border/40 px-3 py-2 text-sm"
-                  >
-                    <span>
-                      {m.move.nameZh}{" "}
-                      <span className="text-muted-foreground">
-                        ({m.move.name})
-                      </span>
-                    </span>
-                    <Badge variant={moveStatusVariant(m.status)}>
-                      {moveStatusLabel(m.status)}
-                    </Badge>
-                  </li>
-                ))}
-              </ol>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-    </>
-  );
-}
-
-function ScoreTile({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="rounded-lg border border-border/60 bg-muted/30 px-3 py-2 text-center">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="text-2xl font-semibold tabular-nums">{value}</p>
-    </div>
+      }
+      stage={
+        <div className="relative h-full w-full bg-black">
+          <video
+            ref={videoRef}
+            className="h-full w-full object-contain"
+            controls
+            playsInline
+            crossOrigin="anonymous"
+            onLoadedData={() => setVideoReady(true)}
+            onLoadedMetadata={(e) => {
+              setDuration(e.currentTarget.duration);
+            }}
+            onTimeUpdate={(e) => {
+              setCurrentTime(e.currentTarget.currentTime);
+            }}
+            onError={() => {
+              setVideoReady(false);
+              setError("This video could not be played in the browser.");
+            }}
+          />
+          {!videoReady && !youtubeLoading && (
+            <div className="absolute inset-0 flex items-center justify-center p-6 text-center text-sm text-white/70">
+              Add a student video to score the pose rail
+            </div>
+          )}
+          {scanning && (
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/40">
+              <Loader2 className="h-10 w-10 animate-spin text-cyan-400" />
+            </div>
+          )}
+        </div>
+      }
+    />
   );
 }
