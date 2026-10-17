@@ -2,8 +2,10 @@ import referenceVideos from "@/data/reference-videos.json";
 import { parseYouTubeVideoId } from "@/lib/youtube";
 
 export type ReferenceVideoConfig = {
-  youtubeUrl: string;
-  label: string;
+  youtubeUrl?: string;
+  label?: string;
+  /** Path under public/, e.g. /refs/si-duan-jian.mp4 — native video element, no iframe */
+  localMp4?: string;
 };
 
 export function getReferenceVideo(
@@ -18,10 +20,4 @@ export function getReferenceYouTubeId(routineId: string): string | null {
   const ref = getReferenceVideo(routineId);
   if (!ref?.youtubeUrl) return null;
   return parseYouTubeVideoId(ref.youtubeUrl);
-}
-
-export function getReferenceEmbedUrl(routineId: string): string | null {
-  const id = getReferenceYouTubeId(routineId);
-  if (!id) return null;
-  return `https://www.youtube.com/embed/${id}`;
 }

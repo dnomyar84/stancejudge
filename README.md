@@ -64,7 +64,7 @@ npx serve out
 
 ## Student videos & YouTube links
 
-Pose detection needs a **real `<video>` element** you control (same as webcam or MP4 upload). A **YouTube iframe cannot** be read by JavaScript (browser security).
+The app **does not use YouTube iframes**. Reference is a thumbnail + link, or an MP4 under `public/`. Pose detection needs a **`<video>`** you control (upload, webcam, or streamed blob).
 
 Flow for a YouTube link:
 

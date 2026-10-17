@@ -16,10 +16,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { PoseRail } from "@/components/pose-rail";
 import { getPoseLandmarker } from "@/lib/pose/landmarker-client";
 import { ROUTINES, getRoutinePackage } from "@/lib/wushu/routines";
-import {
-  getReferenceEmbedUrl,
-  getReferenceVideo,
-} from "@/lib/wushu/reference-videos";
+import { ReferenceVideoLink } from "@/components/reference-video-link";
 import {
   buildRailFromReport,
   railScrollProgress,
@@ -68,9 +65,6 @@ export function RoutineJudge() {
   const [duration, setDuration] = useState(0);
 
   const { routine, canonical } = getRoutinePackage(routineId);
-  const refConfig = getReferenceVideo(routineId);
-  const embedUrl = getReferenceEmbedUrl(routineId);
-
   const scanComplete = report !== null && !scanning;
 
   const railMoves = useMemo(
@@ -202,12 +196,10 @@ export function RoutineJudge() {
         <Alert className="border-cyan-500/30 bg-cyan-950/20">
           <AlertTitle>Same pose engine as the live camera</AlertTitle>
           <AlertDescription>
-            Webcam, uploaded MP4, or a YouTube link (streamed into a hidden{" "}
-            <code className="text-xs">&lt;video&gt;</code> tag) all use the same
-            MediaPipe path — not the YouTube iframe. Paste a link, we fetch
-            video bytes, then pose + pose-rail work like a file. On GitHub Pages
-            you may need the small{" "}
-            <code className="text-xs">youtube-proxy</code> on Vercel.
+            We do not use YouTube iframes. Reference is a thumbnail link or a
+            file in <code className="text-xs">public/</code>. Student clips use
+            upload or YouTube Stream (blob on <code className="text-xs">video</code>
+            ) — same MediaPipe path as the webcam.
           </AlertDescription>
         </Alert>
 
@@ -252,23 +244,8 @@ export function RoutineJudge() {
               </div>
 
               <div className="space-y-2">
-                <p className="text-sm font-medium">Reference (YouTube)</p>
-                {embedUrl ? (
-                  <div className="aspect-video overflow-hidden rounded-lg ring-1 ring-white/10">
-                    <iframe
-                      title={refConfig?.label ?? "Reference routine"}
-                      src={embedUrl}
-                      className="h-full w-full"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    />
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    Add champion/coach URL in{" "}
-                    <code className="text-xs">reference-videos.json</code>.
-                  </p>
-                )}
+                <p className="text-sm font-medium">Reference (no iframe)</p>
+                <ReferenceVideoLink routineId={routineId} />
               </div>
 
               <div className="space-y-2">
