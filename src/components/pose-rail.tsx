@@ -95,13 +95,11 @@ function PoseChip({
           Next
         </span>
       )}
-      {!isNow &&
-        !showNextLabel &&
-        state !== "scanning" && (
-          <span className="mt-0.5 text-[9px] leading-tight opacity-70">
-            {move.order > 0 ? `#${move.order}` : "·"}
-          </span>
-        )}
+      {!isNow && !showNextLabel && (
+        <span className="mt-0.5 text-[9px] leading-tight opacity-70">
+          {move.order > 0 ? `#${move.order}` : "·"}
+        </span>
+      )}
     </div>
   );
 }
