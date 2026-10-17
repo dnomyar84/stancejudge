@@ -6,9 +6,16 @@ const YOUTUBE_HOSTS = [
   "m.youtube.com",
 ];
 
+export function normalizeYouTubeUrl(url: string): string {
+  const trimmed = url.trim();
+  if (!trimmed) return trimmed;
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  return `https://${trimmed.replace(/^\/\//, "")}`;
+}
+
 export function parseYouTubeVideoId(url: string): string | null {
   try {
-    const parsed = new URL(url.trim());
+    const parsed = new URL(normalizeYouTubeUrl(url));
     const host = parsed.hostname.replace(/^www\./, "");
     if (host === "youtu.be") {
       const id = parsed.pathname.slice(1).split("/")[0];
@@ -31,7 +38,7 @@ export function parseYouTubeVideoId(url: string): string | null {
 
 export function isYouTubeUrl(url: string): boolean {
   try {
-    const parsed = new URL(url.trim());
+    const parsed = new URL(normalizeYouTubeUrl(url));
     const host = parsed.hostname.replace(/^www\./, "");
     return YOUTUBE_HOSTS.some((h) => h.replace(/^www\./, "") === host);
   } catch {

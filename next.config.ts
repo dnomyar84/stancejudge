@@ -4,7 +4,8 @@ const isGitHubPages = process.env.GITHUB_PAGES === "true";
 const basePath = isGitHubPages ? "/stancejudge" : "";
 
 const nextConfig: NextConfig = {
-  output: "export",
+  // Static export only for GitHub Pages; local `npm run dev` keeps /api/youtube working.
+  ...(isGitHubPages ? { output: "export" as const } : {}),
   basePath,
   assetPrefix: basePath ? `${basePath}/` : undefined,
   images: { unoptimized: true },

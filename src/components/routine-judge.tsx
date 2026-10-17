@@ -17,6 +17,7 @@ import { PoseRail } from "@/components/pose-rail";
 import { getPoseLandmarker } from "@/lib/pose/landmarker-client";
 import { ROUTINES, getRoutinePackage } from "@/lib/wushu/routines";
 import { ReferenceVideoLink } from "@/components/reference-video-link";
+import { getReferenceVideo } from "@/lib/wushu/reference-videos";
 import {
   buildRailFromReport,
   railScrollProgress,
@@ -25,7 +26,7 @@ import { analyzeRoutineVideo } from "@/lib/wushu/sequence";
 import type { MoveAlignmentStatus, RoutineAnalysisReport } from "@/lib/wushu/types";
 import { SYLLABUS_NOTES } from "@/lib/wushu/competition/sources";
 import { loadYouTubeAsBlobUrl } from "@/lib/load-youtube-video";
-import { isYouTubeUrl } from "@/lib/youtube";
+import { isYouTubeUrl, normalizeYouTubeUrl } from "@/lib/youtube";
 import { FileVideo, Link2, Loader2, Upload } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
@@ -169,7 +170,7 @@ export function RoutineJudge() {
     setError(null);
     try {
       const { blobUrl, videoId } = await loadYouTubeAsBlobUrl(
-        youtubeUrl,
+        normalizeYouTubeUrl(youtubeUrl),
         (p) => {
           setYoutubeProgress(p.phase === "resolving" ? 0.05 : p.ratio);
         },
@@ -250,12 +251,25 @@ export function RoutineJudge() {
 
               <div className="space-y-2">
                 <p className="text-sm font-medium">Student video — YouTube or file</p>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Input
-                    placeholder="https://www.youtube.com/watch?v=…"
+                    className="min-w-[12rem] flex-1"
+                    placeholder="youtube.com/watch?v=… (https optional)"
                     value={youtubeUrl}
                     onChange={(e) => setYoutubeUrl(e.target.value)}
                   />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="shrink-0"
+                    disabled={!getReferenceVideo(routineId)?.youtubeUrl?.trim()}
+                    onClick={() => {
+                      const ref = getReferenceVideo(routineId)?.youtubeUrl?.trim();
+                      if (ref) setYoutubeUrl(ref);
+                    }}
+                  >
+                    Coach link
+                  </Button>
                   <Button
                     type="button"
                     variant="secondary"

@@ -5,9 +5,16 @@
  */
 import ytdl from "@distube/ytdl-core";
 
+function normalizeUrl(url) {
+  const t = String(url).trim();
+  if (!t) return t;
+  if (/^https?:\/\//i.test(t)) return t;
+  return `https://${t.replace(/^\/\//, "")}`;
+}
+
 function parseId(url) {
   try {
-    const u = new URL(url);
+    const u = new URL(normalizeUrl(url));
     if (u.hostname.includes("youtu.be")) return u.pathname.slice(1).split("/")[0];
     if (u.searchParams.get("v")) return u.searchParams.get("v");
   } catch {
@@ -17,7 +24,7 @@ function parseId(url) {
 }
 
 export default async function handler(req, res) {
-  const url = req.query.url;
+  const url = normalizeUrl(req.query.url ?? "");
   if (!url) {
     res.status(400).json({ error: "Missing url" });
     return;
