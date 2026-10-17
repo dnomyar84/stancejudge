@@ -16,6 +16,7 @@ const BONES: [number, number][] = [
   [KP.right_knee, KP.right_ankle],
 ];
 
+/** @param mirror Flip X in canvas pixel space (use when the video is not CSS-mirrored). */
 export function drawPose(
   ctx: CanvasRenderingContext2D,
   keypoints: PoseKeypoint[],

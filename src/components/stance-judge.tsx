@@ -154,7 +154,8 @@ export function StanceJudge() {
             const landmarks = result.landmarks[0];
             if (landmarks) {
               const keypoints = landmarksToKeypoints(landmarks, w, h);
-              drawPose(ctx, keypoints, w, h, true);
+              // Video + canvas use CSS mirror; MediaPipe coords stay in raw frame space.
+              drawPose(ctx, keypoints, w, h, false);
               setAnalysis(analyzeStance(keypoints, mode));
             }
           }
