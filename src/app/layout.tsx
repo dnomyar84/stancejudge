@@ -16,6 +16,13 @@ export const metadata: Metadata = {
   title: "Stance Judge — Wushu routine coach",
   description:
     "Browser-based pose coach for kids: routine sequence, leg stance, and hand/sword form from video or live camera.",
+  appleWebApp: { capable: true, title: "Stance Judge" },
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover" as const,
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

@@ -14,10 +14,13 @@ export async function getPoseLandmarker(): Promise<PoseLandmarker> {
         "@mediapipe/tasks-vision"
       );
       const vision = await FilesetResolver.forVisionTasks(WASM_BASE);
+      const isIOS =
+        typeof navigator !== "undefined" &&
+        /iPad|iPhone|iPod/.test(navigator.userAgent);
       return PoseLandmarker.createFromOptions(vision, {
         baseOptions: {
           modelAssetPath: MODEL_URL,
-          delegate: "GPU",
+          delegate: isIOS ? "CPU" : "GPU",
         },
         runningMode: "VIDEO",
         numPoses: 1,

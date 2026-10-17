@@ -1,33 +1,42 @@
 "use client";
 
-import Link from "next/link";
+import { useState } from "react";
+import { LiveRoutinePractice } from "@/components/live-routine-practice";
+import { PracticeHome, type PracticeMode } from "@/components/practice-home";
 import { RoutineJudge } from "@/components/routine-judge";
 import { StanceJudge } from "@/components/stance-judge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 
 export function WushuApp() {
+  const [mode, setMode] = useState<PracticeMode>("home");
+
+  if (mode === "home") {
+    return (
+      <div className="min-h-full bg-gradient-to-b from-background via-background to-cyan-950/20">
+        <PracticeHome onSelect={(m) => setMode(m)} />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-full bg-gradient-to-b from-background via-background to-cyan-950/20">
-      <div className="mx-auto max-w-6xl px-4 pt-6 md:px-6">
-        <p className="mb-4 text-center text-xs text-muted-foreground">
-          Coaches:{" "}
-          <Link href="/admin/" className="text-cyan-400 underline">
-            Admin / settings
-          </Link>{" "}
-          — upload reference video, calibrate sequence, save or export JSON.
-        </p>
-        <Tabs defaultValue="routine" className="gap-6">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
-            <TabsTrigger value="routine">Routine video</TabsTrigger>
-            <TabsTrigger value="live">Live practice</TabsTrigger>
-          </TabsList>
-          <TabsContent value="routine">
-            <RoutineJudge />
-          </TabsContent>
-          <TabsContent value="live">
-            <StanceJudge />
-          </TabsContent>
-        </Tabs>
+      <div className="mx-auto max-w-6xl px-4 pt-4 md:px-6">
+        {mode !== "live-routine" && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="mb-2"
+            onClick={() => setMode("home")}
+          >
+            ← Home
+          </Button>
+        )}
+        {mode === "routine-video" && <RoutineJudge />}
+        {mode === "live-stance" && <StanceJudge />}
+        {mode === "live-routine" && (
+          <LiveRoutinePractice onBack={() => setMode("home")} />
+        )}
       </div>
     </div>
   );

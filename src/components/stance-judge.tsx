@@ -18,6 +18,8 @@ import {
   type StanceCriterion,
   type StanceMode,
 } from "@/lib/pose/analyze";
+import { PracticeStage } from "@/components/practice-stage";
+import { useThrottledValue } from "@/lib/hooks/use-throttled-value";
 import { drawPose } from "@/lib/pose/draw";
 import { landmarksToKeypoints } from "@/lib/pose/keypoints";
 import { getPoseLandmarker } from "@/lib/pose/landmarker-client";
@@ -53,12 +55,13 @@ export function StanceJudge() {
   const [cameraOn, setCameraOn] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mode, setMode] = useState<StanceMode>("athletic");
-  const [analysis, setAnalysis] = useState<StanceAnalysis>({
+  const [analysisRaw, setAnalysisRaw] = useState<StanceAnalysis>({
     overall: 0,
     criteria: [],
     ready: false,
     headline: "Start the camera to begin judging your stance.",
   });
+  const analysis = useThrottledValue(analysisRaw, 120);
 
   const stopCamera = useCallback(() => {
     cancelAnimationFrame(rafRef.current);
@@ -156,7 +159,7 @@ export function StanceJudge() {
               const keypoints = landmarksToKeypoints(landmarks, w, h);
               // Video + canvas use CSS mirror; MediaPipe coords stay in raw frame space.
               drawPose(ctx, keypoints, w, h, false);
-              setAnalysis(analyzeStance(keypoints, mode));
+              setAnalysisRaw(analyzeStance(keypoints, mode));
             }
           }
         }
@@ -220,34 +223,29 @@ export function StanceJudge() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-black/80 ring-1 ring-white/10">
-              <video
-                ref={videoRef}
-                className="absolute inset-0 h-full w-full scale-x-[-1] object-cover"
-                playsInline
-                muted
-              />
-              <canvas
-                ref={canvasRef}
-                className="pointer-events-none absolute inset-0 h-full w-full scale-x-[-1] object-cover"
-              />
-              {!cameraOn && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/70 p-6 text-center">
-                  {loadState === "loading" ? (
-                    <>
-                      <Loader2 className="h-10 w-10 animate-spin text-cyan-400" />
+            <PracticeStage
+              videoRef={videoRef}
+              canvasRef={canvasRef}
+              fit="contain"
+              overlay={
+                !cameraOn ? (
+                  <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-black/70 p-6 text-center">
+                    {loadState === "loading" ? (
+                      <>
+                        <Loader2 className="h-10 w-10 animate-spin text-cyan-400" />
+                        <p className="text-sm text-muted-foreground">
+                          Loading pose model…
+                        </p>
+                      </>
+                    ) : (
                       <p className="text-sm text-muted-foreground">
-                        Loading pose model…
+                        Camera off. Start when you are ready to be scored.
                       </p>
-                    </>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">
-                      Camera off. Start when you are ready to be scored.
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
+                    )}
+                  </div>
+                ) : null
+              }
+            />
 
             {error && (
               <p className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
