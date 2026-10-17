@@ -20,12 +20,8 @@ import {
 } from "@/lib/pose/analyze";
 import { drawPose } from "@/lib/pose/draw";
 import { landmarksToKeypoints } from "@/lib/pose/keypoints";
+import { getPoseLandmarker } from "@/lib/pose/landmarker-client";
 import { Camera, CameraOff, Loader2 } from "lucide-react";
-
-const WASM_BASE =
-  "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm";
-const MODEL_URL =
-  "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task";
 
 type LoadState = "idle" | "loading" | "ready" | "error";
 
@@ -78,18 +74,7 @@ export function StanceJudge() {
     setLoadState("loading");
     setError(null);
     try {
-      const { FilesetResolver, PoseLandmarker } = await import(
-        "@mediapipe/tasks-vision"
-      );
-      const vision = await FilesetResolver.forVisionTasks(WASM_BASE);
-      const landmarker = await PoseLandmarker.createFromOptions(vision, {
-        baseOptions: {
-          modelAssetPath: MODEL_URL,
-          delegate: "GPU",
-        },
-        runningMode: "VIDEO",
-        numPoses: 1,
-      });
+      const landmarker = await getPoseLandmarker();
       landmarkerRef.current = landmarker;
       setLoadState("ready");
       return landmarker;

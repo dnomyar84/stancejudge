@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Stance Judge — Pose estimation",
+  title: "Stance Judge — Wushu routine coach",
   description:
-    "Real-time athletic and boxing stance feedback using in-browser pose estimation.",
+    "Browser-based pose coach for kids: routine sequence, leg stance, and hand/sword form from video or live camera.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
