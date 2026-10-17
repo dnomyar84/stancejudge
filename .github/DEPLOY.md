@@ -31,11 +31,13 @@ Or in **Cursor**: link the project to `dnomyar84/stancejudge` and push `main` (P
 ```bash
 npm ci
 npm run generate-canonical
-GITHUB_PAGES=true npm run build
-npx serve out -l 4322
+npm run build:pages
+npm run preview:pages
 ```
 
-Open http://localhost:4322/stancejudge/ — 四段剑 should show the `c1cgyuk-r7o` reference thumbnail and a **Coach link** button (not on older deploys).
+Open **http://127.0.0.1:4322/stancejudge/** (not `/` at the server root). The export uses `basePath` `/stancejudge`, so `npx serve out` alone will 404 assets and look like an old app.
+
+四段剑 should show the `c1cgyuk-r7o` reference thumbnail and a **Coach link** button.
 
 ## Cloud agent cannot push?
 
