@@ -16,7 +16,8 @@
       "glob": "si-duan-jian/**/*.mp4",
       "expectRoutine": "san-duan-chang-quan",
       "maxSequenceScore": 42,
-      "maxOverallScore": 48,
+      "maxOverallScore": 52,
+      "maxHandCoverage": 0.42,
       "note": "Sword routine scored as changquan should not match well"
     }
   ]

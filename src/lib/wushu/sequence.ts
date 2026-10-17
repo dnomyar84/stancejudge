@@ -17,6 +17,8 @@ import { landmarksToKeypoints } from "@/lib/pose/keypoints";
 import type { PoseLandmarker } from "@mediapipe/tasks-vision";
 
 const SAMPLE_INTERVAL_SEC = 0.45;
+const MIN_SAMPLE_INTERVAL_SEC = 0.35;
+const MAX_SAMPLE_FRAMES = 100;
 const MAX_VIDEO_SEC = 600;
 
 function waitForSeek(video: HTMLVideoElement): Promise<void> {
@@ -49,10 +51,14 @@ export async function sampleVideoPoses(
 
   video.pause();
   const frames: FrameClassification[] = [];
-  const steps = Math.max(1, Math.ceil(duration / SAMPLE_INTERVAL_SEC));
+  const interval = Math.max(
+    MIN_SAMPLE_INTERVAL_SEC,
+    Math.min(SAMPLE_INTERVAL_SEC, duration / MAX_SAMPLE_FRAMES),
+  );
+  const steps = Math.max(1, Math.ceil(duration / interval));
 
   for (let i = 0; i <= steps; i++) {
-    const timeSec = Math.min(i * SAMPLE_INTERVAL_SEC, duration);
+    const timeSec = Math.min(i * interval, duration);
     video.currentTime = timeSec;
     await waitForSeek(video);
 
@@ -132,30 +138,50 @@ export function collapseLegTimeline(
   return out;
 }
 
+/** Consecutive duplicate stances in the syllabus count as one beat for order matching. */
+export function collapseExpectedLegSequence(
+  moves: { expectedLeg: FrameClassification["leg"] }[],
+): FrameClassification["leg"][] {
+  const out: FrameClassification["leg"][] = [];
+  for (const m of moves) {
+    if (m.expectedLeg === "unknown" || m.expectedLeg === "walking") continue;
+    if (out[out.length - 1] === m.expectedLeg) continue;
+    out.push(m.expectedLeg);
+  }
+  return out;
+}
+
 export function sequenceOrderScore(
   canonical: CanonicalRoutine,
   frames: FrameClassification[],
 ): { score: number; wrongOrder: number } {
-  const expected = canonical.moves.map((m) => m.expectedLeg);
+  const expected = collapseExpectedLegSequence(canonical.moves);
   const detected = collapseLegTimeline(frames).map((s) => s.leg);
-  if (detected.length === 0) return { score: 0, wrongOrder: expected.length };
+  if (detected.length === 0 || expected.length === 0) {
+    return { score: 0, wrongOrder: expected.length };
+  }
 
-  let matched = 0;
-  let wrongOrder = 0;
-  let d = 0;
-  for (const exp of expected) {
-    while (d < detected.length && detected[d] !== exp) {
-      wrongOrder++;
-      d++;
+  const n = detected.length;
+  const prev = new Array<number>(n + 1).fill(0);
+  const curr = new Array<number>(n + 1).fill(0);
+  let lcs = 0;
+  for (let i = 1; i <= expected.length; i++) {
+    for (let j = 1; j <= n; j++) {
+      if (expected[i - 1] === detected[j - 1]) {
+        curr[j] = prev[j - 1] + 1;
+      } else {
+        curr[j] = Math.max(prev[j], curr[j - 1]);
+      }
     }
-    if (d < detected.length) {
-      matched++;
-      d++;
+    if (i === expected.length) lcs = curr[n];
+    for (let j = 0; j <= n; j++) {
+      prev[j] = curr[j];
+      curr[j] = 0;
     }
   }
-  const missed = expected.length - matched;
-  wrongOrder += missed;
-  const score = Math.round((matched / expected.length) * 100);
+
+  const score = Math.round((lcs / expected.length) * 100);
+  const wrongOrder = expected.length - lcs;
   return { score, wrongOrder };
 }
 

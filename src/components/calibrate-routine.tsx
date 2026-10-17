@@ -43,6 +43,10 @@ export function CalibrateRoutine() {
 
   const { routine } = getRoutinePackage(routineId);
   const refVideo = getReferenceVideo(routineId);
+  const sampleWeapon: "unarmed" | "jian" =
+    testHarness && searchParams.get("sampleWeapon") === "jian"
+      ? "jian"
+      : routine.weapon;
 
   useEffect(() => {
     const video = videoRef.current;
@@ -104,7 +108,7 @@ export function CalibrateRoutine() {
       const frames = await sampleVideoPoses(
         video,
         landmarker,
-        routine.weapon,
+        sampleWeapon,
         setProgress,
       );
       const youtubeUrl = refVideo?.youtubeUrl?.trim() || null;

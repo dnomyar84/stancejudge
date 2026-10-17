@@ -2,6 +2,55 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+@keyframes juice-flash {
+  0% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes grade-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.6) translateY(12px);
+  }
+  35% {
+    opacity: 1;
+    transform: scale(1.08) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1) translateY(-8px);
+  }
+}
+
+@keyframes stage-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  75% {
+    transform: translateX(4px);
+  }
+}
+
+@utility animate-juice-flash {
+  animation: juice-flash 0.45s ease-out forwards;
+}
+
+@utility animate-grade-pop {
+  animation: grade-pop 0.65s ease-out forwards;
+}
+
+@utility animate-stage-shake {
+  animation: stage-shake 0.35s ease-in-out;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

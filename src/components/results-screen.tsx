@@ -32,6 +32,14 @@ export function ResultsScreen({
   const good = grades.filter((g) => g.grade === "good").length;
   const miss = grades.filter((g) => g.grade === "miss").length;
   const attempted = perfect + good + miss;
+  const rank =
+    perfect >= routine.moves.length * 0.7
+      ? "S"
+      : perfect + good >= routine.moves.length * 0.6
+        ? "A"
+        : attempted > 0
+          ? "B"
+          : "—";
   return (
     <Card className="border-cyan-500/25">
       <CardHeader>
@@ -43,8 +51,14 @@ export function ResultsScreen({
       <CardContent className="space-y-6">
         <div className="flex flex-wrap items-end gap-6">
           <div>
+            <p className="text-sm text-muted-foreground">Rank</p>
+            <p className="text-5xl font-black tabular-nums text-cyan-300">
+              {rank}
+            </p>
+          </div>
+          <div>
             <p className="text-sm text-muted-foreground">Score</p>
-            <p className="text-5xl font-bold tabular-nums text-emerald-400">
+            <p className="text-4xl font-bold tabular-nums text-emerald-400">
               {Math.round(session.totalPoints)}
             </p>
           </div>

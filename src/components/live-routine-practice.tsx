@@ -5,6 +5,7 @@ import type { PoseLandmarker } from "@mediapipe/tasks-vision";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GradeFloater } from "@/components/grade-floater";
+import { ScreenJuice } from "@/components/screen-juice";
 import { PoseRail } from "@/components/pose-rail";
 import { PracticeStage } from "@/components/practice-stage";
 import { ResultsScreen } from "@/components/results-screen";
@@ -50,10 +51,14 @@ export function LiveRoutinePractice({ onBack }: { onBack: () => void }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [session, setSession] = useState<LiveSessionState>(initialLiveSession());
-  const [floater, setFloater] = useState<{ text: string | null; grade: "perfect" | "good" | "miss" | null }>({
-    text: null,
-    grade: null,
-  });
+  const [floater, setFloater] = useState<{
+    text: string | null;
+    grade: "perfect" | "good" | "miss" | null;
+  }>({ text: null, grade: null });
+  const [juiceGrade, setJuiceGrade] = useState<
+    "perfect" | "good" | "miss" | null
+  >(null);
+  const [shakeStage, setShakeStage] = useState(false);
 
   const { routine, canonical } = getRoutinePackage(routineId);
   const phase: PracticePhase =
@@ -175,10 +180,15 @@ export function LiveRoutinePractice({ onBack }: { onBack: () => void }) {
                   text: out.floaterText,
                   grade: out.gradeFlash,
                 });
-                window.setTimeout(
-                  () => setFloater({ text: null, grade: null }),
-                  600,
-                );
+                setJuiceGrade(out.gradeFlash);
+                if (out.gradeFlash === "miss") {
+                  setShakeStage(true);
+                  window.setTimeout(() => setShakeStage(false), 380);
+                }
+                window.setTimeout(() => {
+                  setFloater({ text: null, grade: null });
+                  setJuiceGrade(null);
+                }, 700);
               }
               setSession(
                 out.phase === "complete" ? { ...out, phase: "review" } : out,
@@ -237,7 +247,13 @@ export function LiveRoutinePractice({ onBack }: { onBack: () => void }) {
           <span className="text-muted-foreground">
             {" "}
             · move {session.moveIndex + 1}/{canonical.moves.length}
-            {session.combo > 1 && ` · combo ×${session.combo}`}
+            {session.combo > 1 && (
+              <span className="text-amber-300/90">
+                {" "}
+                · combo ×{session.combo}
+                {session.combo >= 3 ? " 🔥" : ""}
+              </span>
+            )}
           </span>
         )}
       </p>
@@ -252,9 +268,19 @@ export function LiveRoutinePractice({ onBack }: { onBack: () => void }) {
             canvasRef={canvasRef}
             fit="contain"
             mirrored={prefs.facing === "user"}
+            className={shakeStage ? "animate-stage-shake" : undefined}
             overlay={
               <>
+                <ScreenJuice grade={juiceGrade} />
                 <GradeFloater text={floater.text} grade={floater.grade} />
+                {session.phase === "performing" && session.combo >= 2 && (
+                  <div
+                    className="pointer-events-none absolute right-3 top-3 z-20 rounded-full bg-black/50 px-3 py-1 text-sm font-bold tabular-nums text-amber-300 ring-1 ring-amber-400/40"
+                    aria-live="polite"
+                  >
+                    ×{session.combo}
+                  </div>
+                )}
                 {!cameraOn && (
                   <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/70 p-4 text-center text-sm text-muted-foreground">
                     {loading ? (

@@ -165,55 +165,55 @@
   - [ ] `GradeFloater` component per [ui-design-system.md](./ui-design-system.md)
 
 ### F-038 Stance depth penalty (not low enough)
-- **Status:** `planned`
+- **Status:** `in_progress`
 - **Priority:** P0 gameplay
 - **Acceptance:**
   - [ ] Knee/hip metrics vs per-stance thresholds → Good vs LOW/Miss
   - [ ] Visible `DepthMeter` + penalty floater when shallow
 
 ### F-039 Combo streak & multiplier
-- **Status:** `planned`
+- **Status:** `done`
 - **Priority:** P1 gameplay
 - **Acceptance:**
   - [ ] Consecutive Good/Perfect increases multiplier
   - [ ] Miss breaks combo with clear animation
 
 ### F-040 Reward juice (VFX)
-- **Status:** `planned`
+- **Status:** `in_progress`
 - **Priority:** P1 gameplay
 - **Acceptance:**
   - [ ] Perfect/Good: screen pulse, chip burst, +points floater
   - [ ] `prefers-reduced-motion` disables particles
 
 ### F-041 Penalty juice (VFX)
-- **Status:** `planned`
+- **Status:** `in_progress`
 - **Priority:** P1 gameplay
 - **Acceptance:**
   - [ ] Miss/wrong move: red flash, chip shake, combo break
   - [ ] Wrong move vs shallow stance visually distinct
 
 ### F-042 Detect routine **start** (first move / 起势 / respect)
-- **Status:** `planned`
+- **Status:** `done`
 - **Priority:** P0 gameplay
 - **Acceptance:**
   - [ ] Canonical `routineBoundary: start` on first move(s)
   - [ ] Stable pose match → session `Performing`, scoring/timer starts
 
 ### F-043 Detect routine **end** (收势 / closing respect)
-- **Status:** `planned`
+- **Status:** `done`
 - **Priority:** P0 gameplay
 - **Acceptance:**
   - [ ] Last move stable match → session `Complete`, stop live grading
 
 ### F-044 Session state machine (Ready → Performing → Complete → Review)
-- **Status:** `planned`
+- **Status:** `done`
 - **Priority:** P0 gameplay
 - **Acceptance:**
   - [ ] UI banner per phase; no score before start
   - [ ] Shared between live DDR and video play modes
 
 ### F-045 Results / score review screen
-- **Status:** `planned`
+- **Status:** `in_progress`
 - **Priority:** P0 gameplay
 - **Acceptance:**
   - [ ] Total score + per-move grade table after Complete
@@ -222,7 +222,7 @@
   - [ ] Supersedes minimal F-021 scope
 
 ### F-046 Live DDR mode (camera + pose rail + grades)
-- **Status:** `planned`
+- **Status:** `done`
 - **Priority:** P0 gameplay
 - **Acceptance:**
   - [ ] Extends F-030: rail + F-037 grades on webcam

@@ -87,10 +87,13 @@ async function waitHydrated(page: import("playwright").Page) {
 async function evaluateSanDuanFile(
   browser: Awaited<ReturnType<typeof chromium.launch>>,
   filePath: string,
+  options?: { sampleWeapon?: "unarmed" | "jian" },
 ): Promise<EvalResult> {
   const page = await browser.newPage();
   page.setDefaultTimeout(180_000);
-  const url = `${ORIGIN}/calibrate/?routine=san-duan-chang-quan&test=1`;
+  const weaponQ =
+    options?.sampleWeapon === "jian" ? "&sampleWeapon=jian" : "";
+  const url = `${ORIGIN}/calibrate/?routine=san-duan-chang-quan&test=1${weaponQ}`;
   await page.goto(url, { waitUntil: "domcontentloaded" });
   await waitHydrated(page);
   const fileInput = page.getByTestId("calibrate-file");
@@ -145,7 +148,7 @@ async function main() {
     try {
       const ev = await evaluateSanDuanFile(browser, file);
       console.log(
-        `  sequence=${ev.sequenceScore} overall=${ev.overallScore} legCov=${(ev.legCoverage * 100).toFixed(0)}% frames=${ev.frameCount}`,
+        `  sequence=${ev.sequenceScore} overall=${ev.overallScore} legCov=${(ev.legCoverage * 100).toFixed(0)}% handCov=${(ev.handCoverage * 100).toFixed(0)}% frames=${ev.frameCount}`,
       );
       if (ev.frameCount < 5) {
         console.error("  FAIL: too few pose frames");
@@ -171,8 +174,12 @@ async function main() {
     const rel = relative(VIDEO_ROOT, file);
     console.log(`\n[四段剑 − vs 长拳] ${rel}`);
     try {
-      const ev = await evaluateSanDuanFile(browser, file);
-      console.log(`  sequence=${ev.sequenceScore} overall=${ev.overallScore}`);
+      const ev = await evaluateSanDuanFile(browser, file, {
+        sampleWeapon: "jian",
+      });
+      console.log(
+        `  sequence=${ev.sequenceScore} overall=${ev.overallScore} handCov=${(ev.handCoverage * 100).toFixed(0)}%`,
+      );
       if (
         ev.sequenceScore > negativeCase.maxSequenceScore! &&
         ev.overallScore > negativeCase.maxOverallScore!
