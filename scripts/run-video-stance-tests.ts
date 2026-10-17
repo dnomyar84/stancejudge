@@ -14,6 +14,8 @@ const VIDEO_ROOT = join(ROOT, "tests/video");
 const PREVIEW_PORT = process.env.PREVIEW_PORT ?? "4322";
 const BASE = "/stancejudge";
 const ORIGIN = `http://127.0.0.1:${PREVIEW_PORT}${BASE}`;
+/** Skip Git LFS pointer stubs and broken uploads. */
+const MIN_VIDEO_BYTES = 10_000;
 
 type EvalResult = {
   sequenceScore: number;
@@ -31,7 +33,15 @@ function globMp4(dir: string): string[] {
     const p = join(dir, name);
     const st = statSync(p);
     if (st.isDirectory()) out.push(...globMp4(p));
-    else if (/\.(mp4|webm|mov)$/i.test(name)) out.push(p);
+    else if (/\.(mp4|webm|mov)$/i.test(name)) {
+      if (st.size < MIN_VIDEO_BYTES) {
+        console.warn(
+          `Skip ${relative(VIDEO_ROOT, p)} (${st.size} bytes — not a playable clip; use Git LFS or re-upload)`,
+        );
+      } else {
+        out.push(p);
+      }
+    }
   }
   return out;
 }

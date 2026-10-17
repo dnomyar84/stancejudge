@@ -29,7 +29,9 @@ Unit tests without video: `npm test`
 
 ## Scoring
 
-Videos are sampled every ~0.45s, poses classified, then compared to **三段长拳** canonical move order and syllabus legs/hands (`evaluate-san-duan.ts` uses `src/data/canonical/san-duan-chang-quan.json`).
+Videos are sampled on a coarse timeline plus **dense samples inside each move window**, then poses are classified in a **body-relative frame** and compared to **三段长拳** canonical timing (`src/data/canonical/san-duan-chang-quan.json`).
+
+Files under **10KB** are skipped in `test:video` (usually unfetched Git LFS pointers). Ensure `git lfs pull` for 1080p / sword fixtures.
 
 - **san-duan-chang-quan/** videos should score **high** sequence + coverage.
 - **si-duan-jian/** videos should score **low** when judged as changquan.
