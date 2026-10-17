@@ -32,7 +32,7 @@ import { ROUTINES, getRoutinePackage } from "@/lib/wushu/routines";
 import { sampleVideoPoses } from "@/lib/wushu/sequence";
 import type { CanonicalRoutine } from "@/lib/wushu/types";
 import { parseYouTubeVideoId } from "@/lib/youtube";
-import { isYouTubeUrl } from "@/lib/youtube";
+import { isYouTubeUrl, normalizeYouTubeUrl } from "@/lib/youtube";
 import referenceVideosBundled from "@/data/reference-videos.json";
 import { Link2, Loader2, Upload } from "lucide-react";
 
@@ -104,7 +104,9 @@ export function AdminSettings() {
     setBusy(true);
     setError(null);
     try {
-      const { blobUrl } = await loadYouTubeAsBlobUrl(youtubeUrl, (p) =>
+      const { blobUrl } = await loadYouTubeAsBlobUrl(
+        normalizeYouTubeUrl(youtubeUrl),
+        (p) =>
         setProgress(p.phase === "resolving" ? 0.05 : p.ratio),
       );
       attachVideo(blobUrl, "YouTube (blob on video)");
