@@ -62,9 +62,17 @@ npm run build:pages
 npx serve out
 ```
 
-## Student videos
+## Student videos & YouTube links
 
-On GitHub Pages there is **no server** — students **upload MP4/WebM** only. The reference plays via embedded YouTube.
+Pose detection needs a **real `<video>` element** you control (same as webcam or MP4 upload). A **YouTube iframe cannot** be read by JavaScript (browser security).
+
+Flow for a YouTube link:
+
+1. App calls a **small proxy** that returns MP4 bytes (built-in `/api/youtube` when running `npm run dev`, or `youtube-proxy/` on Vercel for GitHub Pages).
+2. Browser builds a **blob URL** and attaches it to `<video>`.
+3. **MediaPipe** runs `detectForVideo(video, …)` — identical pipeline to upload/camera.
+
+Set repo variable `YOUTUBE_PROXY_URL` (e.g. `https://your-proxy.vercel.app/api/youtube`) for Pages builds, or upload MP4 if you skip the proxy.
 
 ## Stack
 

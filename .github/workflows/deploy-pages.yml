@@ -25,7 +25,10 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run generate-canonical
+      - run: rm -rf src/app/api
       - run: GITHUB_PAGES=true npm run build
+        env:
+          NEXT_PUBLIC_YOUTUBE_PROXY: ${{ vars.YOUTUBE_PROXY_URL }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: ./out

@@ -27,7 +27,10 @@ import {
 import { analyzeRoutineVideo } from "@/lib/wushu/sequence";
 import type { MoveAlignmentStatus, RoutineAnalysisReport } from "@/lib/wushu/types";
 import { SYLLABUS_NOTES } from "@/lib/wushu/competition/sources";
-import { FileVideo, Loader2, Upload } from "lucide-react";
+import { loadYouTubeAsBlobUrl } from "@/lib/load-youtube-video";
+import { isYouTubeUrl } from "@/lib/youtube";
+import { FileVideo, Link2, Loader2, Upload } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 function moveStatusVariant(
   status: MoveAlignmentStatus,
@@ -58,6 +61,9 @@ export function RoutineJudge() {
   const [error, setError] = useState<string | null>(null);
   const [report, setReport] = useState<RoutineAnalysisReport | null>(null);
   const [videoLabel, setVideoLabel] = useState<string | null>(null);
+  const [youtubeUrl, setYoutubeUrl] = useState("");
+  const [youtubeLoading, setYoutubeLoading] = useState(false);
+  const [youtubeProgress, setYoutubeProgress] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
 
@@ -159,6 +165,29 @@ export function RoutineJudge() {
     [attachVideoSrc],
   );
 
+  const loadYouTube = useCallback(async () => {
+    if (!isYouTubeUrl(youtubeUrl)) {
+      setError("Paste a valid YouTube link for the student or reference clip.");
+      return;
+    }
+    setYoutubeLoading(true);
+    setYoutubeProgress(0);
+    setError(null);
+    try {
+      const { blobUrl, videoId } = await loadYouTubeAsBlobUrl(
+        youtubeUrl,
+        (p) => {
+          setYoutubeProgress(p.phase === "resolving" ? 0.05 : p.ratio);
+        },
+      );
+      attachVideoSrc(blobUrl, `YouTube ${videoId}`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "YouTube load failed.");
+    } finally {
+      setYoutubeLoading(false);
+    }
+  }, [youtubeUrl, attachVideoSrc]);
+
   return (
     <>
       {videoReady && (
@@ -171,12 +200,14 @@ export function RoutineJudge() {
 
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-4 md:px-6">
         <Alert className="border-cyan-500/30 bg-cyan-950/20">
-          <AlertTitle>Competition syllabus + pose game</AlertTitle>
+          <AlertTitle>Same pose engine as the live camera</AlertTitle>
           <AlertDescription>
-            {SYLLABUS_NOTES[routineId as keyof typeof SYLLABUS_NOTES]} Press
-            play on your upload — the pose strip scrolls left→right; green =
-            met, red = missed. Scanning runs in the background; keep going like
-            a game. Champion calibration videos will tighten timing.
+            Webcam, uploaded MP4, or a YouTube link (streamed into a hidden{" "}
+            <code className="text-xs">&lt;video&gt;</code> tag) all use the same
+            MediaPipe path — not the YouTube iframe. Paste a link, we fetch
+            video bytes, then pose + pose-rail work like a file. On GitHub Pages
+            you may need the small{" "}
+            <code className="text-xs">youtube-proxy</code> on Vercel.
           </AlertDescription>
         </Alert>
 
@@ -241,7 +272,28 @@ export function RoutineJudge() {
               </div>
 
               <div className="space-y-2">
-                <p className="text-sm font-medium">Student video (upload)</p>
+                <p className="text-sm font-medium">Student video — YouTube or file</p>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="https://www.youtube.com/watch?v=…"
+                    value={youtubeUrl}
+                    onChange={(e) => setYoutubeUrl(e.target.value)}
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="shrink-0 gap-2"
+                    disabled={youtubeLoading}
+                    onClick={loadYouTube}
+                  >
+                    {youtubeLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Link2 className="h-4 w-4" />
+                    )}
+                    Stream
+                  </Button>
+                </div>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -256,8 +308,11 @@ export function RoutineJudge() {
                   onClick={() => fileInputRef.current?.click()}
                 >
                   <Upload className="h-4 w-4" />
-                  Choose video & play
+                  Or upload MP4
                 </Button>
+                {youtubeLoading && (
+                  <Progress value={youtubeProgress * 100} className="h-1" />
+                )}
               </div>
 
               {videoLabel && (
@@ -310,6 +365,7 @@ export function RoutineJudge() {
                   className="h-full w-full object-contain"
                   controls
                   playsInline
+                  crossOrigin="anonymous"
                   onLoadedData={() => setVideoReady(true)}
                   onLoadedMetadata={(e) => {
                     setDuration(e.currentTarget.duration);
