@@ -1,5 +1,13 @@
 # Agent guide — Stance Judge
 
+You are the **only developer**. **GitHub is the only place to store** plans, decisions, code, and deploy artifacts metadata (branches `main` and `gh-pages`).
+
+**Canonical repo:** https://github.com/dnomyar84/stancejudge
+
+- Commit every meaningful change to `main` and **push to GitHub**.
+- Do not treat chat, local-only notes, or secondary git remotes as source of truth.
+- Planning and backlog live **in this repo** under `docs/` — not elsewhere.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 ## This is NOT the Next.js you know
@@ -10,35 +18,34 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- END:nextjs-agent-rules -->
 
-## Product source of truth
+## What to read first
 
-1. Start at [`docs/README.md`](docs/README.md).
-2. Pick work from [`docs/product/features.md`](docs/product/features.md) — highest **P** priority with status `planned` (or continue `in_progress`).
-3. Match UX to [`docs/product/ux-flows.md`](docs/product/ux-flows.md) and mode specs:
-   - Live: [`docs/product/live-practice-spec.md`](docs/product/live-practice-spec.md)
-   - Routine video: [`docs/product/routine-video-spec.md`](docs/product/routine-video-spec.md)
-4. Visuals: [`docs/product/ui-design-system.md`](docs/product/ui-design-system.md).
+1. [`docs/README.md`](docs/README.md)
+2. [`docs/product/features.md`](docs/product/features.md) — pick highest **P** priority with status `planned` (or finish `in_progress`)
+3. UX: [`docs/product/ux-flows.md`](docs/product/ux-flows.md), [`live-practice-spec.md`](docs/product/live-practice-spec.md), [`routine-video-spec.md`](docs/product/routine-video-spec.md)
+4. UI: [`docs/product/ui-design-system.md`](docs/product/ui-design-system.md)
+5. Deploy: [`.github/DEPLOY.md`](.github/DEPLOY.md)
 
 ## Implementation conventions
 
-- **Stack:** Next.js static export, TypeScript, Tailwind, shadcn/ui, MediaPipe client-only.
-- **Commands:** `npm run dev` (port 4317), `npm run build:pages`, `npm run preview:pages` (local Pages URL shape).
-- **Deploy:** push `main`; production site uses `gh-pages` branch or Actions (see `.github/DEPLOY.md`).
-- **Scope:** One feature ID per PR when possible; update feature checkboxes and status in `features.md`.
-- **No secrets** in repo; never commit PATs.
+- **Stack:** Next.js static export, TypeScript, Tailwind, shadcn/ui, MediaPipe (client-only).
+- **Commands:** `npm run dev` (4317), `npm run build:pages`, `npm run preview:pages`.
+- **Features:** one `F-###` per change when possible; update status and checkboxes in `features.md` on `main`.
+- **Secrets:** never commit tokens or PATs.
 
-## Repo map (quick)
+## Repo map
 
 | Area | Location |
 | --- | --- |
 | Routine video UI | `src/components/routine-judge.tsx` |
 | Live camera UI | `src/components/stance-judge.tsx` |
-| App shell / tabs | `src/components/wushu-app.tsx` |
+| App shell | `src/components/wushu-app.tsx` |
 | Coach admin | `src/components/admin-settings.tsx` |
 | Syllabus + canonical | `src/lib/wushu/`, `src/data/canonical/` |
+| All planning | `docs/` |
 
-## Testing expectations
+## Before finishing a task
 
-- Run `npm run build:pages` before claiming deploy readiness.
-- Live camera: verify skeleton aligns with mirrored preview (CSS mirror only, not `drawPose` mirror).
-- Routine: pose rail updates during playback after scan.
+- [ ] `npm run build:pages` passes
+- [ ] User-visible UI change → deploy `gh-pages` per `.github/DEPLOY.md`
+- [ ] `git push` to **github.com/dnomyar84/stancejudge** `main`

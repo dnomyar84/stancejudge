@@ -1,6 +1,6 @@
 # Stance Judge
 
-**Product & UX plan (for humans and coding agents):** [`docs/README.md`](docs/README.md) · [Feature catalog](docs/product/features.md) · [Roadmap](docs/product/roadmap.md)
+**All planning on GitHub:** [`docs/README.md`](docs/README.md) · [Features](docs/product/features.md) · [Roadmap](docs/product/roadmap.md) · [AGENTS.md](AGENTS.md)
 
 Browser app for kids’ **Wushu** practice: compare a **student video** to a **known sequence** from a coach’s **YouTube reference** — step order, leg stance, and hand/sword shape.
 

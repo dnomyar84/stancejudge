@@ -1,10 +1,10 @@
 # Feature catalog
 
-**Convention for agents**
+**Backlog on `main` only** (no external tracker).
 
 - Each feature has an **ID** (`F-###`), **priority** (P0–P3), **status**, and **acceptance criteria** (checkboxes).
-- Implement one feature (or one sub-slice) per PR when possible.
-- When starting: set status → `in_progress`. When merged: → `done` and check criteria.
+- Implement one feature (or one sub-slice) per commit series when possible.
+- When starting: set status → `in_progress`. When shipped: → `done` and check criteria on GitHub `main`.
 - Link code paths in **Implementation notes** when done.
 
 **Status values:** `planned` | `in_progress` | `done` | `deferred`

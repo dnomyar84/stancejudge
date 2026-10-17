@@ -1,6 +1,8 @@
 # Stance Judge — documentation index
 
-**Agents:** read this file first, then implement from [`product/features.md`](./product/features.md) (pick the highest-priority item with status `planned` or `in_progress`). Update feature status and acceptance checkboxes in the same PR.
+**Stored only on GitHub:** https://github.com/dnomyar84/stancejudge (`main` branch).
+
+Read this file first, then implement from [`product/features.md`](./product/features.md) (highest-priority `planned` or `in_progress`). Commit doc updates with code on `main` — no external backlog.
 
 | Doc | Purpose |
 | --- | --- |
@@ -12,9 +14,9 @@
 | [product/live-practice-spec.md](./product/live-practice-spec.md) | Live camera UX and UI requirements |
 | [product/routine-video-spec.md](./product/routine-video-spec.md) | Recorded routine / pose-rail UX |
 | [architecture/overview.md](./architecture/overview.md) | Technical boundaries (static, MediaPipe, data) |
-
+| [decisions/README.md](./decisions/README.md) | Architecture decision records (ADRs) |
 | [../.github/DEPLOY.md](../.github/DEPLOY.md) | GitHub Pages deploy & preview |
 | [../AGENTS.md](../AGENTS.md) | Coding agents: conventions + feature workflow |
-| [../CONTRIBUTING.md](../CONTRIBUTING.md) | How to propose changes and update the backlog |
+| [../CONTRIBUTING.md](../CONTRIBUTING.md) | Sole-developer workflow on GitHub |
 
-Human setup summary: repo root [`README.md`](../README.md).
+App setup summary: [`README.md`](../README.md).

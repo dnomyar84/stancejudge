@@ -1,46 +1,59 @@
 # Deploy to GitHub Pages
 
-Product docs and feature backlog: [`docs/README.md`](../docs/README.md).
+**Canonical repo (only place for code, docs, and planning):**  
+https://github.com/dnomyar84/stancejudge
 
-## Why you see 404
+Product docs: [`docs/README.md`](../docs/README.md).
 
-`https://dnomyar84.github.io/stancejudge/` only works after:
+## Live site
 
-1. **`main` contains this project** (repo must not be empty).
-2. **Settings → Pages → Source = GitHub Actions**.
-3. Workflow **Deploy GitHub Pages** completes successfully.
+https://dnomyar84.github.io/stancejudge/
 
-## Push code (one time)
+## Source branches
 
-From a machine logged into GitHub as **dnomyar84**:
+| Branch | Role |
+| --- | --- |
+| `main` | Application source, `docs/`, workflows |
+| `gh-pages` | Static `out/` export served by GitHub Pages (legacy source) |
+
+Settings → Pages should use the **`gh-pages`** branch (root `/`), as configured today.
+
+## Agent workflow (sole developer)
+
+1. Implement on `main`; update [`docs/product/features.md`](../docs/product/features.md) in the same commit when closing a feature.
+2. **Push `main`** to `github.com/dnomyar84/stancejudge` only.
+3. **Publish user-facing changes:**
+   ```bash
+   npm run generate-canonical   # if reference-videos.json changed
+   npm run build:pages
+   # deploy static export to gh-pages (from repo root):
+   rm -rf /tmp/stancejudge-pages && cp -a out /tmp/stancejudge-pages
+   cd /tmp/stancejudge-pages && git init -q && git add -A \
+     && git -c user.name="stancejudge" -c user.email="stancejudge@users.noreply.github.com" \
+     commit -q -m "Deploy $(git -C /workspace rev-parse --short HEAD)" \
+     && git branch -M gh-pages \
+     && git push -f https://github.com/dnomyar84/stancejudge.git gh-pages
+   ```
+4. Optional: fix **Settings → Environments → github-pages** so the Actions workflow can deploy without step 3.
+
+## Clone (any machine)
 
 ```bash
-git clone https://origin.cursor.com/git/esri-singapore/tmp-1412f656696e4dda.git stancejudge
+git clone https://github.com/dnomyar84/stancejudge.git
 cd stancejudge
-git remote add github https://github.com/dnomyar84/stancejudge.git
-git push -u github main
+npm install
+npm run dev
 ```
 
-Or in **Cursor**: link the project to `dnomyar84/stancejudge` and push `main` (Publish / Create repo flow).
-
-## After push
-
-1. Open **Actions** → **Deploy GitHub Pages** → confirm green check.
-2. Open **Settings → Pages** — URL should show `https://dnomyar84.github.io/stancejudge/`.
-
-## Local verify (same as CI)
+## Local verify (matches Pages)
 
 ```bash
-npm ci
-npm run generate-canonical
 npm run build:pages
 npm run preview:pages
 ```
 
-Open **http://127.0.0.1:4322/stancejudge/** (not `/` at the server root). The export uses `basePath` `/stancejudge`, so `npx serve out` alone will 404 assets and look like an old app.
+Open **http://127.0.0.1:4322/stancejudge/** — not the server root. `basePath` is `/stancejudge`.
 
-四段剑 should show the `c1cgyuk-r7o` reference thumbnail and a **Coach link** button.
+## GitHub Actions
 
-## Cloud agent cannot push?
-
-If `git push github main` fails with **401 / invalid token**, reconnect GitHub in **Cursor → Integrations** (repo + `workflow` scope for Actions), start a new agent or reply **retry push**. Code may still be on Cursor `origin` at the latest `main` commit.
+Workflow `.github/workflows/deploy-pages.yml` builds on push to `main`. If the **deploy** job fails on environment protection, use the `gh-pages` push above until `main` is allowed to deploy to the `github-pages` environment.
