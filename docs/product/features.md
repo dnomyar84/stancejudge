@@ -18,7 +18,17 @@
 | T-03 | [#12](https://github.com/dnomyar84/stancejudge/issues/12) |
 | T-04 | [#13](https://github.com/dnomyar84/stancejudge/issues/13) |
 | F-036 | [#14](https://github.com/dnomyar84/stancejudge/issues/14) |
-| F-037–F-047 | [#15–#25](https://github.com/dnomyar84/stancejudge/issues?q=is%3Aissue+is%3Aopen+F-037) (gameplay DDR) |
+| F-037 | [#15](https://github.com/dnomyar84/stancejudge/issues/15) |
+| F-038 | [#16](https://github.com/dnomyar84/stancejudge/issues/16) |
+| F-039 | [#17](https://github.com/dnomyar84/stancejudge/issues/17) |
+| F-040 | [#18](https://github.com/dnomyar84/stancejudge/issues/18) |
+| F-041 | [#19](https://github.com/dnomyar84/stancejudge/issues/19) |
+| F-042 | [#20](https://github.com/dnomyar84/stancejudge/issues/20) |
+| F-043 | [#21](https://github.com/dnomyar84/stancejudge/issues/21) |
+| F-044 | [#22](https://github.com/dnomyar84/stancejudge/issues/22) |
+| F-045 | [#23](https://github.com/dnomyar84/stancejudge/issues/23) |
+| F-046 | [#24](https://github.com/dnomyar84/stancejudge/issues/24) |
+| F-047 | [#25](https://github.com/dnomyar84/stancejudge/issues/25) |
 
 - Each feature has an **ID** (`F-###`), **priority** (P0–P3), and **acceptance criteria**.
 - Open/close work on Issues; reference `F-###` in the issue title.

@@ -7,6 +7,8 @@ Read this file first. **Work from [GitHub Issues](https://github.com/dnomyar84/s
 | Doc | Purpose |
 | --- | --- |
 | [product/governance.md](./product/governance.md) | Who reviews design vs who ships code |
+| [product/gameplay-ddr.md](./product/gameplay-ddr.md) | **DDR-style gameplay** (grades, juice, start/end, results) |
+| [product/backlog-gap-review.md](./product/backlog-gap-review.md) | User expectations vs open issues |
 | [product/vision.md](./product/vision.md) | Who we build for, principles, success metrics |
 | [product/ux-flows.md](./product/ux-flows.md) | End-to-end journeys, screen map, states |
 | [product/ui-design-system.md](./product/ui-design-system.md) | Visual language, layout, motion, components |

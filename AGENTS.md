@@ -48,6 +48,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ## Before finishing a task
 
-- [ ] `npm run build:pages` passes
+- [ ] `npm test` and `npm run build:pages` pass
+- [ ] Regressions: unit test or `tests/fixtures/reference-videos/` entry
 - [ ] User-visible UI change → deploy `gh-pages` per `.github/DEPLOY.md`
 - [ ] `git push` to **github.com/dnomyar84/stancejudge** `main`

@@ -56,6 +56,14 @@ Open **`/admin/`** on the site (optional `NEXT_PUBLIC_COACH_PIN` in the build):
 
 In the repo **Settings → Pages → Build and deployment**, choose **GitHub Actions** (workflow `Deploy GitHub Pages` is included).
 
+## Tests & reference videos
+
+Upload master MP4s for automated checks: [`tests/fixtures/reference-videos/README.md`](tests/fixtures/reference-videos/README.md) (use **Git LFS** for large files).
+
+```bash
+npm test
+```
+
 ## Local development
 
 ```bash
