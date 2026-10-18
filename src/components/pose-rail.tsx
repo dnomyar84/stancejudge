@@ -87,7 +87,7 @@ export function PoseRail({
             <span>
               {scanning
                 ? "Scanning… swipe rail to browse"
-                : "Swipe rail · drag a pose sideways to rotate view"}
+                : "Swipe rail · 3D coach view (feet on floor line)"}
             </span>
           </div>
         )}

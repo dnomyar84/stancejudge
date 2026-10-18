@@ -1,15 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
+import {
+  buildCoachFigureKeypoints,
+  coachFigureFloorY,
+} from "@/lib/pose/coach-figure";
 import { drawPose } from "@/lib/pose/draw";
 import { buildMoveTemplateKeypoints } from "@/lib/pose/move-pose-template";
 import { buildStanceTemplateKeypoints } from "@/lib/pose/stance-template";
-import {
-  defaultThumbnailYaw,
-  rotateKeypointsYaw,
-  THUMBNAIL_YAW_MAX,
-  THUMBNAIL_YAW_MIN,
-} from "@/lib/pose/view-yaw";
 import type { HandProfileType, LegStanceType } from "@/lib/wushu/types";
 import { cn } from "@/lib/utils";
 
@@ -21,8 +19,6 @@ type PoseThumbnailProps = {
   size?: number;
   className?: string;
   highlight?: boolean;
-  /** Allow horizontal drag on the chip to yaw the coach view. */
-  rotatable?: boolean;
 };
 
 export function PoseThumbnail({
@@ -33,19 +29,10 @@ export function PoseThumbnail({
   size = 52,
   className,
   highlight,
-  rotatable = true,
 }: PoseThumbnailProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const dragRef = useRef<{ x: number; yaw: number } | null>(null);
-  const [viewYaw, setViewYaw] = useState(() =>
-    defaultThumbnailYaw(leg, routineId, moveId),
-  );
 
   useEffect(() => {
-    setViewYaw(defaultThumbnailYaw(leg, routineId, moveId));
-  }, [leg, hand, moveId, routineId]);
-
-  const paint = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const px = Math.round(size * 2);
@@ -54,12 +41,18 @@ export function PoseThumbnail({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const template =
+    let template =
       routineId && moveId
         ? buildMoveTemplateKeypoints(routineId, moveId, leg, hand)
         : buildStanceTemplateKeypoints(leg, hand);
-    const yawed = rotateKeypointsYaw(template, viewYaw);
-    const scaled = yawed.map((kp) =>
+
+    const coach3d =
+      routineId && moveId
+        ? buildCoachFigureKeypoints(routineId, moveId)
+        : null;
+    if (coach3d) template = coach3d;
+
+    const scaled = template.map((kp) =>
       kp
         ? {
             ...kp,
@@ -71,50 +64,28 @@ export function PoseThumbnail({
 
     ctx.fillStyle = "rgba(0,0,0,0.35)";
     ctx.fillRect(0, 0, px, px);
+
+    const floorY = (coachFigureFloorY(128) / 128) * px;
+    ctx.strokeStyle = "rgba(255,255,255,0.18)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(px * 0.06, floorY);
+    ctx.lineTo(px * 0.94, floorY);
+    ctx.stroke();
+
     drawPose(ctx, scaled, px, px, false, { jointDots: "head-only" });
-  }, [hand, leg, moveId, routineId, size, viewYaw]);
-
-  useEffect(() => {
-    paint();
-  }, [paint]);
-
-  const onPointerDown = (e: React.PointerEvent) => {
-    if (!rotatable) return;
-    dragRef.current = { x: e.clientX, yaw: viewYaw };
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
-  };
-
-  const onPointerMove = (e: React.PointerEvent) => {
-    const drag = dragRef.current;
-    if (!drag) return;
-    const delta = e.clientX - drag.x;
-    const next = Math.min(
-      THUMBNAIL_YAW_MAX,
-      Math.max(THUMBNAIL_YAW_MIN, drag.yaw + delta * 0.55),
-    );
-    setViewYaw(next);
-  };
-
-  const onPointerUp = () => {
-    dragRef.current = null;
-  };
+  }, [hand, leg, moveId, routineId, size]);
 
   return (
     <canvas
       ref={canvasRef}
       aria-hidden
-      title={rotatable ? "Drag left/right to rotate coach view" : undefined}
       className={cn(
         "rounded-md ring-1 ring-white/10",
-        rotatable && "touch-none cursor-ew-resize",
         highlight && "ring-cyan-400/70",
         className,
       )}
       style={{ width: size, height: size }}
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      onPointerCancel={onPointerUp}
     />
   );
 }

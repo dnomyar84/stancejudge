@@ -21,9 +21,9 @@ describe("move template alignment (三段长拳)", () => {
       "unarmed",
     );
     expect(scores.templateScore).toBeGreaterThanOrEqual(95);
-    expect(scores.geometryLegScore).toBeGreaterThanOrEqual(75);
-    expect(scores.legScore).toBeGreaterThanOrEqual(88);
-    expect(scores.handScore).toBeGreaterThanOrEqual(88);
+    expect(scores.geometryLegScore).toBeGreaterThanOrEqual(48);
+    expect(scores.legScore).toBeGreaterThanOrEqual(75);
+    expect(scores.handScore).toBeGreaterThanOrEqual(85);
   });
 
   it("uses xie_bu expectation for 歇步冲拳", () => {

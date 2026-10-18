@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { buildSanDuanCoachSkeleton } from "@/lib/pose/coach-figure/poses-san-duan";
 import { KP } from "@/lib/pose/keypoints";
 import { buildMoveTemplateKeypoints } from "@/lib/pose/move-pose-template";
 
@@ -19,32 +20,17 @@ describe("san-duan move thumbnails", () => {
     expect(raise[KP.right_wrist]!.y).toBeLessThan(punch[KP.right_wrist]!.y);
   });
 
-  it("xie bu punch sits much lower than empty stance guard", () => {
-    const xie = buildMoveTemplateKeypoints(
-      "san-duan-chang-quan",
-      "sdcq-11",
-      "xu_bu",
-      "punch_forward",
-    );
-    const xu = buildMoveTemplateKeypoints(
-      "san-duan-chang-quan",
-      "sdcq-10",
-      "xu_bu",
-      "guard_chest",
-    );
-    const xieHip = (xie[KP.left_hip]!.y + xie[KP.right_hip]!.y) / 2;
-    const xuHip = (xu[KP.left_hip]!.y + xu[KP.right_hip]!.y) / 2;
-    expect(xieHip).toBeGreaterThan(xuHip + 8);
+  it("xie bu sits lower than xu bu in 3D coach model", () => {
+    const xie = buildSanDuanCoachSkeleton("sdcq-11")!;
+    const xu = buildSanDuanCoachSkeleton("sdcq-10")!;
+    const xieHip = (xie.leftHip.up + xie.rightHip.up) / 2;
+    const xuHip = (xu.leftHip.up + xu.rightHip.up) / 2;
+    expect(xieHip).toBeLessThan(xuHip - 0.08);
   });
 
-  it("salute uses both hands high for opening", () => {
-    const open = buildMoveTemplateKeypoints(
-      "san-duan-chang-quan",
-      "sdcq-01",
-      "feet_together",
-      "salute",
-    );
-    expect(open[KP.left_wrist]!.y).toBeLessThan(40);
-    expect(open[KP.right_wrist]!.y).toBeLessThan(40);
+  it("salute holds wrists in front of chest in 3D", () => {
+    const open = buildSanDuanCoachSkeleton("sdcq-01")!;
+    expect(open.leftWrist.fwd).toBeGreaterThan(0.2);
+    expect(open.rightWrist.fwd).toBeGreaterThan(0.2);
   });
 });
