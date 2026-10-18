@@ -4,9 +4,27 @@ import {
   applyKeypointOverrides,
   buildStanceTemplateKeypoints,
   fillKeypoint,
+  type GongBuLead,
 } from "./stance-template";
+import type { HandProfileType } from "@/lib/wushu/types";
 
 const CX = 64;
+
+function gongBuLeadForMove(moveId: string): GongBuLead {
+  if (moveId === "sdcq-15" || moveId === "sdcq-17") return "left";
+  return "right";
+}
+
+function sdcqGongBu(
+  moveId: string,
+  hand: HandProfileType,
+  overrides?: Partial<Record<number, { x: number; y: number }>>,
+) {
+  const base = buildStanceTemplateKeypoints("gong_bu", hand, {
+    gongBuLead: gongBuLeadForMove(moveId),
+  });
+  return overrides ? applyKeypointOverrides(base, overrides) : base;
+}
 
 /** 歇步冲拳 — low seated cross stance (buttocks near floor), not 虚步. */
 function buildXieBuThrustPose(): PoseKeypoint[] {
@@ -33,9 +51,7 @@ const SAN_DUAN_POSE_BUILDERS: Record<string, () => PoseKeypoint[]> = {
     buildStanceTemplateKeypoints("feet_together", "salute"),
 
   "sdcq-02": () =>
-    applyKeypointOverrides(
-      buildStanceTemplateKeypoints("gong_bu", "guard_chest"),
-      {
+    applyKeypointOverrides(sdcqGongBu("sdcq-02", "block_elbow"), {
         [KP.left_wrist]: { x: CX - 4, y: 40 },
         [KP.left_elbow]: { x: CX - 18, y: 38 },
         [KP.right_wrist]: { x: CX + 20, y: 52 },
@@ -55,9 +71,7 @@ const SAN_DUAN_POSE_BUILDERS: Record<string, () => PoseKeypoint[]> = {
     ),
 
   "sdcq-04": () =>
-    applyKeypointOverrides(
-      buildStanceTemplateKeypoints("gong_bu", "guard_chest"),
-      {
+    applyKeypointOverrides(sdcqGongBu("sdcq-04", "wrist_wrap"), {
         [KP.left_wrist]: { x: CX - 2, y: 46 },
         [KP.right_wrist]: { x: CX + 6, y: 44 },
         [KP.left_elbow]: { x: CX - 12, y: 40 },
@@ -69,9 +83,7 @@ const SAN_DUAN_POSE_BUILDERS: Record<string, () => PoseKeypoint[]> = {
     buildStanceTemplateKeypoints("ma_bu", "punch_forward"),
 
   "sdcq-06": () =>
-    applyKeypointOverrides(
-      buildStanceTemplateKeypoints("gong_bu", "punch_forward"),
-      {
+    applyKeypointOverrides(sdcqGongBu("sdcq-06", "push_palm"), {
         [KP.left_wrist]: { x: 10, y: 52 },
         [KP.left_elbow]: { x: CX - 8, y: 44 },
         [KP.right_wrist]: { x: CX + 42, y: 48 },
@@ -79,9 +91,7 @@ const SAN_DUAN_POSE_BUILDERS: Record<string, () => PoseKeypoint[]> = {
     ),
 
   "sdcq-07": () =>
-    applyKeypointOverrides(
-      buildStanceTemplateKeypoints("gong_bu", "punch_forward"),
-      {
+    applyKeypointOverrides(sdcqGongBu("sdcq-07", "lift_fist"), {
         [KP.right_wrist]: { x: CX + 28, y: 24 },
         [KP.right_elbow]: { x: CX + 22, y: 36 },
       },
@@ -122,7 +132,7 @@ const SAN_DUAN_POSE_BUILDERS: Record<string, () => PoseKeypoint[]> = {
 
   "sdcq-13": () =>
     applyKeypointOverrides(
-      buildStanceTemplateKeypoints("ma_bu", "punch_forward"),
+      buildStanceTemplateKeypoints("ma_bu", "chop_palm"),
       {
         [KP.right_wrist]: { x: CX + 24, y: 68 },
         [KP.right_elbow]: { x: CX + 20, y: 52 },
@@ -130,26 +140,17 @@ const SAN_DUAN_POSE_BUILDERS: Record<string, () => PoseKeypoint[]> = {
       },
     ),
 
-  "sdcq-14": () =>
-    buildStanceTemplateKeypoints("gong_bu", "punch_forward"),
+  "sdcq-14": () => sdcqGongBu("sdcq-14", "punch_forward"),
 
   "sdcq-15": () =>
-    applyKeypointOverrides(
-      buildStanceTemplateKeypoints("gong_bu", "punch_forward"),
-      {
-        [KP.left_ankle]: { x: CX + 26, y: 96 },
-        [KP.right_ankle]: { x: CX - 18, y: 96 },
-        [KP.left_knee]: { x: CX + 22, y: 74 },
-        [KP.right_knee]: { x: CX - 16, y: 76 },
+    applyKeypointOverrides(sdcqGongBu("sdcq-15", "push_palm"), {
         [KP.left_wrist]: { x: CX + 34, y: 46 },
         [KP.left_elbow]: { x: CX + 20, y: 40 },
       },
     ),
 
   "sdcq-16": () =>
-    applyKeypointOverrides(
-      buildStanceTemplateKeypoints("gong_bu", "punch_forward"),
-      {
+    applyKeypointOverrides(sdcqGongBu("sdcq-16", "double_push_palm"), {
         [KP.left_wrist]: { x: CX + 34, y: 48 },
         [KP.right_wrist]: { x: CX + 38, y: 52 },
         [KP.left_elbow]: { x: CX + 18, y: 40 },
@@ -158,19 +159,13 @@ const SAN_DUAN_POSE_BUILDERS: Record<string, () => PoseKeypoint[]> = {
     ),
 
   "sdcq-17": () =>
-    applyKeypointOverrides(
-      buildStanceTemplateKeypoints("gong_bu", "punch_forward"),
-      {
-        [KP.left_ankle]: { x: CX + 26, y: 96 },
-        [KP.right_ankle]: { x: CX - 18, y: 96 },
+    applyKeypointOverrides(sdcqGongBu("sdcq-17", "push_palm"), {
         [KP.left_wrist]: { x: CX + 36, y: 50 },
       },
     ),
 
   "sdcq-18": () =>
-    applyKeypointOverrides(
-      buildStanceTemplateKeypoints("gong_bu", "punch_forward"),
-      {
+    applyKeypointOverrides(sdcqGongBu("sdcq-18", "chop_palm"), {
         [KP.right_wrist]: { x: CX + 20, y: 32 },
         [KP.right_elbow]: { x: CX + 18, y: 44 },
       },
@@ -186,8 +181,7 @@ const SAN_DUAN_POSE_BUILDERS: Record<string, () => PoseKeypoint[]> = {
       },
     ),
 
-  "sdcq-20": () =>
-    buildStanceTemplateKeypoints("gong_bu", "punch_forward"),
+  "sdcq-20": () => sdcqGongBu("sdcq-20", "punch_forward"),
 
   "sdcq-21": () =>
     buildStanceTemplateKeypoints("ma_bu", "fist_waist"),

@@ -1,3 +1,4 @@
+import { angleAtVertex } from "./geometry";
 import { KP } from "./keypoints";
 import type { PoseKeypoint } from "./types";
 import type { HandProfileType, LegStanceType } from "@/lib/wushu/types";
@@ -6,6 +7,54 @@ const S = 128;
 const CX = S / 2;
 
 type Pt = { x: number; y: number };
+
+export type GongBuLead = "left" | "right";
+
+/** Front-view 弓步: leading knee ~90°, rear leg straight (duanwei teaching shape). */
+export function gongBuLegPoints(lead: GongBuLead): {
+  lh: Pt;
+  rh: Pt;
+  lk: Pt;
+  rk: Pt;
+  la: Pt;
+  ra: Pt;
+} {
+  if (lead === "right") {
+    return {
+      lh: { x: CX - 14, y: 54 },
+      lk: { x: CX - 16, y: 75 },
+      la: { x: CX - 18, y: 96 },
+      rh: { x: CX + 12, y: 54 },
+      rk: { x: CX + 36, y: 84 },
+      ra: { x: CX + 26, y: 92 },
+    };
+  }
+  return {
+    lh: { x: CX - 12, y: 54 },
+    lk: { x: CX - 36, y: 84 },
+    la: { x: CX - 26, y: 92 },
+    rh: { x: CX + 14, y: 54 },
+    rk: { x: CX + 16, y: 75 },
+    ra: { x: CX + 18, y: 96 },
+  };
+}
+
+export function gongBuKneeAngles(lead: GongBuLead): {
+  frontKnee: number;
+  rearKnee: number;
+} {
+  const p = gongBuLegPoints(lead);
+  if (lead === "right") {
+    return {
+      frontKnee: angleAtVertex(p.rh, p.rk, p.ra),
+      rearKnee: angleAtVertex(p.lh, p.lk, p.la),
+    };
+  }
+  return {
+    frontKnee: angleAtVertex(p.lh, p.lk, p.la),
+    rearKnee: angleAtVertex(p.rh, p.rk, p.ra),
+  };
+}
 
 export function fillKeypoint(
   out: PoseKeypoint[],
@@ -32,6 +81,7 @@ export function applyKeypointOverrides(
 export function buildStanceTemplateKeypoints(
   leg: LegStanceType,
   hand: HandProfileType,
+  options?: { gongBuLead?: GongBuLead },
 ): PoseKeypoint[] {
   const kps: PoseKeypoint[] = [];
 
@@ -50,12 +100,16 @@ export function buildStanceTemplateKeypoints(
       la = { x: CX - 6, y: 96 };
       ra = { x: CX + 6, y: 96 };
       break;
-    case "gong_bu":
-      la = { x: CX - 18, y: 96 };
-      ra = { x: CX + 26, y: 96 };
-      rk = { x: CX + 22, y: 74 };
-      lk = { x: CX - 16, y: 76 };
+    case "gong_bu": {
+      const gb = gongBuLegPoints(options?.gongBuLead ?? "right");
+      lh = gb.lh;
+      rh = gb.rh;
+      lk = gb.lk;
+      rk = gb.rk;
+      la = gb.la;
+      ra = gb.ra;
       break;
+    }
     case "ma_bu":
       la = { x: CX - 28, y: 94 };
       ra = { x: CX + 28, y: 94 };
