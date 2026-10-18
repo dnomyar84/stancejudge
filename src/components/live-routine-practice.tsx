@@ -256,6 +256,7 @@ export function LiveRoutinePractice({ onBack }: { onBack: () => void }) {
         <>
           <PoseRail
             variant="overlay"
+            routineId={routineId}
             moves={railMoves}
             scrollProgress={scrollProgress}
             scanning={session.phase === "performing"}

@@ -9,6 +9,7 @@ type PoseRailProps = {
   moves: RailMove[];
   scrollProgress: number;
   scanning: boolean;
+  routineId?: string;
   variant?: "default" | "overlay";
 };
 
@@ -18,6 +19,7 @@ export function PoseRail({
   moves,
   scrollProgress,
   scanning,
+  routineId,
   variant = "default",
 }: PoseRailProps) {
   const overlay = variant === "overlay";
@@ -115,6 +117,7 @@ export function PoseRail({
             {moves.map((item, index) => (
               <PoseChip
                 key={item.move.id}
+                routineId={routineId}
                 item={item}
                 showNextLabel={
                   item.state === "upcoming" &&
@@ -139,9 +142,11 @@ export function PoseRail({
 
 function PoseChip({
   item,
+  routineId,
   showNextLabel,
 }: {
   item: RailMove;
+  routineId?: string;
   showNextLabel?: boolean;
 }) {
   const { move, state } = item;
@@ -164,6 +169,8 @@ function PoseChip({
       title={move.name}
     >
       <PoseThumbnail
+        routineId={routineId}
+        moveId={move.id}
         leg={move.expectedLeg}
         hand={move.expectedHand}
         size={item.isActive ? 56 : 48}

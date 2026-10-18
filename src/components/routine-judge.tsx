@@ -187,6 +187,7 @@ export function RoutineJudge({ onBack }: { onBack?: () => void }) {
           {videoReady && (
             <PoseRail
               variant="overlay"
+              routineId={routineId}
               moves={railMoves}
               scrollProgress={scrollProgress}
               scanning={scanning}

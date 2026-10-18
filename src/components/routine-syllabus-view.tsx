@@ -78,9 +78,12 @@ export function RoutineSyllabusView({ onBack }: RoutineSyllabusViewProps) {
                   )}
                 >
                   <PoseThumbnail
+                    routineId={routineId}
+                    moveId={move.id}
                     leg={move.expectedLeg}
                     hand={move.expectedHand}
-                    className="h-16 w-16 shrink-0 rounded-lg"
+                    size={64}
+                    className="shrink-0 rounded-lg"
                   />
                   <div className="min-w-0 flex-1">
                     <p className="font-medium leading-snug">

@@ -7,12 +7,25 @@ const CX = S / 2;
 
 type Pt = { x: number; y: number };
 
-function fill(
+export function fillKeypoint(
   out: PoseKeypoint[],
   index: number,
   p: Pt,
 ): void {
   out[index] = { x: p.x, y: p.y, score: 1 };
+}
+
+const fill = fillKeypoint;
+
+export function applyKeypointOverrides(
+  kps: PoseKeypoint[],
+  overrides: Partial<Record<number, Pt>>,
+): PoseKeypoint[] {
+  const out = [...kps];
+  for (const [idx, p] of Object.entries(overrides)) {
+    if (p) fillKeypoint(out, Number(idx), p);
+  }
+  return out;
 }
 
 /** Normalized stick figure for rail thumbnails (front-facing coach view). */
@@ -73,9 +86,10 @@ export function buildStanceTemplateKeypoints(
 
   switch (hand) {
     case "salute":
-      lw = { x: CX - 6, y: 22 };
-      le = { x: CX - 10, y: 32 };
-      rw = { x: rs.x + 6, y: 58 };
+      lw = { x: CX - 8, y: 28 };
+      rw = { x: CX + 8, y: 28 };
+      le = { x: CX - 14, y: 34 };
+      re = { x: CX + 14, y: 34 };
       break;
     case "guard_chest":
     case "jian_guard":

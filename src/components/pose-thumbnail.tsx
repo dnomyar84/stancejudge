@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { drawPose } from "@/lib/pose/draw";
+import { buildMoveTemplateKeypoints } from "@/lib/pose/move-pose-template";
 import { buildStanceTemplateKeypoints } from "@/lib/pose/stance-template";
 import type { HandProfileType, LegStanceType } from "@/lib/wushu/types";
 import { cn } from "@/lib/utils";
@@ -9,6 +10,8 @@ import { cn } from "@/lib/utils";
 type PoseThumbnailProps = {
   leg: LegStanceType;
   hand: HandProfileType;
+  routineId?: string;
+  moveId?: string;
   size?: number;
   className?: string;
   highlight?: boolean;
@@ -17,6 +20,8 @@ type PoseThumbnailProps = {
 export function PoseThumbnail({
   leg,
   hand,
+  routineId,
+  moveId,
   size = 52,
   className,
   highlight,
@@ -32,7 +37,10 @@ export function PoseThumbnail({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const template = buildStanceTemplateKeypoints(leg, hand);
+    const template =
+      routineId && moveId
+        ? buildMoveTemplateKeypoints(routineId, moveId, leg, hand)
+        : buildStanceTemplateKeypoints(leg, hand);
     const scaled = template.map((kp) =>
       kp
         ? {
@@ -46,7 +54,7 @@ export function PoseThumbnail({
     ctx.fillStyle = "rgba(0,0,0,0.35)";
     ctx.fillRect(0, 0, px, px);
     drawPose(ctx, scaled, px, px, false);
-  }, [hand, leg, size]);
+  }, [hand, leg, moveId, routineId, size]);
 
   return (
     <canvas
