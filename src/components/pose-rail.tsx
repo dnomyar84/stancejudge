@@ -87,7 +87,7 @@ export function PoseRail({
             <span>
               {scanning
                 ? "Scanning… swipe rail to browse"
-                : "Swipe left/right · green = met, red = missed"}
+                : "Swipe rail · drag a pose sideways to rotate view"}
             </span>
           </div>
         )}
