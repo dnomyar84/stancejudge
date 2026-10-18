@@ -53,7 +53,7 @@ Until (1–2) drive live + video grades, **fixing thumbnails alone will always f
 ## Current direction in code
 
 - Thumbnails: per-move templates for 三段长拳.
-- Scoring: enums + time windows + sequence LCS; **`move-pose-score.ts` exists but is not wired** into live or video grades yet.
-- **`xie_bu` is not in `LegStanceType` yet** — 歇步冲拳 still uses `expectedLeg: "xu_bu"` in the syllabus file; only the rail thumbnail uses a seated cross pose.
+- Scoring: **`move-alignment.ts`** blends per-move template similarity (~78%) with enum match (~22%) for `san-duan-chang-quan` in live DDR, video `buildRoutineReport`, and `bestFrameForMove`.
+- Leg/hand enums extended (`xie_bu`, `ti_xi`, `push_palm`, `block_elbow`, …); syllabus expectations live in `san-duan-chang-quan.ts` and merge into calibrated JSON via `canonical-store.ts`.
 
 See also [app-vs-gold-standard.md](./app-vs-gold-standard.md).

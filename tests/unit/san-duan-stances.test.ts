@@ -17,12 +17,16 @@ describe("三段长拳 syllabus stances (test oracle)", () => {
     expect(SAN_DUAN_EXPECTED_LEGS).toContain("gong_bu");
     expect(SAN_DUAN_EXPECTED_LEGS).toContain("ma_bu");
     expect(SAN_DUAN_EXPECTED_LEGS).toContain("xu_bu");
+    expect(SAN_DUAN_EXPECTED_LEGS).toContain("xie_bu");
+    expect(SAN_DUAN_EXPECTED_LEGS).toContain("ti_xi");
     expect(SAN_DUAN_EXPECTED_LEGS).toContain("walking");
   });
 
   it("expects unarmed hand profiles (not sword)", () => {
     expect(SAN_DUAN_EXPECTED_HANDS).toContain("salute");
     expect(SAN_DUAN_EXPECTED_HANDS).toContain("punch_forward");
+    expect(SAN_DUAN_EXPECTED_HANDS).toContain("push_palm");
+    expect(SAN_DUAN_EXPECTED_HANDS).toContain("block_elbow");
     expect(SAN_DUAN_EXPECTED_HANDS).toContain("guard_chest");
     expect(SAN_DUAN_EXPECTED_HANDS.every((h) => !h.startsWith("jian"))).toBe(
       true,

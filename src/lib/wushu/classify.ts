@@ -71,6 +71,32 @@ export function classifyLegStance(keypoints: PoseKeypoint[]): {
     return { leg: "feet_together", confidence: 0.85 };
   }
 
+  const hipMid = midpoint(lh, rh);
+  const hipB = toBodyLocal(hipMid, axes);
+  const laUp = laB.up;
+  const raUp = raB.up;
+  const avgAnkleUp = (laUp + raUp) / 2;
+  const hipDrop = avgAnkleUp - hipB.up;
+  const bothKneesDeep = avgKnee < 128 && minKnee < 135;
+
+  if (
+    bothKneesDeep &&
+    hipDrop < 0.42 &&
+    lateralWidth > 0.22 &&
+    fwdSep < 0.55
+  ) {
+    return { leg: "xie_bu", confidence: 0.76 };
+  }
+
+  const leftKneeUp = lk ? toBodyLocal(lk, axes).up : null;
+  const rightKneeUp = rk ? toBodyLocal(rk, axes).up : null;
+  if (leftKneeUp !== null && rightKneeUp !== null) {
+    const kneeLift = Math.max(leftKneeUp, rightKneeUp) - hipB.up;
+    if (kneeLift > 0.38 && kneeDiff > 42 && minKnee < 118) {
+      return { leg: "ti_xi", confidence: 0.74 };
+    }
+  }
+
   if (lateralWidth > 0.72 && avgKnee < 162 && kneeDiff < 32) {
     return { leg: "ma_bu", confidence: 0.78 };
   }
@@ -131,7 +157,9 @@ export function classifyHandProfile(
   const rwB = local.get(KP.right_wrist);
   const lsB = local.get(KP.left_shoulder);
   const rsB = local.get(KP.right_shoulder);
-  if (!lwB || !rwB || !lsB || !rsB) {
+  const leB = local.get(KP.left_elbow);
+  const reB = local.get(KP.right_elbow);
+  if (!lwB || !rwB || !lsB || !rsB || !leB || !reB) {
     return { hand: "unknown", confidence: 0 };
   }
   const hipB = toBodyLocal(midpoint(lh, rh), axes);
@@ -180,10 +208,58 @@ export function classifyHandProfile(
     }
   }
 
+  const wristLat = Math.abs(lwB.lat - rwB.lat);
+  const bothForward =
+    lwB.fwd - lsB.fwd > 0.42 && rwB.fwd - rsB.fwd > 0.42;
+  const palmsOpen =
+    wristLat > 0.28 &&
+    lwB.up > hipB.up + 0.12 &&
+    rwB.up > hipB.up + 0.12 &&
+    Math.abs(lwB.fwd - rwB.fwd) < 0.22;
+  if (bothForward && palmsOpen) {
+    return { hand: "double_push_palm", confidence: 0.72 };
+  }
+
   const leftPunch = lwB.fwd - lsB.fwd > 0.55;
   const rightPunch = rwB.fwd - rsB.fwd > 0.55;
+  const punchWristHigh =
+    (leftPunch && lwB.up < noseB.up + 0.08) ||
+    (rightPunch && rwB.up < noseB.up + 0.08);
+  if (punchWristHigh) {
+    return { hand: "lift_fist", confidence: 0.7 };
+  }
   if (leftPunch || rightPunch) {
+    const palmLike =
+      wristLat > 0.55 &&
+      (leftPunch ? lwB.up > leB.up - 0.05 : rwB.up > reB.up - 0.05);
+    if (palmLike) {
+      return { hand: "push_palm", confidence: 0.7 };
+    }
+    const chopLike =
+      (rightPunch && rwB.up > reB.up + 0.12) ||
+      (leftPunch && lwB.up > leB.up + 0.12);
+    if (chopLike) {
+      return { hand: "chop_palm", confidence: 0.68 };
+    }
     return { hand: "punch_forward", confidence: 0.74 };
+  }
+
+  const wristsClose =
+    Math.hypot(lwB.lat - rwB.lat, lwB.fwd - rwB.fwd) < 0.35;
+  if (
+    wristsClose &&
+    lwB.up > hipB.up + 0.1 &&
+    rwB.up > hipB.up + 0.1 &&
+    lwB.up < noseB.up + 0.15
+  ) {
+    return { hand: "wrist_wrap", confidence: 0.66 };
+  }
+
+  const blockElbow =
+    (leB.up < noseB.up && lwB.up > leB.up - 0.08 && lwB.fwd > lsB.fwd + 0.2) ||
+    (reB.up < noseB.up && rwB.up > reB.up - 0.08 && rwB.fwd > rsB.fwd + 0.2);
+  if (blockElbow) {
+    return { hand: "block_elbow", confidence: 0.67 };
   }
 
   const guard =
@@ -242,8 +318,10 @@ export function scoreLegMatch(
     feet_together: ["xu_bu"],
     gong_bu: ["walking", "xu_bu"],
     ma_bu: ["gong_bu"],
-    xu_bu: ["gong_bu", "feet_together", "walking"],
-    walking: ["gong_bu", "xu_bu", "feet_together"],
+    xu_bu: ["gong_bu", "feet_together", "walking", "ti_xi"],
+    xie_bu: ["ma_bu", "xu_bu"],
+    ti_xi: ["xu_bu", "walking", "gong_bu"],
+    walking: ["gong_bu", "xu_bu", "feet_together", "ti_xi"],
     unknown: [],
   };
   if (similar[expected]?.includes(detected)) return 78;
@@ -259,8 +337,14 @@ export function scoreHandMatch(
   const similar: Record<HandProfileType, HandProfileType[]> = {
     salute: ["guard_chest", "fist_waist"],
     fist_waist: ["guard_chest", "salute"],
-    punch_forward: ["guard_chest", "jian_point"],
-    guard_chest: ["fist_waist", "salute", "punch_forward"],
+    punch_forward: ["guard_chest", "jian_point", "push_palm", "lift_fist"],
+    push_palm: ["punch_forward", "double_push_palm", "guard_chest"],
+    chop_palm: ["punch_forward", "push_palm"],
+    double_push_palm: ["push_palm", "punch_forward"],
+    block_elbow: ["guard_chest", "wrist_wrap"],
+    lift_fist: ["punch_forward"],
+    wrist_wrap: ["guard_chest", "block_elbow"],
+    guard_chest: ["fist_waist", "salute", "punch_forward", "block_elbow"],
     jian_point: ["punch_forward", "arms_spread"],
     jian_guard: ["guard_chest"],
     arms_spread: ["jian_point", "punch_forward"],

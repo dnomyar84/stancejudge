@@ -1,5 +1,7 @@
 import { scoreHandMatch, scoreLegMatch } from "./classify";
+import { scoreMoveAlignment } from "./move-alignment";
 import type { HandProfileType, LegStanceType } from "./types";
+import type { PoseKeypoint } from "@/lib/pose/types";
 
 export type MoveGrade = "perfect" | "good" | "miss";
 
@@ -25,6 +27,26 @@ export function scoresForExpected(
     legScore: scoreLegMatch(detectedLeg, expectedLeg),
     handScore: scoreHandMatch(detectedHand, expectedHand),
   };
+}
+
+/** Per-move scoring: template similarity for 三段长拳, enums elsewhere. */
+export function scoresForMove(
+  routineId: string,
+  moveId: string,
+  keypoints: PoseKeypoint[],
+  expectedLeg: LegStanceType,
+  expectedHand: HandProfileType,
+  weapon: "unarmed" | "jian",
+): { legScore: number; handScore: number } {
+  const aligned = scoreMoveAlignment(
+    routineId,
+    moveId,
+    expectedLeg,
+    expectedHand,
+    keypoints,
+    weapon,
+  );
+  return { legScore: aligned.legScore, handScore: aligned.handScore };
 }
 
 export function gradePoints(grade: MoveGrade): number {

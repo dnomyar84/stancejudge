@@ -70,6 +70,20 @@ export function buildStanceTemplateKeypoints(
       lk = { x: CX + 6, y: 78 };
       rk = { x: CX - 18, y: 80 };
       break;
+    case "xie_bu":
+      la = { x: CX - 26, y: 104 };
+      ra = { x: CX + 2, y: 106 };
+      lk = { x: CX - 22, y: 82 };
+      rk = { x: CX + 4, y: 84 };
+      lh = { x: CX - 10, y: 66 };
+      rh = { x: CX + 8, y: 68 };
+      break;
+    case "ti_xi":
+      la = { x: CX - 18, y: 96 };
+      ra = { x: CX + 10, y: 94 };
+      lk = { x: CX - 6, y: 56 };
+      rk = { x: CX + 8, y: 80 };
+      break;
     case "walking":
       la = { x: CX - 10, y: 88 };
       ra = { x: CX + 18, y: 96 };
@@ -99,11 +113,27 @@ export function buildStanceTemplateKeypoints(
       re = { x: CX + 12, y: 38 };
       break;
     case "punch_forward":
+    case "push_palm":
+    case "chop_palm":
+    case "lift_fist":
     case "jian_point":
       rw = { x: CX + 38, y: 50 };
       re = { x: CX + 24, y: 40 };
       lw = { x: CX - 18, y: 54 };
       le = { x: CX - 10, y: 42 };
+      break;
+    case "double_push_palm":
+      lw = { x: CX + 34, y: 48 };
+      rw = { x: CX + 38, y: 52 };
+      le = { x: CX + 18, y: 40 };
+      re = { x: CX + 22, y: 42 };
+      break;
+    case "block_elbow":
+    case "wrist_wrap":
+      lw = { x: CX - 4, y: 40 };
+      rw = { x: CX + 20, y: 52 };
+      le = { x: CX - 18, y: 38 };
+      re = { x: CX + 10, y: 42 };
       break;
     case "fist_waist":
       lw = { x: lh.x - 4, y: lh.y + 4 };

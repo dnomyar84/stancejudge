@@ -1,5 +1,5 @@
 import { classifyPose } from "./classify";
-import { gradeFromScores, scoresForExpected } from "./move-grade";
+import { gradeFromScores, scoresForExpected, scoresForMove } from "./move-grade";
 import type { CanonicalRoutine, HandProfileType, LegStanceType } from "./types";
 import type { PoseKeypoint } from "@/lib/pose/types";
 
@@ -38,6 +38,8 @@ export function initialLiveSession(): LiveSessionState {
 }
 
 function matchesMove(
+  routineId: string,
+  moveId: string,
   keypoints: PoseKeypoint[],
   weapon: "unarmed" | "jian",
   expectedLeg: LegStanceType,
@@ -45,12 +47,13 @@ function matchesMove(
   minLeg = 55,
   minHand = 50,
 ): boolean {
-  const pose = classifyPose(keypoints, weapon);
-  const { legScore, handScore } = scoresForExpected(
-    pose.leg,
-    pose.hand,
+  const { legScore, handScore } = scoresForMove(
+    routineId,
+    moveId,
+    keypoints,
     expectedLeg,
     expectedHand,
+    weapon,
   );
   return legScore >= minLeg && handScore >= minHand;
 }
@@ -94,7 +97,16 @@ export function tickLiveSession(
   const last = moves[moves.length - 1];
 
   if (next.phase === "ready") {
-    if (matchesMove(keypoints, weapon, first.expectedLeg, first.expectedHand)) {
+    if (
+      matchesMove(
+        canonical.routineId,
+        first.id,
+        keypoints,
+        weapon,
+        first.expectedLeg,
+        first.expectedHand,
+      )
+    ) {
       next.startStable += 1;
       if (next.startStable >= STABLE_FRAMES_START) {
         next.phase = "performing";
@@ -110,17 +122,28 @@ export function tickLiveSession(
 
   if (next.phase === "performing") {
     const move = moves[next.moveIndex];
-    const pose = classifyPose(keypoints, weapon);
-    const { legScore, handScore } = scoresForExpected(
-      pose.leg,
-      pose.hand,
+    const aligned = scoresForMove(
+      canonical.routineId,
+      move.id,
+      keypoints,
       move.expectedLeg,
       move.expectedHand,
+      weapon,
     );
+    const { legScore, handScore } = aligned;
     const shallow = shallowForLeg(keypoints, move.expectedLeg);
     const grade = gradeFromScores(legScore, handScore, shallow);
 
-    if (matchesMove(keypoints, weapon, move.expectedLeg, move.expectedHand)) {
+    if (
+      matchesMove(
+        canonical.routineId,
+        move.id,
+        keypoints,
+        weapon,
+        move.expectedLeg,
+        move.expectedHand,
+      )
+    ) {
       next.advanceStable += 1;
     } else {
       next.advanceStable = Math.max(0, next.advanceStable - 1);

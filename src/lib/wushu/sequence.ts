@@ -3,6 +3,7 @@ import {
   scoreHandMatch,
   scoreLegMatch,
 } from "./classify";
+import { scoreMoveAlignment } from "./move-alignment";
 import { scaledWindow } from "./canonical";
 import type {
   CanonicalMove,
@@ -65,6 +66,7 @@ async function sampleAtTimes(
       handScore: scoreHandMatch(classified.hand, classified.hand),
       legConfidence: classified.legConfidence,
       handConfidence: classified.handConfidence,
+      keypoints,
     });
   }
   return frames;
@@ -128,6 +130,7 @@ export async function sampleVideoPoses(
       handScore,
       legConfidence: classified.legConfidence,
       handConfidence: classified.handConfidence,
+      keypoints,
     });
     onProgress(timeSec / duration);
   }
@@ -164,11 +167,42 @@ function paddedWindow(
   };
 }
 
+function scoresForFrameMove(
+  routineId: string,
+  move: CanonicalMove,
+  f: FrameClassification,
+  weapon: "unarmed" | "jian",
+): { leg: number; hand: number; detectedLeg: FrameClassification["leg"]; detectedHand: FrameClassification["hand"] } {
+  if (f.keypoints && f.keypoints.length > 0) {
+    const aligned = scoreMoveAlignment(
+      routineId,
+      move.id,
+      move.expectedLeg,
+      move.expectedHand,
+      f.keypoints,
+      weapon,
+    );
+    return {
+      leg: aligned.legScore,
+      hand: aligned.handScore,
+      detectedLeg: aligned.detectedLeg,
+      detectedHand: aligned.detectedHand,
+    };
+  }
+  return {
+    leg: scoreLegMatch(f.leg, move.expectedLeg),
+    hand: scoreHandMatch(f.hand, move.expectedHand),
+    detectedLeg: f.leg,
+    detectedHand: f.hand,
+  };
+}
+
 function bestFrameForMove(
   frames: FrameClassification[],
   move: CanonicalMove,
   canonical: CanonicalRoutine,
   studentDurationSec: number,
+  weapon: "unarmed" | "jian",
 ): FrameClassification | null {
   if (frames.length === 0) return null;
   const { start: windowStart, end: windowEnd } = paddedWindow(
@@ -194,13 +228,13 @@ function bestFrameForMove(
   let best: FrameClassification | null = null;
   let bestScore = -1;
   for (const f of pool) {
-    const leg = scoreLegMatch(f.leg, move.expectedLeg);
-    const hand = scoreHandMatch(f.hand, move.expectedHand);
+    const scored = scoresForFrameMove(canonical.routineId, move, f, weapon);
     const unknownPenalty =
-      (f.leg === "unknown" ? 14 : 0) + (f.hand === "unknown" ? 14 : 0);
+      (scored.detectedLeg === "unknown" ? 14 : 0) +
+      (scored.detectedHand === "unknown" ? 14 : 0);
     const combined =
-      leg * 0.52 +
-      hand * 0.48 +
+      scored.leg * 0.52 +
+      scored.hand * 0.48 +
       f.legConfidence * 12 +
       f.handConfidence * 12 -
       unknownPenalty;
@@ -213,13 +247,15 @@ function bestFrameForMove(
 }
 
 function legPresentInWindow(
+  routineId: string,
   move: CanonicalMove,
   frames: FrameClassification[],
   window: { start: number; end: number },
+  weapon: "unarmed" | "jian",
 ): boolean {
   return frames
     .filter((f) => f.timeSec >= window.start && f.timeSec <= window.end)
-    .some((f) => scoreLegMatch(f.leg, move.expectedLeg) >= 55);
+    .some((f) => scoresForFrameMove(routineId, move, f, weapon).leg >= 55);
 }
 
 export function collapseLegTimeline(
@@ -299,6 +335,7 @@ export function buildRoutineReport(
   canonical: CanonicalRoutine,
   frames: FrameClassification[],
   studentDurationSec: number,
+  weapon: "unarmed" | "jian" = "unarmed",
 ): RoutineAnalysisReport {
   const { score: sequenceScore, wrongOrder } = sequenceOrderScore(
     canonical,
@@ -310,19 +347,25 @@ export function buildRoutineReport(
       move,
       canonical,
       studentDurationSec,
+      weapon,
     );
     const window = paddedWindow(canonical, move, studentDurationSec);
 
-    const detectedLeg = frame?.leg ?? "unknown";
-    const detectedHand = frame?.hand ?? "unknown";
-    const legScore = frame
-      ? scoreLegMatch(detectedLeg, move.expectedLeg)
-      : 0;
-    const handScore = frame
-      ? scoreHandMatch(detectedHand, move.expectedHand)
-      : 0;
+    const scored = frame
+      ? scoresForFrameMove(canonical.routineId, move, frame, weapon)
+      : null;
+    const detectedLeg = scored?.detectedLeg ?? frame?.leg ?? "unknown";
+    const detectedHand = scored?.detectedHand ?? frame?.hand ?? "unknown";
+    const legScore = scored?.leg ?? 0;
+    const handScore = scored?.hand ?? 0;
 
-    const orderOk = legPresentInWindow(move, frames, window);
+    const orderOk = legPresentInWindow(
+      canonical.routineId,
+      move,
+      frames,
+      window,
+      weapon,
+    );
 
     const status = statusForMove(legScore, handScore, orderOk);
     let notes = move.coachTip;
@@ -422,5 +465,5 @@ export async function analyzeRoutineVideo(
     onProgress,
     moveWindows,
   );
-  return buildRoutineReport(canonical, frames, studentDurationSec);
+  return buildRoutineReport(canonical, frames, studentDurationSec, weapon);
 }
