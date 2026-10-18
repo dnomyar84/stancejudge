@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { PoseThumbnail } from "@/components/pose-thumbnail";
 import type { RailMove } from "@/lib/wushu/playback";
 import { cn } from "@/lib/utils";
@@ -11,6 +12,8 @@ type PoseRailProps = {
   variant?: "default" | "overlay";
 };
 
+const USER_SCROLL_PAUSE_MS = 4500;
+
 export function PoseRail({
   moves,
   scrollProgress,
@@ -18,7 +21,54 @@ export function PoseRail({
   variant = "default",
 }: PoseRailProps) {
   const overlay = variant === "overlay";
-  const translatePercent = scrollProgress * Math.max(0, moves.length - 4) * 12;
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const userScrollingRef = useRef(false);
+  const pauseAutoScrollUntilRef = useRef(0);
+
+  const activeIndex = moves.findIndex(
+    (m) =>
+      m.isActive ||
+      m.state === "scanning" ||
+      m.state === "active",
+  );
+
+  const markUserScroll = () => {
+    userScrollingRef.current = true;
+    pauseAutoScrollUntilRef.current = Date.now() + USER_SCROLL_PAUSE_MS;
+  };
+
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    if (Date.now() < pauseAutoScrollUntilRef.current) return;
+
+    const maxScroll = el.scrollWidth - el.clientWidth;
+    if (maxScroll <= 0) return;
+
+    if (activeIndex >= 0) {
+      const chip = el.children[activeIndex] as HTMLElement | undefined;
+      chip?.scrollIntoView({
+        behavior: "smooth",
+        inline: "center",
+        block: "nearest",
+      });
+      return;
+    }
+
+    el.scrollTo({
+      left: scrollProgress * maxScroll,
+      behavior: "smooth",
+    });
+  }, [scrollProgress, activeIndex, moves.length]);
+
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      if (Date.now() >= pauseAutoScrollUntilRef.current) {
+        userScrollingRef.current = false;
+      }
+    }, 500);
+    return () => window.clearInterval(id);
+  }, []);
 
   return (
     <div
@@ -33,19 +83,34 @@ export function PoseRail({
           <div className="mb-1 flex items-center justify-between text-[10px] uppercase tracking-wider text-muted-foreground">
             <span>Routine poses</span>
             <span>
-              {scanning ? "Scanning… keep playing" : "Play — green = met, red = missed"}
+              {scanning
+                ? "Scanning… swipe rail to browse"
+                : "Swipe left/right · green = met, red = missed"}
             </span>
           </div>
         )}
         <div
           className={cn(
-            "relative overflow-hidden py-2",
-            overlay ? "bg-black/30" : "rounded-lg bg-muted/40 py-3",
+            "relative",
+            overlay ? "bg-black/30" : "rounded-lg bg-muted/40",
           )}
         >
           <div
-            className="flex gap-2 px-3 transition-transform duration-150 ease-linear will-change-transform"
-            style={{ transform: `translateX(-${translatePercent}%)` }}
+            ref={scrollerRef}
+            className={cn(
+              "flex gap-2 overflow-x-auto overscroll-x-contain px-3 py-2",
+              "touch-pan-x scroll-smooth",
+              "[scrollbar-width:thin] [-webkit-overflow-scrolling:touch]",
+              "snap-x snap-mandatory",
+            )}
+            onTouchStart={markUserScroll}
+            onPointerDown={markUserScroll}
+            onWheel={(e) => {
+              if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) markUserScroll();
+            }}
+            onScroll={markUserScroll}
+            role="list"
+            aria-label="Routine pose sequence"
           >
             {moves.map((item, index) => (
               <PoseChip
@@ -81,17 +146,18 @@ function PoseChip({
 }) {
   const { move, state } = item;
   const isNow =
-    item.isActive ||
-    state === "scanning" ||
-    state === "active";
+    item.isActive || state === "scanning" || state === "active";
   return (
     <div
+      role="listitem"
       className={cn(
-        "flex min-w-[5.25rem] shrink-0 flex-col items-center rounded-md border px-1.5 py-1.5 text-center transition-colors md:min-w-[6.25rem]",
-        state === "upcoming" && "border-border/50 bg-background/60 text-muted-foreground",
+        "flex min-w-[5.25rem] shrink-0 snap-center flex-col items-center rounded-md border px-1.5 py-1.5 text-center transition-colors md:min-w-[6.25rem]",
+        state === "upcoming" &&
+          "border-border/50 bg-background/60 text-muted-foreground",
         item.isActive &&
           "scale-105 border-cyan-400 bg-cyan-950/50 ring-2 ring-cyan-400/60",
-        state === "scanning" && "border-amber-500/50 bg-amber-950/30 text-amber-100",
+        state === "scanning" &&
+          "border-amber-500/50 bg-amber-950/30 text-amber-100",
         state === "met" && "border-emerald-500/70 bg-emerald-950/50 text-emerald-100",
         state === "missed" && "border-rose-500/70 bg-rose-950/50 text-rose-100",
       )}
