@@ -19,7 +19,7 @@ export const sanDuanChangQuan: RoutineDefinition = {
     { id: "sdcq-08", order: 8, name: "Waist flip knee push palm", nameZh: "翻腰提膝推掌", expectedLeg: "xu_bu", expectedHand: "punch_forward", coachTip: "Flip waist, knee up, push palm." },
     { id: "sdcq-09", order: 9, name: "Whirlwind kick", nameZh: "旋风脚", expectedLeg: "walking", expectedHand: "arms_spread", coachTip: "Jumping spin — full body visible." },
     { id: "sdcq-10", order: 10, name: "Empty stance guard palm", nameZh: "虚步护身掌", expectedLeg: "xu_bu", expectedHand: "guard_chest", coachTip: "Empty stance protecting palm." },
-    { id: "sdcq-11", order: 11, name: "Cross stance punch", nameZh: "歇步冲拳", expectedLeg: "xu_bu", expectedHand: "punch_forward", coachTip: "Low crossed step, punch out." },
+    { id: "sdcq-11", order: 11, name: "Cross stance punch", nameZh: "歇步冲拳", expectedLeg: "xu_bu", expectedHand: "punch_forward", coachTip: "歇步 seated low — crossed legs, hips near floor, then punch." },
     { id: "sdcq-12", order: 12, name: "Right bow block elbow", nameZh: "右弓步格肘", expectedLeg: "gong_bu", expectedHand: "guard_chest", coachTip: "Repeat block section — mirror first." },
     { id: "sdcq-13", order: 13, name: "Horse stance cut palm", nameZh: "马步切掌", expectedLeg: "ma_bu", expectedHand: "punch_forward", coachTip: "Ma bu, cutting palm down." },
     { id: "sdcq-14", order: 14, name: "Right bow punch", nameZh: "右弓步冲拳", expectedLeg: "gong_bu", expectedHand: "punch_forward", coachTip: "Straight punch in bow stance." },

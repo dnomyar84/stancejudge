@@ -3,9 +3,29 @@ import type { PoseKeypoint } from "./types";
 import {
   applyKeypointOverrides,
   buildStanceTemplateKeypoints,
+  fillKeypoint,
 } from "./stance-template";
 
 const CX = 64;
+
+/** 歇步冲拳 — low seated cross stance (buttocks near floor), not 虚步. */
+function buildXieBuThrustPose(): PoseKeypoint[] {
+  const kps: PoseKeypoint[] = [];
+  fillKeypoint(kps, KP.nose, { x: CX, y: 20 });
+  fillKeypoint(kps, KP.left_shoulder, { x: CX - 15, y: 34 });
+  fillKeypoint(kps, KP.right_shoulder, { x: CX + 15, y: 34 });
+  fillKeypoint(kps, KP.left_hip, { x: CX - 10, y: 66 });
+  fillKeypoint(kps, KP.right_hip, { x: CX + 8, y: 68 });
+  fillKeypoint(kps, KP.left_knee, { x: CX - 22, y: 82 });
+  fillKeypoint(kps, KP.right_knee, { x: CX + 4, y: 84 });
+  fillKeypoint(kps, KP.left_ankle, { x: CX - 26, y: 104 });
+  fillKeypoint(kps, KP.right_ankle, { x: CX + 2, y: 106 });
+  fillKeypoint(kps, KP.left_elbow, { x: CX - 12, y: 48 });
+  fillKeypoint(kps, KP.right_elbow, { x: CX + 24, y: 46 });
+  fillKeypoint(kps, KP.left_wrist, { x: CX - 14, y: 60 });
+  fillKeypoint(kps, KP.right_wrist, { x: CX + 44, y: 48 });
+  return kps;
+}
 
 /** Per-move coach silhouettes for 三段长拳 (duanwei syllabus). */
 const SAN_DUAN_POSE_BUILDERS: Record<string, () => PoseKeypoint[]> = {
@@ -96,17 +116,7 @@ const SAN_DUAN_POSE_BUILDERS: Record<string, () => PoseKeypoint[]> = {
       },
     ),
 
-  "sdcq-11": () =>
-    applyKeypointOverrides(
-      buildStanceTemplateKeypoints("xu_bu", "punch_forward"),
-      {
-        [KP.left_ankle]: { x: CX + 12, y: 98 },
-        [KP.right_ankle]: { x: CX - 8, y: 98 },
-        [KP.left_knee]: { x: CX + 4, y: 88 },
-        [KP.right_knee]: { x: CX - 4, y: 88 },
-        [KP.right_wrist]: { x: CX + 40, y: 52 },
-      },
-    ),
+  "sdcq-11": () => buildXieBuThrustPose(),
 
   "sdcq-12": () => SAN_DUAN_POSE_BUILDERS["sdcq-02"](),
 

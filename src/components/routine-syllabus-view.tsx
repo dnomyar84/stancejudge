@@ -95,6 +95,7 @@ export function RoutineSyllabusView({ onBack }: RoutineSyllabusViewProps) {
                     <p className="text-xs text-muted-foreground">{move.name}</p>
                     <MoveStanceChips
                       className="mt-2"
+                      moveId={move.id}
                       expectedLeg={move.expectedLeg}
                       expectedHand={move.expectedHand}
                     />

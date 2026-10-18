@@ -110,6 +110,7 @@ export function RoutineAnalysisResults({
             </div>
             <MoveStanceChips
               className="mt-2"
+              moveId={m.move.id}
               expectedLeg={m.move.expectedLeg}
               expectedHand={m.move.expectedHand}
               detectedLeg={m.detectedLeg}

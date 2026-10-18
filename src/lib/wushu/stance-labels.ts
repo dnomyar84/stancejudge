@@ -27,3 +27,15 @@ export function legLabel(leg: LegStanceType, lang: "en" | "zh" = "zh"): string {
 export function handLabel(hand: HandProfileType, lang: "en" | "zh" = "zh"): string {
   return HAND_LABELS[hand][lang];
 }
+
+/** Syllabus-specific leg names where enum is a coarse scorer bucket. */
+export function legLabelForMove(
+  moveId: string | undefined,
+  leg: LegStanceType,
+  lang: "en" | "zh" = "zh",
+): string {
+  if (moveId === "sdcq-11") {
+    return lang === "zh" ? "歇步" : "Seated cross stance (xie bu)";
+  }
+  return legLabel(leg, lang);
+}

@@ -1,7 +1,7 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { handLabel, legLabel } from "@/lib/wushu/stance-labels";
+import { handLabel, legLabelForMove } from "@/lib/wushu/stance-labels";
 import type { HandProfileType, LegStanceType } from "@/lib/wushu/types";
 import { cn } from "@/lib/utils";
 
@@ -10,6 +10,7 @@ type MoveStanceChipsProps = {
   expectedHand: HandProfileType;
   detectedLeg?: LegStanceType;
   detectedHand?: HandProfileType;
+  moveId?: string;
   compact?: boolean;
   className?: string;
 };
@@ -29,6 +30,7 @@ export function MoveStanceChips({
   expectedHand,
   detectedLeg,
   detectedHand,
+  moveId,
   compact,
   className,
 }: MoveStanceChipsProps) {
@@ -46,9 +48,11 @@ export function MoveStanceChips({
           chipClass(showDetected ? legMatch : "expected-only"),
         )}
       >
-        {compact ? "腿" : "Leg"} · {legLabel(expectedLeg)}
+        {compact ? "腿" : "Leg"} · {legLabelForMove(moveId, expectedLeg)}
         {showDetected && !legMatch && (
-          <span className="ml-1 opacity-80">→ {legLabel(detectedLeg)}</span>
+          <span className="ml-1 opacity-80">
+            → {legLabelForMove(moveId, detectedLeg)}
+          </span>
         )}
       </Badge>
       <Badge
