@@ -16,6 +16,11 @@ const BONES: [number, number][] = [
   [KP.right_knee, KP.right_ankle],
 ];
 
+export type DrawPoseStyle = {
+  /** `all` = joint dots (live overlay). `head-only` = single head mark (rail thumbnails). */
+  jointDots?: "all" | "head-only";
+};
+
 /** @param mirror Flip X in canvas pixel space (use when the video is not CSS-mirrored). */
 export function drawPose(
   ctx: CanvasRenderingContext2D,
@@ -23,12 +28,14 @@ export function drawPose(
   width: number,
   height: number,
   mirror: boolean,
+  style: DrawPoseStyle = {},
 ): void {
+  const jointDots = style.jointDots ?? "all";
   ctx.clearRect(0, 0, width, height);
 
   const mapX = (x: number) => (mirror ? width - x : x);
 
-  ctx.lineWidth = 3;
+  ctx.lineWidth = jointDots === "head-only" ? Math.max(2, width * 0.028) : 3;
   ctx.strokeStyle = "rgba(56, 189, 248, 0.9)";
   ctx.lineCap = "round";
 
@@ -42,12 +49,25 @@ export function drawPose(
     ctx.stroke();
   }
 
+  const dotRadius =
+    jointDots === "head-only" ? Math.max(2.5, width * 0.045) : 5;
+
   ctx.fillStyle = "rgba(34, 211, 238, 1)";
+  if (jointDots === "head-only") {
+    const head = getKeypoint(keypoints, KP.nose);
+    if (head) {
+      ctx.beginPath();
+      ctx.arc(mapX(head.x), head.y, dotRadius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    return;
+  }
+
   for (const idx of Object.values(KP)) {
     const p = getKeypoint(keypoints, idx);
     if (!p) continue;
     ctx.beginPath();
-    ctx.arc(mapX(p.x), p.y, 5, 0, Math.PI * 2);
+    ctx.arc(mapX(p.x), p.y, dotRadius, 0, Math.PI * 2);
     ctx.fill();
   }
 }

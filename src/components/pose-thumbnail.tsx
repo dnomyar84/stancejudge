@@ -53,7 +53,7 @@ export function PoseThumbnail({
 
     ctx.fillStyle = "rgba(0,0,0,0.35)";
     ctx.fillRect(0, 0, px, px);
-    drawPose(ctx, scaled, px, px, false);
+    drawPose(ctx, scaled, px, px, false, { jointDots: "head-only" });
   }, [hand, leg, moveId, routineId, size]);
 
   return (
