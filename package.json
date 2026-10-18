@@ -6,6 +6,7 @@
     "dev": "next dev -p 4317",
     "build": "node scripts/static-export-build.mjs",
     "build:pages": "GITHUB_PAGES=true npm run build",
+    "deploy:pages": "node scripts/deploy-gh-pages.mjs",
     "preview:pages": "node scripts/preview-pages.mjs",
     "generate-canonical": "tsx scripts/generate-canonical.ts",
     "calibrate": "tsx scripts/calibrate-routine.ts",

@@ -5,6 +5,8 @@ You are the **only developer** with **full rights** to code, merge, and `main` (
 **Canonical repo:** https://github.com/dnomyar84/stancejudge
 
 - Commit every meaningful change to `main` and **push to GitHub** without waiting for code review.
+- **Always push to `main`** on https://github.com/dnomyar84/stancejudge when you finish a task (`git push github main`). Never end a session with unpushed commits unless the user asked you to stop.
+- **Always update GitHub Pages after every push to `main`:** run `npm run deploy:pages` **or** confirm the [Deploy GitHub Pages](.github/workflows/deploy-pages.yml) workflow succeeded for that commit. The public site must match `main` (see [`.github/DEPLOY.md`](.github/DEPLOY.md)).
 - Do not treat chat, local-only notes, or secondary git remotes as source of truth.
 - Planning and backlog live **in this repo** under `docs/` — not elsewhere.
 - Governance: [`docs/product/governance.md`](docs/product/governance.md).
@@ -31,7 +33,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 ## Implementation conventions
 
 - **Stack:** Next.js static export, TypeScript, Tailwind, shadcn/ui, MediaPipe (client-only).
-- **Commands:** `npm run dev` (4317), `npm run build:pages`, `npm run preview:pages`.
+- **Commands:** `npm run dev` (4317), `npm run build:pages`, `npm run preview:pages`, **`npm run deploy:pages`** (publish after push).
 - **Backlog:** file bugs as Issues when testing; close with `Fixes #n` in commit; sync `features.md` for F-### status.
 - **Secrets:** never commit tokens or PATs.
 
@@ -50,5 +52,5 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 - [ ] `npm test` and `npm run build:pages` pass
 - [ ] Regressions: unit test or `tests/fixtures/reference-videos/` entry
-- [ ] User-visible UI change → deploy `gh-pages` per `.github/DEPLOY.md`
-- [ ] `git push` to **github.com/dnomyar84/stancejudge** `main`
+- [ ] **`git push github main`** (always)
+- [ ] **`npm run deploy:pages`** or green CI deploy for that commit (always — not only for UI tweaks)

@@ -20,21 +20,21 @@ Settings → Pages should use the **`gh-pages`** branch (root `/`), as configure
 
 ## Agent workflow (sole developer)
 
-1. Implement on `main`; update [`docs/product/features.md`](../docs/product/features.md) in the same commit when closing a feature.
-2. **Push `main`** to `github.com/dnomyar84/stancejudge` only.
-3. **Publish user-facing changes:**
-   ```bash
-   npm run generate-canonical   # if reference-videos.json changed
-   npm run build:pages
-   # deploy static export to gh-pages (from repo root):
-   rm -rf /tmp/stancejudge-pages && cp -a out /tmp/stancejudge-pages
-   cd /tmp/stancejudge-pages && git init -q && git add -A \
-     && git -c user.name="stancejudge" -c user.email="stancejudge@users.noreply.github.com" \
-     commit -q -m "Deploy $(git -C /workspace rev-parse --short HEAD)" \
-     && git branch -M gh-pages \
-     && git push -f https://github.com/dnomyar84/stancejudge.git gh-pages
-   ```
-4. Optional: fix **Settings → Environments → github-pages** so the Actions workflow can deploy without step 3.
+**Hard rules (see also [`AGENTS.md`](../AGENTS.md)):**
+
+1. **Always push to `main`** on `https://github.com/dnomyar84/stancejudge` (`git push github main` or `origin` if it points there). Do not leave work only on a Cursor/tmp remote.
+2. **Always update GitHub Pages after every push to `main`** — the live site must not lag `main`.
+
+**How to publish Pages:**
+
+| Method | When |
+| --- | --- |
+| **CI (default)** | Push to `main` → `.github/workflows/deploy-pages.yml` builds and force-pushes `out/` to `gh-pages`. |
+| **Manual / agent** | `npm run deploy:pages` (build + push `gh-pages`) if you need the site updated immediately or CI is down. |
+
+Before deploy when reference videos changed: `npm run generate-canonical`.
+
+Implement on `main`; update [`docs/product/features.md`](../docs/product/features.md) in the same commit when closing a feature.
 
 ## Clone (any machine)
 
@@ -56,4 +56,4 @@ Open **http://127.0.0.1:4322/stancejudge/** — not the server root. `basePath` 
 
 ## GitHub Actions
 
-Workflow `.github/workflows/deploy-pages.yml` builds on push to `main`. If the **deploy** job fails on environment protection, use the `gh-pages` push above until `main` is allowed to deploy to the `github-pages` environment.
+Workflow `.github/workflows/deploy-pages.yml` runs on **every push to `main`**: `npm ci` → `generate-canonical` → static build → **force-push `out/` to branch `gh-pages`**. No separate Pages environment approval required.
