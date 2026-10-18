@@ -53,7 +53,7 @@ Until (1–2) drive live + video grades, **fixing thumbnails alone will always f
 ## Current direction in code
 
 - Thumbnails: per-move templates for 三段长拳.
-- Scoring: **`move-alignment.ts`** blends per-move template similarity (~78%) with enum match (~22%) for `san-duan-chang-quan` in live DDR, video `buildRoutineReport`, and `bestFrameForMove`.
+- Scoring: **`stance-geometry.ts`** scores legs in **body-local 3D** (knee interior angle hip–knee–ankle, thigh near horizontal, shin near vertical for 弓步, etc.). **`move-alignment.ts`** blends geometry (~50%), template (~32%), and enums (~18%) for `san-duan-chang-quan`.
 - Leg/hand enums extended (`xie_bu`, `ti_xi`, `push_palm`, `block_elbow`, …); syllabus expectations live in `san-duan-chang-quan.ts` and merge into calibrated JSON via `canonical-store.ts`.
 
 See also [app-vs-gold-standard.md](./app-vs-gold-standard.md).

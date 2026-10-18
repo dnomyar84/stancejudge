@@ -22,20 +22,20 @@ export function gongBuLegPoints(lead: GongBuLead): {
   if (lead === "right") {
     return {
       lh: { x: CX - 14, y: 54 },
-      lk: { x: CX - 16, y: 75 },
-      la: { x: CX - 18, y: 96 },
+      lk: { x: CX - 15, y: 75 },
+      la: { x: CX - 16, y: 96 },
       rh: { x: CX + 12, y: 54 },
-      rk: { x: CX + 36, y: 84 },
-      ra: { x: CX + 26, y: 92 },
+      rk: { x: CX + 43, y: 70 },
+      ra: { x: CX + 26, y: 97 },
     };
   }
   return {
     lh: { x: CX - 12, y: 54 },
-    lk: { x: CX - 36, y: 84 },
-    la: { x: CX - 26, y: 92 },
+    lk: { x: CX - 43, y: 70 },
+    la: { x: CX - 26, y: 97 },
     rh: { x: CX + 14, y: 54 },
-    rk: { x: CX + 16, y: 75 },
-    ra: { x: CX + 18, y: 96 },
+    rk: { x: CX + 15, y: 75 },
+    ra: { x: CX + 16, y: 96 },
   };
 }
 

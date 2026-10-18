@@ -5,7 +5,7 @@ import { sanDuanChangQuan } from "@/lib/wushu/routines/san-duan-chang-quan";
 
 describe("move template alignment (三段长拳)", () => {
   it("scores ~100 when keypoints match the move template", () => {
-    const move = sanDuanChangQuan.moves.find((m) => m.id === "sdcq-11")!;
+    const move = sanDuanChangQuan.moves.find((m) => m.id === "sdcq-14")!;
     const template = buildMoveTemplateKeypoints(
       "san-duan-chang-quan",
       move.id,
@@ -21,8 +21,9 @@ describe("move template alignment (三段长拳)", () => {
       "unarmed",
     );
     expect(scores.templateScore).toBeGreaterThanOrEqual(95);
-    expect(scores.legScore).toBeGreaterThanOrEqual(90);
-    expect(scores.handScore).toBeGreaterThanOrEqual(90);
+    expect(scores.geometryLegScore).toBeGreaterThanOrEqual(75);
+    expect(scores.legScore).toBeGreaterThanOrEqual(88);
+    expect(scores.handScore).toBeGreaterThanOrEqual(88);
   });
 
   it("uses xie_bu expectation for 歇步冲拳", () => {

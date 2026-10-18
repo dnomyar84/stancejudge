@@ -1,4 +1,5 @@
 import { angleAtVertex, distance, midpoint } from "@/lib/pose/geometry";
+import { kneeAngleBody3D } from "@/lib/pose/stance-geometry";
 import {
   bodyLocalKeypoints,
   estimateBodyAxes,
@@ -42,19 +43,18 @@ export function classifyLegStance(keypoints: PoseKeypoint[]): {
     return { leg: "unknown", confidence: 0 };
   }
 
-  const leftKnee = kneeAngle(keypoints, KP.left_hip, KP.left_knee, KP.left_ankle);
-  const rightKnee = kneeAngle(
-    keypoints,
-    KP.right_hip,
-    KP.right_knee,
-    KP.right_ankle,
-  );
-  if (leftKnee === null || rightKnee === null) {
+  const axes = estimateBodyAxes(keypoints);
+  if (!axes) {
     return { leg: "unknown", confidence: 0 };
   }
 
-  const axes = estimateBodyAxes(keypoints);
-  if (!axes) {
+  const leftKnee =
+    kneeAngleBody3D(keypoints, axes, "left") ??
+    kneeAngle(keypoints, KP.left_hip, KP.left_knee, KP.left_ankle);
+  const rightKnee =
+    kneeAngleBody3D(keypoints, axes, "right") ??
+    kneeAngle(keypoints, KP.right_hip, KP.right_knee, KP.right_ankle);
+  if (leftKnee === null || rightKnee === null) {
     return { leg: "unknown", confidence: 0 };
   }
 

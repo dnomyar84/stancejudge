@@ -4,16 +4,11 @@ import {
   applyKeypointOverrides,
   buildStanceTemplateKeypoints,
   fillKeypoint,
-  type GongBuLead,
 } from "./stance-template";
+import { gongBuLeadForSanDuanMove } from "@/lib/wushu/gong-bu-lead";
 import type { HandProfileType } from "@/lib/wushu/types";
 
 const CX = 64;
-
-function gongBuLeadForMove(moveId: string): GongBuLead {
-  if (moveId === "sdcq-15" || moveId === "sdcq-17") return "left";
-  return "right";
-}
 
 function sdcqGongBu(
   moveId: string,
@@ -21,7 +16,7 @@ function sdcqGongBu(
   overrides?: Partial<Record<number, { x: number; y: number }>>,
 ) {
   const base = buildStanceTemplateKeypoints("gong_bu", hand, {
-    gongBuLead: gongBuLeadForMove(moveId),
+    gongBuLead: gongBuLeadForSanDuanMove(moveId),
   });
   return overrides ? applyKeypointOverrides(base, overrides) : base;
 }

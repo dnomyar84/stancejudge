@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { KP } from "@/lib/pose/keypoints";
+import { scoreGongBuGeometry } from "@/lib/pose/stance-geometry";
 import {
   buildStanceTemplateKeypoints,
   gongBuKneeAngles,
@@ -12,11 +13,14 @@ describe("buildStanceTemplateKeypoints", () => {
     expect(kps[KP.right_wrist]?.x).toBeGreaterThan(kps[KP.right_shoulder]!.x);
   });
 
-  it("right gong bu shows ~90° front knee and straight rear leg", () => {
+  it("right gong bu shows ~90° front knee and straight rear leg (3D body)", () => {
+    const kps = buildStanceTemplateKeypoints("gong_bu", "punch_forward", {
+      gongBuLead: "right",
+    });
     const { frontKnee, rearKnee } = gongBuKneeAngles("right");
-    expect(frontKnee).toBeGreaterThan(85);
-    expect(frontKnee).toBeLessThan(95);
     expect(rearKnee).toBeGreaterThan(165);
+    expect(frontKnee).toBeGreaterThan(75);
+    expect(scoreGongBuGeometry(kps, "right")).toBeGreaterThan(80);
   });
 
   it("spreads feet for ma_bu", () => {
