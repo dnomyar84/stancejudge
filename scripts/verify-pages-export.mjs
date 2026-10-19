@@ -63,4 +63,10 @@ if (!utilitiesOk) {
   process.exit(1);
 }
 
+const modelPath = join(out, "models", "xbot.glb");
+if (!existsSync(modelPath)) {
+  console.error("verify-pages-export: missing out/models/xbot.glb");
+  process.exit(1);
+}
+
 console.log("verify-pages-export: ok");

@@ -2,19 +2,17 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { ExtendedCoachPose } from "@/lib/pose/coach-figure/extended-pose";
-import { applyCoachPoseToMannequin } from "@/lib/pose/mannequin-adapter/coach-pose-to-mannequin";
-import { removeStrayFullscreenCanvases } from "@/lib/pose/mannequin-adapter/cleanup-stray-canvas";
+import {
+  loadMixamoAvatar,
+  retargetCoachPose,
+} from "@/lib/pose/hanim/load-mixamo-avatar";
+import type { MixamoAvatar } from "@/lib/pose/hanim/apply-coach-to-mixamo";
 import { cn } from "@/lib/utils";
 
 type Pose3DViewerProps = {
   pose: ExtendedCoachPose | null;
   className?: string;
-  /** Lock camera to horizontal ring — swipe/drag rotates around figure. */
   horizontalOrbit?: boolean;
-};
-
-type MannequinFigure = import("three").Object3D & {
-  dispose?: () => void;
 };
 
 type RebuildFn = (pose: ExtendedCoachPose | null) => void;
@@ -54,18 +52,15 @@ export function Pose3DViewer({
     let disposed = false;
     let renderer: import("three").WebGLRenderer | null = null;
     let frameId = 0;
-    let mannequin: MannequinFigure | null = null;
-
-    removeStrayFullscreenCanvases();
+    let avatar: MixamoAvatar | null = null;
+    let THREE: typeof import("three") | null = null;
 
     void (async () => {
       try {
-        const THREE = await import("three");
+        THREE = await import("three");
         const { OrbitControls } = await import(
           "three/examples/jsm/controls/OrbitControls.js"
         );
-        const { Male } = await import("mannequin-js/src/bodies/Male.js");
-        const { GROUND_LEVEL } = await import("mannequin-js/src/globals.js");
 
         if (disposed) return;
 
@@ -75,8 +70,8 @@ export function Pose3DViewer({
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x0a1218);
 
-        const camera = new THREE.PerspectiveCamera(42, width / height, 0.05, 20);
-        camera.position.set(0, 1.0, 2.2);
+        const camera = new THREE.PerspectiveCamera(42, width / height, 0.05, 50);
+        camera.position.set(0, 1.05, 2.35);
 
         const canvasOpts = { alpha: false, powerPreference: "default" as const };
         try {
@@ -96,7 +91,7 @@ export function Pose3DViewer({
         mount.appendChild(canvas);
 
         const controls = new OrbitControls(camera, renderer.domElement);
-        controls.target.set(0, 0.9, 0);
+        controls.target.set(0, 0.95, 0);
         controls.enableDamping = true;
         controls.enablePan = false;
         if (horizontalOrbit) {
@@ -108,15 +103,15 @@ export function Pose3DViewer({
         }
         controls.update();
 
-        scene.add(new THREE.HemisphereLight(0xb8e8ff, 0x223344, 1.1));
-        const key = new THREE.DirectionalLight(0xffffff, 1.35);
+        scene.add(new THREE.HemisphereLight(0xb8e8ff, 0x223344, 1.15));
+        const key = new THREE.DirectionalLight(0xffffff, 1.4);
         key.position.set(2, 4, 2);
         key.castShadow = true;
         scene.add(key);
-        scene.add(new THREE.AmbientLight(0x8899aa, 0.45));
+        scene.add(new THREE.AmbientLight(0x8899aa, 0.5));
 
         const floor = new THREE.Mesh(
-          new THREE.PlaneGeometry(4, 4),
+          new THREE.PlaneGeometry(6, 6),
           new THREE.MeshStandardMaterial({
             color: 0x14202a,
             roughness: 0.9,
@@ -126,7 +121,7 @@ export function Pose3DViewer({
         floor.receiveShadow = true;
         scene.add(floor);
 
-        const grid = new THREE.GridHelper(4, 20, 0x2a4a5a, 0x1a2a34);
+        const grid = new THREE.GridHelper(6, 24, 0x2a4a5a, 0x1a2a34);
         grid.position.y = 0.001;
         scene.add(grid);
 
@@ -134,28 +129,24 @@ export function Pose3DViewer({
           new THREE.ArrowHelper(
             new THREE.Vector3(0, 0, 1),
             new THREE.Vector3(0, 0.01, 0),
-            0.4,
+            0.45,
             0x22d3ee,
           ),
         );
 
-        const figureGroup = new THREE.Group();
-        scene.add(figureGroup);
-
-        const groundLift = -GROUND_LEVEL;
-
-        mannequin = new Male(1.75) as MannequinFigure;
-        figureGroup.add(mannequin);
+        avatar = await loadMixamoAvatar(THREE);
+        avatar.root.traverse((obj) => {
+          const o = obj as import("three").Mesh;
+          if (o.isMesh) {
+            o.castShadow = true;
+            o.receiveShadow = true;
+          }
+        });
+        scene.add(avatar.root);
 
         const rebuildFigure = (p: ExtendedCoachPose | null) => {
-          if (!mannequin || !p) return;
-          applyCoachPoseToMannequin(
-            mannequin as unknown as Parameters<
-              typeof applyCoachPoseToMannequin
-            >[0],
-            p,
-            groundLift,
-          );
+          if (!THREE || !avatar) return;
+          retargetCoachPose(THREE, avatar, p);
         };
 
         rebuildRef.current = rebuildFigure;
@@ -184,7 +175,7 @@ export function Pose3DViewer({
       } catch (err) {
         if (disposed) return;
         const message =
-          err instanceof Error ? err.message : "3D viewer failed to start";
+          err instanceof Error ? err.message : "3D avatar failed to load";
         console.error("Pose3DViewer:", err);
         setViewerError(message);
         setViewerState("error");
@@ -194,9 +185,7 @@ export function Pose3DViewer({
     return () => {
       disposed = true;
       rebuildRef.current = null;
-      removeStrayFullscreenCanvases();
       cancelAnimationFrame(frameId);
-      if (mannequin?.parent) mannequin.parent.remove(mannequin);
       if (renderer) {
         renderer.dispose();
         if (renderer.domElement.parentElement === mount) {
@@ -217,11 +206,11 @@ export function Pose3DViewer({
         ref={mountRef}
         className="absolute inset-0"
         role="img"
-        aria-label="3D coach mannequin preview"
+        aria-label="3D humanoid coach preview"
       />
       {viewerState === "loading" && (
         <p className="pointer-events-none absolute inset-x-0 bottom-3 text-center text-xs text-muted-foreground">
-          Loading 3D figure…
+          Loading humanoid coach…
         </p>
       )}
       {viewerState === "error" && (
