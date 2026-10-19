@@ -33,7 +33,13 @@ const ROOT_Y_SMOOTH = 0.42;
 export function applyCoachFigurinePoseToMannequin(
   man: MannequinFigurineTarget,
   pose: CoachFigurinePoseV1,
-  options?: { groundLift?: number; smoothRootY?: boolean },
+  options?: {
+    /** @deprecated Use anchorFeetOnGround; kept for legacy semantic compile path. */
+    groundLift?: number;
+    smoothRootY?: boolean;
+    /** After stepOnGround(), keep computed foot placement (+ pose.root.y). Default true. */
+    anchorFeetOnGround?: boolean;
+  },
 ): void {
   assertCoachFigurinePoseV1(pose);
 
@@ -92,11 +98,16 @@ export function applyCoachFigurinePoseToMannequin(
   man.stepOnGround();
   man.updateMatrixWorld(true);
 
-  let rootY = pose.root.y;
-  const groundLift = options?.groundLift ?? 0;
-  if (groundLift !== 0) rootY += groundLift;
+  const anchorFeet = options?.anchorFeetOnGround ?? true;
+  let rootY: number;
+  if (anchorFeet) {
+    rootY = man.position.y + pose.root.y;
+  } else {
+    const groundLift = options?.groundLift ?? 0;
+    rootY = pose.root.y + groundLift;
+  }
 
-  const smooth = options?.smoothRootY ?? true;
+  const smooth = options?.smoothRootY ?? !anchorFeet;
   const prevRootY = man.__coachRootY;
   if (!smooth || prevRootY === undefined || Math.abs(rootY - prevRootY) > 0.4) {
     man.position.y = rootY;

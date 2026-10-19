@@ -81,8 +81,6 @@ export function Pose3DMannequinViewer({
           "three/examples/jsm/controls/OrbitControls.js"
         );
         const { Male } = await import("mannequin-js/src/bodies/Male.js");
-        const { GROUND_LEVEL } = await import("mannequin-js/src/globals.js");
-
         if (disposed || session !== sessionRef.current) return;
 
         let width = mount.clientWidth;
@@ -159,7 +157,6 @@ export function Pose3DMannequinViewer({
           ),
         );
 
-        const groundLift = -GROUND_LEVEL;
         mannequin = new Male(1.75) as MannequinFigure;
         scene.add(mannequin);
         let cameraFramed = false;
@@ -194,9 +191,12 @@ export function Pose3DMannequinViewer({
             typeof applyCoachFigurinePoseToMannequin
           >[0];
           if (fig) {
-            applyCoachFigurinePoseToMannequin(target, fig, { groundLift });
+            applyCoachFigurinePoseToMannequin(target, fig, {
+              anchorFeetOnGround: true,
+              smoothRootY: false,
+            });
           } else if (p) {
-            applyCoachPoseToMannequin(target, p, groundLift);
+            applyCoachPoseToMannequin(target, p, 0);
           }
           mannequin.updateMatrixWorld(true);
           if (!cameraFramed) {

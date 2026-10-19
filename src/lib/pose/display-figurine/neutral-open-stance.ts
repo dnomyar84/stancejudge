@@ -13,6 +13,68 @@ export function neutralOpenStanceFigurine(): CoachFigurinePoseV1 {
   return extendedToCoachFigurinePose(kf.pose);
 }
 
+function figurineFromKeyframe(
+  moveId: string,
+  phaseId: string,
+  keyframeIndex = -1,
+): CoachFigurinePoseV1 {
+  const ch = getMoveChoreography("wu-bu-quan", moveId);
+  const phase = ch?.phases.find((p) => p.id === phaseId);
+  const kf =
+    keyframeIndex >= 0
+      ? phase?.keyframes[keyframeIndex]
+      : phase?.keyframes.at(-1);
+  if (!kf) {
+    throw new Error(`Missing keyframe ${moveId}/${phaseId}`);
+  }
+  if (kf.figurine) return kf.figurine;
+  return extendedToCoachFigurinePose(kf.pose);
+}
+
+let refRightArmForward: CoachFigurinePoseV1 | undefined;
+let refLeftArmForward: CoachFigurinePoseV1 | undefined;
+let refLeftKneeRaised: CoachFigurinePoseV1 | undefined;
+let refRightKneeRaised: CoachFigurinePoseV1 | undefined;
+
+function refs() {
+  refRightArmForward ??= figurineFromKeyframe("wbq-02", "chong_quan", -1);
+  refLeftArmForward ??= figurineFromKeyframe("wbq-05", "xie_bu", -1);
+  refLeftKneeRaised ??= figurineFromKeyframe("wbq-06", "ti_xi_chuan", -1);
+  refRightKneeRaised ??= figurineFromKeyframe("wbq-03", "chamber", 1);
+  return {
+    refRightArmForward,
+    refLeftArmForward,
+    refLeftKneeRaised,
+    refRightKneeRaised,
+  };
+}
+
+function copyLeftArm(target: CoachFigurinePoseV1, from: CoachFigurinePoseV1) {
+  target.leftArm = { ...from.leftArm };
+  target.leftElbow = { ...from.leftElbow };
+  target.leftWrist = { ...from.leftWrist };
+  target.leftFingers = { ...from.leftFingers };
+}
+
+function copyRightArm(target: CoachFigurinePoseV1, from: CoachFigurinePoseV1) {
+  target.rightArm = { ...from.rightArm };
+  target.rightElbow = { ...from.rightElbow };
+  target.rightWrist = { ...from.rightWrist };
+  target.rightFingers = { ...from.rightFingers };
+}
+
+function copyLeftLeg(target: CoachFigurinePoseV1, from: CoachFigurinePoseV1) {
+  target.leftLeg = { ...from.leftLeg };
+  target.leftKnee = { ...from.leftKnee };
+  target.leftAnkle = { ...from.leftAnkle };
+}
+
+function copyRightLeg(target: CoachFigurinePoseV1, from: CoachFigurinePoseV1) {
+  target.rightLeg = { ...from.rightLeg };
+  target.rightKnee = { ...from.rightKnee };
+  target.rightAnkle = { ...from.rightAnkle };
+}
+
 export type FigurineControlToggles = {
   leftHandRaised: boolean;
   rightHandRaised: boolean;
@@ -20,32 +82,24 @@ export type FigurineControlToggles = {
   rightKneeRaised: boolean;
 };
 
-const RAISED_ARM_RAISE = 88;
-const RAISED_ARM_ELBOW = 18;
-const RAISED_LEG_RAISE = 72;
-const RAISED_KNEE_BEND = 95;
-
 export function figurineWithControlToggles(
   base: CoachFigurinePoseV1,
   toggles: FigurineControlToggles,
 ): CoachFigurinePoseV1 {
   const f = structuredClone(base);
 
+  const r = refs();
   if (toggles.leftHandRaised) {
-    f.leftArm.raise = RAISED_ARM_RAISE;
-    f.leftElbow.bend = RAISED_ARM_ELBOW;
+    copyLeftArm(f, r.refLeftArmForward);
   }
   if (toggles.rightHandRaised) {
-    f.rightArm.raise = RAISED_ARM_RAISE;
-    f.rightElbow.bend = RAISED_ARM_ELBOW;
+    copyRightArm(f, r.refRightArmForward);
   }
   if (toggles.leftKneeRaised) {
-    f.leftLeg.raise = RAISED_LEG_RAISE;
-    f.leftKnee.bend = RAISED_KNEE_BEND;
+    copyLeftLeg(f, r.refLeftKneeRaised);
   }
   if (toggles.rightKneeRaised) {
-    f.rightLeg.raise = RAISED_LEG_RAISE;
-    f.rightKnee.bend = RAISED_KNEE_BEND;
+    copyRightLeg(f, r.refRightKneeRaised);
   }
 
   return f;

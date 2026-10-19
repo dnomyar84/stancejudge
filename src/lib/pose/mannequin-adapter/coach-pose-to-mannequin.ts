@@ -217,5 +217,8 @@ export function applyCoachPoseToMannequin(
   groundLift = 0,
 ): void {
   const figurine = extendedToCoachFigurinePose(pose);
-  applyCoachFigurinePoseToMannequin(man, figurine, { groundLift });
+  applyCoachFigurinePoseToMannequin(man, figurine, {
+    groundLift,
+    anchorFeetOnGround: groundLift === 0,
+  });
 }
