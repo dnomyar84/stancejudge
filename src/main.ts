@@ -15,7 +15,8 @@ import {
   EXAMPLE_SWORD,
   parsePoseGrammar,
 } from "./engine/pose-grammar";
-import { JOINT_IDS } from "./engine/joint-catalog";
+import { JOINT_IDS, type JointId } from "./engine/joint-catalog";
+import type { JointAnglesDeg } from "./engine/wooden-dummy";
 import { createDummyViewer } from "./engine/viewer";
 
 const app = document.querySelector<HTMLDivElement>("#app")!;
@@ -25,7 +26,7 @@ app.innerHTML = `
     <aside class="panel">
       <h1>Wooden dummy — pose grammar</h1>
       <p class="lede">
-        Write a pose in plain lines, then apply. Joint angles still work when you need them.
+        Write a pose in plain lines, then apply. A button eases the figurine from the pose it is in into the next one.
       </p>
       <label for="grammar">Pose program</label>
       <textarea id="grammar" class="grammar" spellcheck="false"></textarea>
@@ -67,7 +68,41 @@ function setStatus(ok: boolean, message: string) {
   statusEl.className = ok ? "status ok" : "status err";
 }
 
-function applyGrammar() {
+const POSE_BLEND_MS = 800;
+let blendToken = 0;
+
+function copyAngles(): Record<JointId, JointAnglesDeg> {
+  const out = {} as Record<JointId, JointAnglesDeg>;
+  for (const id of JOINT_IDS) out[id] = { ...dummy.angles[id] };
+  return out;
+}
+
+function writeAngles(src: Record<JointId, JointAnglesDeg>) {
+  for (const id of JOINT_IDS) dummy.angles[id] = { ...src[id] };
+}
+
+function blendPose(from: Record<JointId, JointAnglesDeg>, to: Record<JointId, JointAnglesDeg>): number {
+  const token = ++blendToken;
+  const started = performance.now();
+  const step = (now: number) => {
+    if (token !== blendToken) return;
+    const u = Math.min(1, (now - started) / POSE_BLEND_MS);
+    const eased = u * u * (3 - 2 * u);
+    for (const id of JOINT_IDS) {
+      const a = dummy.angles[id];
+      a.flex = from[id].flex + (to[id].flex - from[id].flex) * eased;
+      a.abduct = from[id].abduct + (to[id].abduct - from[id].abduct) * eased;
+      a.twist = from[id].twist + (to[id].twist - from[id].twist) * eased;
+    }
+    syncBonesFromAngles(dummy);
+    groundDummy(dummy);
+    if (u < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+  return token;
+}
+
+function applyGrammar(animate = true) {
   const parsed = parsePoseGrammar(grammarEl.value);
   if (!parsed.ok) {
     setStatus(
@@ -76,18 +111,36 @@ function applyGrammar() {
     );
     return;
   }
+  const from = copyAngles();
   const clamped = executePoseProgram(dummy, parsed.program);
+  const to = copyAngles();
+  writeAngles(from);
+  syncBonesFromAngles(dummy);
   groundDummy(dummy);
-  viewer.setDummy(dummy);
-  if (clamped.length === 0) {
-    setStatus(true, `Applied ${parsed.program.statements.length} statement(s).`);
+  const finish = () => {
+    if (clamped.length === 0) {
+      setStatus(true, `Applied ${parsed.program.statements.length} statement(s).`);
+      return;
+    }
+    const detail = clamped
+      .map((n) => `${n.joint} ${n.axis} ${n.requested}° → ${n.applied}°`)
+      .join("; ");
+    statusEl.textContent = `Clamped to human range: ${detail}`;
+    statusEl.className = "status warn";
+  };
+  if (!animate) {
+    writeAngles(to);
+    syncBonesFromAngles(dummy);
+    groundDummy(dummy);
+    finish();
     return;
   }
-  const detail = clamped
-    .map((n) => `${n.joint} ${n.axis} ${n.requested}° → ${n.applied}°`)
-    .join("; ");
-  statusEl.textContent = `Clamped to human range: ${detail}`;
-  statusEl.className = "status warn";
+  const token = blendPose(from, to);
+  setStatus(true, "Moving into the pose.");
+  window.setTimeout(() => {
+    if (token !== blendToken) return;
+    finish();
+  }, POSE_BLEND_MS + 40);
 }
 
 document.querySelector("#apply")!.addEventListener("click", applyGrammar);
@@ -128,4 +181,4 @@ grammarEl.addEventListener("keydown", (e) => {
   }
 });
 
-applyGrammar();
+applyGrammar(false);

@@ -18,7 +18,7 @@ Open http://127.0.0.1:4321/
 
 ## Pose grammar
 
-One line per action. `#` starts a comment.
+One line per action. `#` starts a comment. Applying a pose eases the figurine from where it is into the new pose, instead of snapping.
 
 ```
 stand
