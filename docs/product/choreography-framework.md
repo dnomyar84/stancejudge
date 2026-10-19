@@ -23,6 +23,21 @@ Move (syllabus id)
 
 `ExtendedCoachPose` = `CoachSkeleton` + **hand** end effectors (wrist, knuckle, palm, palm normal) + **foot** (heel, toe, ankle, toe yaw).
 
+## Stance constraints (hard vs soft)
+
+Phases may attach `stanceConstraints` (`src/lib/pose/canonical3d/constraints.ts`):
+
+| Strength | Meaning | Example |
+| --- | --- | --- |
+| **required** | Must pass; pose is invalid if not | 提膝：支撑腿伸直（膝角 ≥ 165°） |
+| **preferred** | Graded tolerance; not “wildly wrong” | 支撑脚脚尖宜朝前；±35° 满分，±70° 以外判为过大偏差 |
+
+Keyframes stay **authoritative** for the coach mesh; constraints describe **what we check** when matching student video later (and what the lab reports for 定势 moves like 提膝).
+
+**提膝** preset: `tiXiDingConstraintSet(supportLeg)` — support leg inferred from higher knee (`inferTiXiSupportLeg`). Lifted leg foot facing is intentionally **not** locked to forward (future: separate soft rules for 勾脚 / 绷脚).
+
+Tune per move by changing `softToleranceDeg` / `rejectBeyondDeg` on `FootToeYawConstraint`, or add more `preferred` rules (knee height band, etc.).
+
 ## Example: 起势 (wbq-01)
 
 | Phase | Cues (summary) | Keyframes |

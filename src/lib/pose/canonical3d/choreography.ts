@@ -1,5 +1,6 @@
 import type { ExtendedCoachPose } from "../coach-figure/extended-pose";
 import { lerpExtendedPose } from "../coach-figure/interpolate-pose";
+import type { StanceConstraintSet } from "./constraints";
 
 /** Body layer a coaching cue applies to. */
 export type ChoreographyLayer =
@@ -43,6 +44,11 @@ export type ChoreographyPhase = {
   keyframes: RigKeyframe[];
   /** Duration weights between consecutive keyframes in this phase. */
   segmentWeights: number[];
+  /**
+   * Optional 定势 checks (hard + soft). Applied to interpolated pose while this phase plays.
+   * Example: 提膝 — support leg straight (required), support toe yaw (preferred band).
+   */
+  stanceConstraints?: StanceConstraintSet;
 };
 
 export type MoveChoreographySpec = {
@@ -71,6 +77,7 @@ export type SampledCoachFrame = {
   phaseNameZh: string | null;
   keyframeLabelZh: string | null;
   activeCues: ChoreographyCue[];
+  stanceConstraints: StanceConstraintSet | null;
   /** 0…1 within current move. */
   moveT: number;
   /** 0…1 across entire routine playback. */
@@ -145,6 +152,7 @@ export function sampleMoveChoreography(
     phaseNameZh: phase.nameZh,
     keyframeLabelZh: segT < 0.5 ? from.labelZh : to.labelZh,
     activeCues,
+    stanceConstraints: phase.stanceConstraints ?? null,
     moveT: clamped,
     routineT: clamped,
   };
@@ -166,6 +174,7 @@ function frameResult(
     phaseNameZh: phase.nameZh,
     keyframeLabelZh: kf.labelZh,
     activeCues,
+    stanceConstraints: phase.stanceConstraints ?? null,
     moveT,
     routineT,
   };

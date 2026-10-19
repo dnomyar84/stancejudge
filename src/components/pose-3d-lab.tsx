@@ -17,6 +17,11 @@ import {
   sampleRoutineVisualCoach,
 } from "@/lib/pose/canonical3d/choreography";
 import {
+  evaluateStanceConstraints,
+  inferTiXiSupportLeg,
+  tiXiDingConstraintSet,
+} from "@/lib/pose/canonical3d/constraints";
+import {
   defaultFootAimForLeg,
   handShapeFromProfile,
   legStanceFromProfile,
@@ -79,6 +84,7 @@ export function Pose3DLab({ onBack }: Pose3DLabProps) {
           phaseNameZh: null,
           keyframeLabelZh: null,
           activeCues: [],
+          stanceConstraints: null,
           moveT: 1,
           routineT: 0,
         }
@@ -128,6 +134,22 @@ export function Pose3DLab({ onBack }: Pose3DLabProps) {
   const legKind = move ? legStanceFromProfile(move.expectedLeg) : "unknown";
   const handKind = move ? handShapeFromProfile(move.expectedHand) : "unknown";
   const feet = defaultFootAimForLeg(legKind);
+
+  const constraintEval = useMemo(() => {
+    if (!sampled?.pose) return null;
+    if (sampled.stanceConstraints) {
+      return evaluateStanceConstraints(sampled.pose, sampled.stanceConstraints);
+    }
+    if (legKind === "ti_xi") {
+      const support = inferTiXiSupportLeg(sampled.pose.skeleton);
+      return evaluateStanceConstraints(
+        sampled.pose,
+        tiXiDingConstraintSet(support),
+      );
+    }
+    return null;
+  }, [sampled, legKind]);
+
   return (
     <div className="min-h-full bg-gradient-to-b from-background via-background to-cyan-950/20">
       <div className="mx-auto flex max-w-4xl flex-col gap-6 px-4 py-6 md:py-10">
@@ -289,6 +311,33 @@ export function Pose3DLab({ onBack }: Pose3DLabProps) {
                 </Card>
               </>
             )}
+
+            {constraintEval ? (
+              <Card className="border-border/80">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base">Stance constraints</CardTitle>
+                  <CardDescription className="text-xs">
+                    Required vs preferred (soft) — score {constraintEval.overallScore}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-2 text-xs">
+                  {constraintEval.results.map((r) => (
+                    <p
+                      key={r.constraintId}
+                      className={
+                        r.strength === "required" && r.score < 100
+                          ? "text-red-400"
+                          : r.score < 100
+                            ? "text-amber-400/90"
+                            : "text-muted-foreground"
+                      }
+                    >
+                      {r.messageZh}
+                    </p>
+                  ))}
+                </CardContent>
+              </Card>
+            ) : null}
 
             {sampled && sampled.activeCues.length > 0 ? (
               <Card className="border-cyan-500/30">

@@ -132,15 +132,46 @@ export function legsXieBu(): Pick<
   };
 }
 
-export function legsTiXi(): Pick<
+/** 提膝: support leg straight (hip–knee–ankle line); other knee raised. */
+export function legsTiXi(lift: "left" | "right" = "left"): Pick<
   CoachSkeleton,
   "leftKnee" | "rightKnee" | "leftAnkle" | "rightAnkle"
 > {
+  const hy = hipY();
+  const thigh = ANATOMY.thigh;
+  const shin = ANATOMY.shin;
+
+  const support = (side: "left" | "right") => {
+    const sign = side === "left" ? -1 : 1;
+    const hip = v(sign * ANATOMY.hipHalfWidth, 0, hy);
+    const ankle = v(sign * (ANATOMY.hipHalfWidth + 0.02), 0.05, ANATOMY.ankleUp);
+    const knee = lerp3(hip, ankle, thigh / (thigh + shin));
+    return { knee, ankle };
+  };
+
+  const lifted = (side: "left" | "right") => {
+    const sign = side === "left" ? -1 : 1;
+    return {
+      knee: v(sign * 0.08, 0.2, hy - 0.06),
+      ankle: v(sign * 0.1, 0.14, hy - 0.26),
+    };
+  };
+
+  const s = support(lift === "left" ? "right" : "left");
+  const l = lifted(lift);
+  if (lift === "left") {
+    return {
+      leftKnee: l.knee,
+      leftAnkle: l.ankle,
+      rightKnee: s.knee,
+      rightAnkle: s.ankle,
+    };
+  }
   return {
-    leftKnee: v(-0.06, 0.12, ANATOMY.hipUp - 0.02),
-    rightKnee: v(0.1, 0, ANATOMY.kneeUp),
-    leftAnkle: v(-0.08, 0.1, ANATOMY.ankleUp),
-    rightAnkle: v(0.1, -0.1, ANATOMY.ankleUp),
+    leftKnee: s.knee,
+    leftAnkle: s.ankle,
+    rightKnee: l.knee,
+    rightAnkle: l.ankle,
   };
 }
 
