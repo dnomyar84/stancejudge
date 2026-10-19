@@ -1,7 +1,0 @@
-{
-  "name": "stancejudge-youtube-proxy",
-  "private": true,
-  "dependencies": {
-    "@distube/ytdl-core": "^4.16.12"
-  }
-}
