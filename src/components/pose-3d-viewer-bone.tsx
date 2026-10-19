@@ -211,6 +211,10 @@ export function Pose3DBoneViewer({
 
         rebuildRef.current = rebuildFigure;
         rebuildFigure(poseRef.current, boneRef.current);
+        if (!cameraFramed && avatar && camera && controls && THREE) {
+          frameAvatarInView(THREE, avatar.root, camera, controls);
+          cameraFramed = true;
+        }
 
         const onResize = () => {
           if (!mount || !renderer || !camera) return;

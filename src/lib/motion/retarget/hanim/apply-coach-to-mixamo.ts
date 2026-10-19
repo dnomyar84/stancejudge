@@ -159,6 +159,28 @@ export function applyBindPose(
   settleAvatarOnFloor(THREE, avatar);
 }
 
+/** Light spine / head aim from coach chest & nose (compile-time retarget). */
+function applyTorsoAndHeadAim(
+  THREE: typeof import("three"),
+  bones: MixamoBoneMap,
+  t: import("./coach-world").CoachWorldTargets,
+): void {
+  const lean = (t.chest.z - t.hipMid.z) * 1.4;
+  const pitch = THREE.MathUtils.clamp(lean, -0.45, 0.35);
+  bones.spine.rotation.x = pitch * 0.35;
+  bones.spine1.rotation.x = pitch * 0.45;
+  bones.spine2.rotation.x = pitch * 0.55;
+
+  const neckBase = t.chest.clone();
+  const look = t.nose.clone().sub(neckBase);
+  if (look.lengthSq() < 1e-6) return;
+  look.normalize();
+  bones.neck.rotation.y = THREE.MathUtils.clamp(look.x * 0.9, -0.5, 0.5);
+  bones.neck.rotation.x = THREE.MathUtils.clamp(-look.y * 0.7, -0.35, 0.35);
+  bones.head.rotation.x = THREE.MathUtils.clamp(-look.y * 0.35, -0.25, 0.2);
+  bones.head.rotation.y = THREE.MathUtils.clamp(look.x * 0.4, -0.35, 0.35);
+}
+
 function alignPelvisToCoach(
   THREE: typeof import("three"),
   avatar: MixamoAvatar,
@@ -192,6 +214,8 @@ export function applyCoachPoseToMixamo(
     t.rightWrist,
     "elbow",
   );
+
+  applyTorsoAndHeadAim(THREE, avatar.bones, t);
 
   mesh.skeleton.update();
   avatar.root.updateMatrixWorld(true);

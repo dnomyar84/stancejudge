@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   Card,
   CardContent,
@@ -115,14 +116,17 @@ export function PracticeHome({ onSelect }: PracticeHomeProps) {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button
-              type="button"
-              className="min-h-12 w-full sm:w-auto"
-              size="lg"
+            <a
+              href="/coach/wu-bu-quan/"
+              data-testid="open-wu-bu-coach"
+              className={cn(
+                buttonVariants({ size: "lg" }),
+                "min-h-12 w-full sm:w-auto",
+              )}
               onClick={() => onSelect("wu-bu-coach")}
             >
               Watch &amp; rotate
-            </Button>
+            </a>
           </CardContent>
         </Card>
 

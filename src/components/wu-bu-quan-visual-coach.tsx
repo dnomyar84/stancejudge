@@ -122,6 +122,7 @@ export function WuBuQuanVisualCoach({ onBack }: WuBuQuanVisualCoachProps) {
               pose={sampled?.pose ?? null}
               figurine={sampled?.figurine ?? null}
               bone={sampled?.bone ?? null}
+              smoothMotion={!playing}
               horizontalOrbit
               className="h-[min(58vh,480px)] w-full touch-pan-y rounded-lg border border-border/60"
             />
@@ -188,6 +189,26 @@ export function WuBuQuanVisualCoach({ onBack }: WuBuQuanVisualCoachProps) {
                 ))}
               </div>
             </label>
+
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {moveMarkers.map((m) => (
+                <Button
+                  key={m.id}
+                  type="button"
+                  size="sm"
+                  variant={
+                    sampled?.moveId === m.id ? "default" : "outline"
+                  }
+                  className="h-8 text-xs"
+                  onClick={() => {
+                    stopPlayback();
+                    setRoutineT(m.start);
+                  }}
+                >
+                  {m.nameZh}
+                </Button>
+              ))}
+            </div>
           </CardContent>
         </Card>
 

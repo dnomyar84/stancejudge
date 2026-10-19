@@ -14,6 +14,8 @@ export type Pose3DViewerProps = {
   figurine?: CoachFigurinePoseV1 | null;
   className?: string;
   horizontalOrbit?: boolean;
+  /** When false, bone viewer applies poses instantly (use during timeline play). */
+  smoothMotion?: boolean;
 };
 
 const useMannequinRenderer =
@@ -27,5 +29,13 @@ export function Pose3DViewer(props: Pose3DViewerProps) {
   if (useMannequinRenderer) {
     return <Pose3DMannequinViewer {...props} />;
   }
-  return <Pose3DBoneViewer pose={props.pose} bone={props.bone} className={props.className} horizontalOrbit={props.horizontalOrbit} />;
+  return (
+    <Pose3DBoneViewer
+      pose={props.pose}
+      bone={props.bone}
+      className={props.className}
+      horizontalOrbit={props.horizontalOrbit}
+      tweenMs={props.smoothMotion === false ? 0 : 90}
+    />
+  );
 }

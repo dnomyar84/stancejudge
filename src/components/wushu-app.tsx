@@ -1,63 +1,76 @@
 "use client";
 
-import dynamic from "next/dynamic";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { LiveRoutinePractice } from "@/components/live-routine-practice";
 import { PracticeHome, type PracticeMode } from "@/components/practice-home";
 import { RoutineJudge } from "@/components/routine-judge";
 import { RoutineSyllabusView } from "@/components/routine-syllabus-view";
 import { Pose3DLab } from "@/components/pose-3d-lab";
 import { CoachErrorBoundary } from "@/components/coach-error-boundary";
-const WuBuQuanVisualCoach = dynamic(
-  () =>
-    import("@/components/wu-bu-quan-visual-coach").then(
-      (m) => m.WuBuQuanVisualCoach,
-    ),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="flex min-h-full items-center justify-center bg-gradient-to-b from-background via-background to-cyan-950/25 p-8 text-sm text-muted-foreground">
-        Loading 3D coach…
-      </div>
-    ),
-  },
-);
+import { WuBuQuanVisualCoach } from "@/components/wu-bu-quan-visual-coach";
 import { StanceJudge } from "@/components/stance-judge";
+
+function coachModeFromLocation(): PracticeMode | null {
+  if (typeof window === "undefined") return null;
+  const coach = new URLSearchParams(window.location.search).get("coach");
+  if (coach === "wu-bu") return "wu-bu-coach";
+  if (coach === "lab") return "pose-3d-lab";
+  return null;
+}
 
 export function WushuApp() {
   const [mode, setMode] = useState<PracticeMode>("home");
 
+  useEffect(() => {
+    const fromUrl = coachModeFromLocation();
+    if (fromUrl) setMode(fromUrl);
+  }, []);
+
+  const goHome = () => {
+    setMode("home");
+    window.history.replaceState(null, "", "/");
+  };
+
+  const openCoach = (next: Exclude<PracticeMode, "home">) => {
+    setMode(next);
+    if (next === "wu-bu-coach") {
+      window.history.replaceState(null, "", "/?coach=wu-bu");
+    } else if (next === "pose-3d-lab") {
+      window.history.replaceState(null, "", "/?coach=lab");
+    }
+  };
+
   if (mode === "home") {
     return (
       <div className="min-h-full bg-gradient-to-b from-background via-background to-cyan-950/20">
-        <PracticeHome onSelect={(m) => setMode(m)} />
+        <PracticeHome onSelect={openCoach} />
       </div>
     );
   }
 
   if (mode === "live-routine") {
-    return <LiveRoutinePractice onBack={() => setMode("home")} />;
+    return <LiveRoutinePractice onBack={goHome} />;
   }
 
   if (mode === "live-stance") {
-    return <StanceJudge onBack={() => setMode("home")} />;
+    return <StanceJudge onBack={goHome} />;
   }
 
   if (mode === "routine-video") {
-    return <RoutineJudge onBack={() => setMode("home")} />;
+    return <RoutineJudge onBack={goHome} />;
   }
 
   if (mode === "syllabus") {
-    return <RoutineSyllabusView onBack={() => setMode("home")} />;
+    return <RoutineSyllabusView onBack={goHome} />;
   }
 
   if (mode === "pose-3d-lab") {
     return (
       <CoachErrorBoundary
         title="Pose 3D Lab failed to load"
-        onBack={() => setMode("home")}
+        onBack={goHome}
       >
-        <Pose3DLab onBack={() => setMode("home")} />
+        <Pose3DLab onBack={goHome} />
       </CoachErrorBoundary>
     );
   }
@@ -66,9 +79,9 @@ export function WushuApp() {
     return (
       <CoachErrorBoundary
         title="五步拳 3D coach failed to load"
-        onBack={() => setMode("home")}
+        onBack={goHome}
       >
-        <WuBuQuanVisualCoach onBack={() => setMode("home")} />
+        <WuBuQuanVisualCoach onBack={goHome} />
       </CoachErrorBoundary>
     );
   }

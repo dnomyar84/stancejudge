@@ -17,7 +17,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:video": "tsx scripts/run-video-stance-tests.ts",
-    "test:video:ci": "npm run build:pages && npm run test:video"
+    "test:video:ci": "npm run build:pages && npm run test:video",
+    "test:smoke-wbq-coach": "node scripts/smoke-wbq-visual-coach.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
