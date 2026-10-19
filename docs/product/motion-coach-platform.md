@@ -20,9 +20,16 @@ Stance Judge treats **motion coaching** as a small platform: shared rig, retarge
 
 Wushu reference: `disciplines/wushu/register.ts` registers **五步拳** (`wu-bu-quan`). Registration uses `registry-core.ts` to avoid circular imports with the public `visual-coach/registry` barrel.
 
-## Retargeting
+## Display vs retarget (important)
 
-Coach poses are retargeted onto a glTF humanoid (`public/models/xbot.glb`, Mixamo bone names) under `motion/retarget/hanim/`. Future disciplines reuse the same retarget path; only choreography and stance recipes change.
+| What kids see | **mannequin-js** via `pose-3d-viewer.tsx` — solid procedural figure, GPL-3.0 |
+| In progress | glTF/Xbot retarget in `motion/retarget/hanim/` + optional `pose-3d-viewer-gltf.impl.tsx` |
+
+The Xbot path is for **H-Anim / Mixamo standards** and future TKD/dance retarget — not because it looked better in the UI. We switched back to mannequin-js for the visual coach until glTF quality matches.
+
+## Retargeting (experimental)
+
+Coach poses can be retargeted onto `public/models/xbot.glb` (Mixamo bone names) under `motion/retarget/hanim/`. Future disciplines may reuse that path; choreography stays discipline-specific.
 
 ## Backward compatibility
 
