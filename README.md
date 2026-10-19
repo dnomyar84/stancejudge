@@ -22,9 +22,20 @@ Degrees, one statement per line. `#` starts a comment.
 
 ```
 reset
-joint l_upper_arm flex 165 abduct 18
-joint l_forearm flex 25
+joint l_upper_arm flex 58 abduct 16
+hand left palm
+hand right sword
 ```
+
+Hand shapes (武术): `hand left|right palm|fist|sword`
+
+| Token | Shape |
+|-------|--------|
+| `palm`, `zhang` | 掌 open palm |
+| `fist`, `quan` | 拳 closed fist |
+| `sword`, `jianzhi` | 剑指 index + middle straight, ring + pinky curled |
+
+Angles are in anatomical coordinates, then clamped to human range of motion before they are written onto a `THREE.Bone`. Three.js itself does not enforce joint limits. See `src/engine/joint-limits.ts`.
 
 | Axis keywords | Meaning on each joint |
 |---------------|------------------------|

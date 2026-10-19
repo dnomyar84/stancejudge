@@ -75,10 +75,18 @@ function applyGrammar() {
     );
     return;
   }
-  executePoseProgram(dummy, parsed.program);
+  const clamped = executePoseProgram(dummy, parsed.program);
   groundDummy(dummy);
   viewer.setDummy(dummy);
-  setStatus(true, `Applied ${parsed.program.statements.length} statement(s).`);
+  if (clamped.length === 0) {
+    setStatus(true, `Applied ${parsed.program.statements.length} statement(s).`);
+    return;
+  }
+  const detail = clamped
+    .map((n) => `${n.joint} ${n.axis} ${n.requested}° → ${n.applied}°`)
+    .join("; ");
+  statusEl.textContent = `Clamped to human range: ${detail}`;
+  statusEl.className = "status warn";
 }
 
 document.querySelector("#apply")!.addEventListener("click", applyGrammar);

@@ -6,6 +6,7 @@ import {
   type JointId,
 } from "./joint-catalog";
 import { applyHandShape } from "./hand-shapes";
+import { clampToAnatomy, type ClampNote } from "./joint-limits";
 import type { HandShapeStmt, JointPoseStmt, PoseProgram } from "./pose-grammar";
 
 export type JointAnglesDeg = {
@@ -371,7 +372,8 @@ export function resetPoseAngles(dummy: WoodenDummy): void {
   }
 }
 
-export function syncBonesFromAngles(dummy: WoodenDummy): void {
+export function syncBonesFromAngles(dummy: WoodenDummy): ClampNote[] {
+  const clamped = clampToAnatomy(dummy.angles);
   for (const id of Object.keys(JOINT_CATALOG) as JointId[]) {
     applyAnglesToBone(
       dummy.bones[id],
@@ -381,15 +383,16 @@ export function syncBonesFromAngles(dummy: WoodenDummy): void {
     );
   }
   dummy.skeleton.update();
+  return clamped;
 }
 
-export function executePoseProgram(dummy: WoodenDummy, program: PoseProgram): void {
+export function executePoseProgram(dummy: WoodenDummy, program: PoseProgram): ClampNote[] {
   for (const stmt of program.statements) {
     if (stmt.kind === "reset") resetPoseAngles(dummy);
     else if (stmt.kind === "hand") applyHandShape(dummy.angles, stmt.side, stmt.shape);
     else applyJointStatement(dummy, stmt);
   }
-  syncBonesFromAngles(dummy);
+  return syncBonesFromAngles(dummy);
 }
 
 /** Drop the lower sole onto y = 0. Foot boxes sit on the foot bone origin. */

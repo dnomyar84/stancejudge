@@ -146,6 +146,10 @@ button:hover {
   color: var(--error);
 }
 
+.status.warn {
+  color: #fbbf24;
+}
+
 .viewport-wrap {
   position: relative;
   min-height: 320px;
