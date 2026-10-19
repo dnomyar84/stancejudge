@@ -146,8 +146,9 @@ export function Pose3DViewer({
       const figureGroup = new THREE.Group();
       scene.add(figureGroup);
 
+      const groundLift = MANNEQUIN_GROUND_OFFSET - GROUND_LEVEL;
+
       mannequin = new Male(1.75) as MannequinFigure;
-      mannequin.position.y += MANNEQUIN_GROUND_OFFSET - GROUND_LEVEL;
       figureGroup.add(mannequin);
 
       const rebuildFigure = (p: ExtendedCoachPose | null) => {
@@ -157,8 +158,8 @@ export function Pose3DViewer({
             typeof applyCoachPoseToMannequin
           >[0],
           p,
+          groundLift,
         );
-        mannequin.position.y += MANNEQUIN_GROUND_OFFSET - GROUND_LEVEL;
       };
 
       rebuildRef.current = rebuildFigure;

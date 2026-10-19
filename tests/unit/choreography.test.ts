@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { sampleMoveChoreography } from "@/lib/pose/canonical3d/choreography";
 import { wbq01OpeningChoreography } from "@/lib/pose/choreography/wbq-01-opening";
+import { lerpExtendedPose } from "@/lib/pose/coach-figure/interpolate-pose";
 
 describe("wbq-01 opening choreography", () => {
   it("has 并步 and 抱拳 phases", () => {
@@ -22,6 +23,14 @@ describe("wbq-01 opening choreography", () => {
       Math.abs(endBing.pose.skeleton.leftAnkle.lat - endBing.pose.skeleton.rightAnkle.lat);
     expect(ankleSpreadMid).toBeLessThan(ankleSpreadStart);
     expect(ankleSpreadEnd).toBeLessThan(ankleSpreadStart);
+  });
+
+  it("keeps ankles on floor plane while interpolating", () => {
+    const a = sampleMoveChoreography(wbq01OpeningChoreography, 0).pose;
+    const b = sampleMoveChoreography(wbq01OpeningChoreography, 1).pose;
+    const mid = lerpExtendedPose(a, b, 0.5);
+    expect(mid.skeleton.leftAnkle.up).toBeGreaterThanOrEqual(0.02);
+    expect(mid.skeleton.rightAnkle.up).toBeGreaterThanOrEqual(0.02);
   });
 
   it("ends in 抱拳 with knuckles forward of wrists", () => {

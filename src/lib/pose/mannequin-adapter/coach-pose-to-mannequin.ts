@@ -5,6 +5,8 @@ import * as THREE from "three";
 type MannequinLike = {
   position: THREE.Vector3;
   rotation: THREE.Euler;
+  /** Smoothed vertical root (reduces bbox flicker while poses interpolate). */
+  __coachRootY?: number;
   body: { y: number; turn: number };
   torso: { bend: number };
   head: { nod: number; turn: number };
@@ -69,10 +71,14 @@ function setHandShape(
   }
 }
 
+const ROOT_Y_SMOOTH = 0.42;
+
 /** Fit mannequin-js figure to coach skeleton (client-side IK heuristic). */
 export function applyCoachPoseToMannequin(
   man: MannequinLike,
   pose: ExtendedCoachPose,
+  /** Scene floor alignment after stepOnGround (set once per viewer). */
+  groundLift = 0,
 ): void {
   const sk = pose.skeleton;
   const hipMid = v3(sk.leftHip).add(v3(sk.rightHip)).multiplyScalar(0.5);
@@ -152,8 +158,24 @@ export function applyCoachPoseToMannequin(
   man.stepOnGround();
   man.updateMatrixWorld(true);
 
+  let rootY = man.position.y;
   const ankleMid = v3(sk.leftAnkle).add(v3(sk.rightAnkle)).multiplyScalar(0.5);
   if (ankleMid.y > 0.02) {
-    man.position.y += ankleMid.y * 0.85;
+    rootY += ankleMid.y * 0.85;
   }
+  if (groundLift !== 0) {
+    rootY += groundLift;
+  }
+
+  const prevRootY = man.__coachRootY;
+  if (
+    prevRootY === undefined ||
+    Math.abs(rootY - prevRootY) > 0.4
+  ) {
+    man.position.y = rootY;
+  } else {
+    man.position.y = prevRootY + (rootY - prevRootY) * ROOT_Y_SMOOTH;
+  }
+  man.__coachRootY = man.position.y;
+  man.updateMatrixWorld(true);
 }

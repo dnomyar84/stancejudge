@@ -21,13 +21,24 @@ function lerpFoot(a: FootEndEffector, b: FootEndEffector, t: number): FootEndEff
   };
 }
 
+function clampFeetToFloor(sk: CoachSkeleton): CoachSkeleton {
+  const floor = 0.02;
+  return {
+    ...sk,
+    leftAnkle: { ...sk.leftAnkle, up: Math.max(floor, sk.leftAnkle.up) },
+    rightAnkle: { ...sk.rightAnkle, up: Math.max(floor, sk.rightAnkle.up) },
+    leftKnee: { ...sk.leftKnee, up: Math.max(0, sk.leftKnee.up) },
+    rightKnee: { ...sk.rightKnee, up: Math.max(0, sk.rightKnee.up) },
+  };
+}
+
 function lerpSk(a: CoachSkeleton, b: CoachSkeleton, t: number): CoachSkeleton {
   const keys = Object.keys(a) as (keyof CoachSkeleton)[];
   const out = {} as CoachSkeleton;
   for (const k of keys) {
     out[k] = lerp3(a[k] as Vec3, b[k] as Vec3, t);
   }
-  return out;
+  return clampFeetToFloor(out);
 }
 
 export function lerpExtendedPose(
