@@ -49,7 +49,7 @@ Output is in `dist/` (still uses CDN for Three.js at runtime).
 
 **URL (project site):** https://dnomyar84.github.io/stancejudge/
 
-Deploys automatically on every push to `main` via `.github/workflows/deploy-pages.yml`.
+Every push to `main` runs `.github/workflows/deploy-pages.yml`. Agents and maintainers should also run `npm run deploy:pages` after each push (`npm run ship` = build + push + deploy).
 
 In the repo **Settings → Pages**, set **Build and deployment → Source** to **GitHub Actions** (not “Deploy from branch” only).
 

@@ -1,33 +1,40 @@
 ---
-description: Push finished work to main and publish GitHub Pages after every shippable change
+description: Always push to main and deploy GitHub Pages — never skip after shippable work
 alwaysApply: true
 ---
 
-# Ship to main + GitHub Pages
+# Always push + always deploy
 
-When you finish a **shippable** change (feature, fix, or user-visible update), **always**:
+For **any** completed, shippable change, the task is **not done** until deploy has run.
 
-1. **Verify** — `npm run build` succeeds.
-2. **Commit** on `main` with a clear message.
-3. **Push** — `git push -u origin main` (or `github` if that is the configured remote).
-4. **Publish Pages** — push to `main` triggers `.github/workflows/deploy-pages.yml`. If Actions is unavailable, run `npm run deploy:pages` (force-pushes `gh-pages`).
+## Required sequence (every time)
 
-Do **not** skip Pages deploy because the user will check the live site. Mention the site URL after deploy:
+1. `npm run build` — must pass.
+2. `git commit` on `main`.
+3. `git push -u github main` (use `origin` only if `github` is absent).
+4. **Deploy** — do **both**:
+   - **A.** Push triggers `.github/workflows/deploy-pages.yml` (GitHub Actions → Pages).
+   - **B.** Run `npm run deploy:pages` immediately after push (updates `gh-pages` fallback).
 
-`https://dnomyar84.github.io/stancejudge/`
+Do not skip step 4B because the user checks the live site and CDN/Actions can lag.
 
-## When to skip
+5. Tell the user: **https://dnomyar84.github.io/stancejudge/** and the commit SHA deployed.
+
+## Never
+
+- Finish a task with only local commits.
+- Assume push alone updated Pages without running `deploy:pages` or confirming Actions success.
+
+## Skip only when
 
 - User explicitly says not to push or deploy.
-- Exploratory/local-only work with no commit yet (still commit before ending a completed task).
 
 ## If deploy fails
 
-- Fix the build, retry `npm run deploy:pages` once.
-- Report the error; do not claim the site is updated.
+- Fix build, retry `npm run deploy:pages` once, then report the error.
 
-## Git notes
+## Repo notes
 
-- Default branch: `main`.
-- Pages branch: `gh-pages` (static `dist/` only, includes `.nojekyll`).
-- Three.js stays on CDN via `index.html` import map — do not bundle it into Pages output.
+- Pages primary: **GitHub Actions** on `main` (Settings → Pages → Source: GitHub Actions).
+- Fallback branch: `gh-pages` from `npm run deploy:pages` (`dist/` + `.nojekyll`).
+- Three.js: CDN import map in `index.html` — do not bundle Three into `dist/`.

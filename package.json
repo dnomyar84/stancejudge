@@ -7,7 +7,8 @@
     "dev": "vite --port 4321 --host 127.0.0.1",
     "build": "vite build",
     "preview": "vite preview --port 4321 --host 127.0.0.1",
-    "deploy:pages": "node scripts/deploy-gh-pages.mjs"
+    "deploy:pages": "node scripts/deploy-gh-pages.mjs",
+    "ship": "npm run build && git push -u github main && npm run deploy:pages"
   },
   "devDependencies": {
     "typescript": "^5.7.3",
