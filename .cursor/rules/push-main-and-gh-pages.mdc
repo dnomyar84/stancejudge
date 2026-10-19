@@ -10,7 +10,7 @@ When you finish a **shippable** change (feature, fix, or user-visible update), *
 1. **Verify** — `npm run build` succeeds.
 2. **Commit** on `main` with a clear message.
 3. **Push** — `git push -u origin main` (or `github` if that is the configured remote).
-4. **Publish Pages** — `npm run deploy:pages` (builds `dist/`, force-pushes `gh-pages`).
+4. **Publish Pages** — push to `main` triggers `.github/workflows/deploy-pages.yml`. If Actions is unavailable, run `npm run deploy:pages` (force-pushes `gh-pages`).
 
 Do **not** skip Pages deploy because the user will check the live site. Mention the site URL after deploy:
 

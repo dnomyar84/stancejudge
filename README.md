@@ -47,8 +47,16 @@ Output is in `dist/` (still uses CDN for Three.js at runtime).
 
 ## GitHub Pages
 
+**URL (project site):** https://dnomyar84.github.io/stancejudge/
+
+Deploys automatically on every push to `main` via `.github/workflows/deploy-pages.yml`.
+
+In the repo **Settings → Pages**, set **Build and deployment → Source** to **GitHub Actions** (not “Deploy from branch” only).
+
+Manual fallback (pushes the `gh-pages` branch):
+
 ```bash
 npm run deploy:pages
 ```
 
-Live site: https://dnomyar84.github.io/stancejudge/
+If you only see “Repository reset” or a blank page, hard-refresh or wait ~2 minutes for the CDN; ensure you are on `/stancejudge/` not the account root URL.
