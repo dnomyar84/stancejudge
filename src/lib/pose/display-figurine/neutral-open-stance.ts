@@ -1,5 +1,9 @@
 import { extendedToCoachFigurinePose } from "@/lib/pose/mannequin-adapter/coach-pose-to-mannequin";
 import { getMoveChoreography } from "@/lib/pose/choreography/registry";
+import {
+  LEFT_ARM_BESIDE_EAR,
+  RIGHT_ARM_BESIDE_EAR,
+} from "./arm-beside-ear";
 import type { CoachFigurinePoseV1 } from "./coach-figurine-pose";
 
 /** 开步站立 — feet shoulder-width, arms at sides (五步拳 起势 opening). */
@@ -31,36 +35,13 @@ function figurineFromKeyframe(
   return extendedToCoachFigurinePose(kf.pose);
 }
 
-let refRightArmForward: CoachFigurinePoseV1 | undefined;
-let refLeftArmForward: CoachFigurinePoseV1 | undefined;
 let refLeftKneeRaised: CoachFigurinePoseV1 | undefined;
 let refRightKneeRaised: CoachFigurinePoseV1 | undefined;
 
-function refs() {
-  refRightArmForward ??= figurineFromKeyframe("wbq-02", "chong_quan", -1);
-  refLeftArmForward ??= figurineFromKeyframe("wbq-05", "xie_bu", -1);
+function kneeRefs() {
   refLeftKneeRaised ??= figurineFromKeyframe("wbq-06", "ti_xi_chuan", -1);
   refRightKneeRaised ??= figurineFromKeyframe("wbq-03", "chamber", 1);
-  return {
-    refRightArmForward,
-    refLeftArmForward,
-    refLeftKneeRaised,
-    refRightKneeRaised,
-  };
-}
-
-function copyLeftArm(target: CoachFigurinePoseV1, from: CoachFigurinePoseV1) {
-  target.leftArm = { ...from.leftArm };
-  target.leftElbow = { ...from.leftElbow };
-  target.leftWrist = { ...from.leftWrist };
-  target.leftFingers = { ...from.leftFingers };
-}
-
-function copyRightArm(target: CoachFigurinePoseV1, from: CoachFigurinePoseV1) {
-  target.rightArm = { ...from.rightArm };
-  target.rightElbow = { ...from.rightElbow };
-  target.rightWrist = { ...from.rightWrist };
-  target.rightFingers = { ...from.rightFingers };
+  return { refLeftKneeRaised, refRightKneeRaised };
 }
 
 function copyLeftLeg(target: CoachFigurinePoseV1, from: CoachFigurinePoseV1) {
@@ -88,13 +69,13 @@ export function figurineWithControlToggles(
 ): CoachFigurinePoseV1 {
   const f = structuredClone(base);
 
-  const r = refs();
   if (toggles.leftHandRaised) {
-    copyLeftArm(f, r.refLeftArmForward);
+    Object.assign(f, structuredClone(LEFT_ARM_BESIDE_EAR));
   }
   if (toggles.rightHandRaised) {
-    copyRightArm(f, r.refRightArmForward);
+    Object.assign(f, structuredClone(RIGHT_ARM_BESIDE_EAR));
   }
+  const r = kneeRefs();
   if (toggles.leftKneeRaised) {
     copyLeftLeg(f, r.refLeftKneeRaised);
   }
