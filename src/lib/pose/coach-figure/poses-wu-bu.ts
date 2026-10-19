@@ -1,11 +1,10 @@
+import { wbq01EndPose } from "../choreography/wbq-01-opening";
 import type { CoachSkeleton } from "./skeleton";
 import {
   armsBlockElbow,
   armsFistWaist,
   armsPunchForward,
-  armsSalute,
   baseStandingTorso,
-  legsFeetTogether,
   legsGongBu,
   legsMaBu,
   legsTiXi,
@@ -24,7 +23,7 @@ function pose(
 export function buildWuBuCoachSkeleton(moveId: string): CoachSkeleton | null {
   switch (moveId) {
     case "wbq-01":
-      return pose(legsFeetTogether(), armsSalute());
+      return wbq01EndPose().skeleton;
     case "wbq-02":
       return pose(legsGongBu("right"), armsPunchForward("right"));
     case "wbq-03":

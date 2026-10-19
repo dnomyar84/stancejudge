@@ -17,6 +17,7 @@ Read this file first. **Work from [GitHub Issues](https://github.com/dnomyar84/s
 | [product/features.md](./product/features.md) | Feature catalog (F-### IDs; Issues are backlog) |
 | [product/roadmap.md](./product/roadmap.md) | Phases and milestones |
 | [product/pose-3d-fundamentals.md](./product/pose-3d-fundamentals.md) | **3D-first pose backlog** (lab QA, flows, vocabulary) |
+| [product/choreography-framework.md](./product/choreography-framework.md) | Phases, keyframes, cues, visual coach |
 | [product/live-practice-spec.md](./product/live-practice-spec.md) | Live camera UX and UI requirements |
 | [product/routine-video-spec.md](./product/routine-video-spec.md) | Recorded routine / pose-rail UX |
 | [architecture/overview.md](./architecture/overview.md) | Technical boundaries (static, MediaPipe, data) |

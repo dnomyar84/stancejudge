@@ -1,3 +1,4 @@
+import type { ExtendedCoachPose } from "./extended-pose";
 import type { CoachSkeleton } from "./skeleton";
 import { lerp3, type Vec3 } from "./vec3";
 
@@ -9,6 +10,19 @@ export type BoneSegment = {
   radius: number;
 };
 
+export type HandMesh = {
+  wrist: Vec3Display;
+  knuckle: Vec3Display;
+  palm: Vec3Display;
+  radius: number;
+};
+
+export type FootMesh = {
+  heel: Vec3Display;
+  toe: Vec3Display;
+  ankle: Vec3Display;
+};
+
 export type CoachMeshSpec = {
   bones: BoneSegment[];
   headCenter: Vec3Display;
@@ -17,6 +31,10 @@ export type CoachMeshSpec = {
   neckTo: Vec3Display;
   neckRadius: number;
   torsoCorners: [Vec3Display, Vec3Display, Vec3Display, Vec3Display];
+  leftHand: HandMesh;
+  rightHand: HandMesh;
+  leftFoot: FootMesh;
+  rightFoot: FootMesh;
 };
 
 /** lat → X, up → Y, fwd → Z (Three.js Y-up). */
@@ -26,6 +44,36 @@ function toDisplay(p: Vec3): Vec3Display {
 
 function mid(a: Vec3, b: Vec3): Vec3 {
   return lerp3(a, b, 0.5);
+}
+
+export function coachMeshFromExtendedPose(pose: ExtendedCoachPose): CoachMeshSpec {
+  const base = coachMeshFromSkeleton(pose.skeleton);
+  const handR = 0.032;
+  return {
+    ...base,
+    leftHand: {
+      wrist: toDisplay(pose.leftHand.wrist),
+      knuckle: toDisplay(pose.leftHand.knuckle),
+      palm: toDisplay(pose.leftHand.palm),
+      radius: handR,
+    },
+    rightHand: {
+      wrist: toDisplay(pose.rightHand.wrist),
+      knuckle: toDisplay(pose.rightHand.knuckle),
+      palm: toDisplay(pose.rightHand.palm),
+      radius: handR,
+    },
+    leftFoot: {
+      ankle: toDisplay(pose.leftFoot.ankle),
+      heel: toDisplay(pose.leftFoot.heel),
+      toe: toDisplay(pose.leftFoot.toe),
+    },
+    rightFoot: {
+      ankle: toDisplay(pose.rightFoot.ankle),
+      heel: toDisplay(pose.rightFoot.heel),
+      toe: toDisplay(pose.rightFoot.toe),
+    },
+  };
 }
 
 /** Proportional tubes + torso box + head sphere for 3D lab rendering. */
@@ -62,6 +110,9 @@ export function coachMeshFromSkeleton(sk: CoachSkeleton): CoachMeshSpec {
     toDisplay({ lat: -torsoW / 2, fwd: torsoD / 2, up: botZ }),
   ] as CoachMeshSpec["torsoCorners"];
 
+  const zero = { x: 0, y: 0, z: 0 };
+  const stubHand = { wrist: zero, knuckle: zero, palm: zero, radius: 0.03 };
+  const stubFoot = { ankle: zero, heel: zero, toe: zero };
   return {
     bones,
     headCenter: toDisplay(headCenter),
@@ -70,5 +121,9 @@ export function coachMeshFromSkeleton(sk: CoachSkeleton): CoachMeshSpec {
     neckTo: toDisplay(headCenter),
     neckRadius: limbR * 0.85,
     torsoCorners,
+    leftHand: stubHand,
+    rightHand: stubHand,
+    leftFoot: stubFoot,
+    rightFoot: stubFoot,
   };
 }

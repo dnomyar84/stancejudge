@@ -1,16 +1,31 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import type { CoachSkeleton } from "@/lib/pose/coach-figure/skeleton";
-import { coachMeshFromSkeleton } from "@/lib/pose/coach-figure/mesh-from-skeleton";
+import type { ExtendedCoachPose } from "@/lib/pose/coach-figure/extended-pose";
+import {
+  coachMeshFromExtendedPose,
+  type CoachMeshSpec,
+} from "@/lib/pose/coach-figure/mesh-from-skeleton";
 
 type Pose3DViewerProps = {
-  skeleton: CoachSkeleton | null;
+  pose: ExtendedCoachPose | null;
   className?: string;
 };
 
-export function Pose3DViewer({ skeleton, className }: Pose3DViewerProps) {
+type RebuildFn = (mesh: CoachMeshSpec) => void;
+
+export function Pose3DViewer({ pose, className }: Pose3DViewerProps) {
   const mountRef = useRef<HTMLDivElement>(null);
+  const poseRef = useRef(pose);
+  const rebuildRef = useRef<RebuildFn | null>(null);
+
+  poseRef.current = pose;
+
+  useEffect(() => {
+    if (pose && rebuildRef.current) {
+      rebuildRef.current(coachMeshFromExtendedPose(pose));
+    }
+  }, [pose]);
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -47,38 +62,30 @@ export function Pose3DViewer({ skeleton, className }: Pose3DViewerProps) {
       controls.enableDamping = true;
       controls.update();
 
-      const hemi = new THREE.HemisphereLight(0xb8e8ff, 0x223344, 1.1);
-      scene.add(hemi);
+      scene.add(new THREE.HemisphereLight(0xb8e8ff, 0x223344, 1.1));
       const key = new THREE.DirectionalLight(0xffffff, 1.2);
       key.position.set(2, 3, 2);
       scene.add(key);
-      const fill = new THREE.DirectionalLight(0x66aacc, 0.35);
-      fill.position.set(-2, 1, -1);
-      scene.add(fill);
 
       const floor = new THREE.Mesh(
         new THREE.PlaneGeometry(3, 3),
-        new THREE.MeshStandardMaterial({
-          color: 0x14202a,
-          roughness: 0.9,
-          metalness: 0.05,
-        }),
+        new THREE.MeshStandardMaterial({ color: 0x14202a, roughness: 0.9 }),
       );
       floor.rotation.x = -Math.PI / 2;
-      floor.position.y = 0;
       scene.add(floor);
 
       const grid = new THREE.GridHelper(3, 16, 0x2a4a5a, 0x1a2a34);
       grid.position.y = 0.001;
       scene.add(grid);
 
-      const forward = new THREE.ArrowHelper(
-        new THREE.Vector3(0, 0, 1),
-        new THREE.Vector3(0, 0.01, 0),
-        0.35,
-        0x22d3ee,
+      scene.add(
+        new THREE.ArrowHelper(
+          new THREE.Vector3(0, 0, 1),
+          new THREE.Vector3(0, 0.01, 0),
+          0.35,
+          0x22d3ee,
+        ),
       );
-      scene.add(forward);
 
       const figureGroup = new THREE.Group();
       scene.add(figureGroup);
@@ -96,70 +103,60 @@ export function Pose3DViewer({ skeleton, className }: Pose3DViewerProps) {
       const headMat = new THREE.MeshStandardMaterial({
         color: 0xfde68a,
         roughness: 0.4,
-        metalness: 0.05,
+      });
+      const handMat = new THREE.MeshStandardMaterial({
+        color: 0xfbbf24,
+        roughness: 0.45,
+      });
+      const footMat = new THREE.MeshStandardMaterial({
+        color: 0x94a3b8,
+        roughness: 0.65,
       });
 
-      function rebuildFigure(sk: CoachSkeleton) {
+      function clearFigure() {
         while (figureGroup.children.length) {
           const child = figureGroup.children[0];
           figureGroup.remove(child);
           if (child instanceof THREE.Mesh) {
             child.geometry.dispose();
-            if (Array.isArray(child.material)) {
-              child.material.forEach((mat) => mat.dispose());
-            } else {
-              child.material.dispose();
-            }
+            const m = child.material;
+            if (Array.isArray(m)) m.forEach((mat) => mat.dispose());
+            else m.dispose();
           }
         }
+      }
 
-        const mesh = coachMeshFromSkeleton(sk);
+      function addTube(
+        from: { x: number; y: number; z: number },
+        to: { x: number; y: number; z: number },
+        radius: number,
+        mat: import("three").MeshStandardMaterial,
+      ) {
+        const a = new THREE.Vector3(from.x, from.y, from.z);
+        const b = new THREE.Vector3(to.x, to.y, to.z);
+        const dir = new THREE.Vector3().subVectors(b, a);
+        const len = dir.length();
+        if (len < 1e-4) return;
+        const cyl = new THREE.Mesh(
+          new THREE.CylinderGeometry(radius, radius, len, 10),
+          mat,
+        );
+        cyl.position.copy(a).add(b).multiplyScalar(0.5);
+        cyl.quaternion.setFromUnitVectors(
+          new THREE.Vector3(0, 1, 0),
+          dir.normalize(),
+        );
+        figureGroup.add(cyl);
+      }
+
+      function rebuildFigure(mesh: CoachMeshSpec) {
+        clearFigure();
 
         for (const bone of mesh.bones) {
-          const a = new THREE.Vector3(bone.from.x, bone.from.y, bone.from.z);
-          const b = new THREE.Vector3(bone.to.x, bone.to.y, bone.to.z);
-          const dir = new THREE.Vector3().subVectors(b, a);
-          const len = dir.length();
-          if (len < 1e-4) continue;
-          const cyl = new THREE.Mesh(
-            new THREE.CylinderGeometry(bone.radius, bone.radius, len, 10),
-            bodyMat,
-          );
-          cyl.position.copy(a).add(b).multiplyScalar(0.5);
-          cyl.quaternion.setFromUnitVectors(
-            new THREE.Vector3(0, 1, 0),
-            dir.normalize(),
-          );
-          figureGroup.add(cyl);
+          addTube(bone.from, bone.to, bone.radius, bodyMat);
         }
 
-        const neckA = new THREE.Vector3(
-          mesh.neckFrom.x,
-          mesh.neckFrom.y,
-          mesh.neckFrom.z,
-        );
-        const neckB = new THREE.Vector3(
-          mesh.neckTo.x,
-          mesh.neckTo.y,
-          mesh.neckTo.z,
-        );
-        const neckDir = new THREE.Vector3().subVectors(neckB, neckA);
-        const neckLen = neckDir.length();
-        const neck = new THREE.Mesh(
-          new THREE.CylinderGeometry(
-            mesh.neckRadius,
-            mesh.neckRadius,
-            neckLen,
-            10,
-          ),
-          bodyMat,
-        );
-        neck.position.copy(neckA).add(neckB).multiplyScalar(0.5);
-        neck.quaternion.setFromUnitVectors(
-          new THREE.Vector3(0, 1, 0),
-          neckDir.normalize(),
-        );
-        figureGroup.add(neck);
+        addTube(mesh.neckFrom, mesh.neckTo, mesh.neckRadius, bodyMat);
 
         const head = new THREE.Mesh(
           new THREE.SphereGeometry(mesh.headRadius, 20, 16),
@@ -174,21 +171,61 @@ export function Pose3DViewer({ skeleton, className }: Pose3DViewerProps) {
 
         const [c0, c1, c2, c3] = mesh.torsoCorners;
         const torsoGeo = new THREE.BufferGeometry();
-        const verts = new Float32Array([
-          c0.x, c0.y, c0.z,
-          c1.x, c1.y, c1.z,
-          c2.x, c2.y, c2.z,
-          c0.x, c0.y, c0.z,
-          c2.x, c2.y, c2.z,
-          c3.x, c3.y, c3.z,
-        ]);
-        torsoGeo.setAttribute("position", new THREE.BufferAttribute(verts, 3));
+        torsoGeo.setAttribute(
+          "position",
+          new THREE.BufferAttribute(
+            new Float32Array([
+              c0.x, c0.y, c0.z,
+              c1.x, c1.y, c1.z,
+              c2.x, c2.y, c2.z,
+              c0.x, c0.y, c0.z,
+              c2.x, c2.y, c2.z,
+              c3.x, c3.y, c3.z,
+            ]),
+            3,
+          ),
+        );
         torsoGeo.computeVertexNormals();
-        const torso = new THREE.Mesh(torsoGeo, torsoMat);
-        figureGroup.add(torso);
+        figureGroup.add(new THREE.Mesh(torsoGeo, torsoMat));
+
+        for (const hand of [mesh.leftHand, mesh.rightHand]) {
+          addTube(hand.wrist, hand.knuckle, hand.radius, handMat);
+          const palm = new THREE.Mesh(
+            new THREE.SphereGeometry(hand.radius * 1.1, 10, 8),
+            handMat,
+          );
+          palm.position.set(hand.palm.x, hand.palm.y, hand.palm.z);
+          figureGroup.add(palm);
+        }
+
+        for (const foot of [mesh.leftFoot, mesh.rightFoot]) {
+          const soleGeo = new THREE.BufferGeometry();
+          const h = foot.heel;
+          const t = foot.toe;
+          const a = foot.ankle;
+          const lat = (t.x - h.x) * 0.15;
+          soleGeo.setAttribute(
+            "position",
+            new THREE.BufferAttribute(
+              new Float32Array([
+                h.x, h.y + 0.01, h.z,
+                t.x, t.y + 0.01, t.z,
+                a.x + lat, a.y + 0.015, a.z,
+                h.x, h.y + 0.01, h.z,
+                a.x - lat, a.y + 0.015, a.z,
+                t.x, t.y + 0.01, t.z,
+              ]),
+              3,
+            ),
+          );
+          soleGeo.computeVertexNormals();
+          figureGroup.add(new THREE.Mesh(soleGeo, footMat));
+        }
       }
 
-      if (skeleton) rebuildFigure(skeleton);
+      rebuildRef.current = rebuildFigure;
+      const initial = poseRef.current;
+      if (initial) rebuildFigure(coachMeshFromExtendedPose(initial));
 
       const onResize = () => {
         if (!mount || !renderer) return;
@@ -208,13 +245,12 @@ export function Pose3DViewer({ skeleton, className }: Pose3DViewerProps) {
       };
       animate();
 
-      return () => {
-        window.removeEventListener("resize", onResize);
-      };
+      return () => window.removeEventListener("resize", onResize);
     })();
 
     return () => {
       disposed = true;
+      rebuildRef.current = null;
       cancelAnimationFrame(frameId);
       if (renderer) {
         renderer.dispose();
@@ -223,7 +259,7 @@ export function Pose3DViewer({ skeleton, className }: Pose3DViewerProps) {
         }
       }
     };
-  }, [skeleton]);
+  }, []);
 
   return (
     <div

@@ -213,13 +213,16 @@ Derive from syllabus + common coaching text; each becomes an E-item when priorit
 
 ---
 
-## Current iteration (this commit)
+## Current iteration
 
 - [x] A-01 fundamentals doc + ADR  
 - [x] B-01/B-02 Pose 3D Lab (tubes, torso, head, orbit)  
 - [x] C-01 五步拳 routine stub in lab picker  
-- [ ] Owner: lab review 五步拳 + 三段 #1–#5  
-- [ ] Next iteration: A-04–A-07 vocabulary in UI + B-09 hand meshes + C-02 poses  
+- [x] **Choreography framework** — phases, cues, keyframes ([choreography-framework.md](./choreography-framework.md))  
+- [x] **Extended rig** — hands (wrist/knuckle/palm) + feet (heel/toe) in 3D mesh  
+- [x] **wbq-01 起势** — 并步 + 抱拳 flow (owner spec); visual coach timeline stub for full 五步拳  
+- [ ] Owner: review 起势 scrub + correct 抱拳 elbow / 并步 width  
+- [ ] Next: wbq-02 冲拳 3-keyframe flow; author remaining 五步拳 phases  
 
 ---
 

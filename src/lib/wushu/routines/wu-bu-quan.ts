@@ -12,11 +12,12 @@ export const wuBuQuan: RoutineDefinition = {
     {
       id: "wbq-01",
       order: 1,
-      name: "Opening — feet together, salute",
-      nameZh: "起势并步抱拳",
+      name: "Opening — 并步 + 抱拳",
+      nameZh: "起势",
       expectedLeg: "feet_together",
-      expectedHand: "salute",
-      coachTip: "并步，抱拳于胸前，立身中正。",
+      expectedHand: "fist_waist",
+      coachTip:
+        "并步：由开步收至两脚并拢，腿直，脚尖朝前。抱拳：体侧立掌→翻拳，拳朝前，肘侧视约45°。",
     },
     {
       id: "wbq-02",
