@@ -115,7 +115,12 @@ export function PracticeHome({ onSelect }: PracticeHomeProps) {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button type="button" className="min-h-12 w-full sm:w-auto" size="lg">
+            <Button
+              type="button"
+              className="min-h-12 w-full sm:w-auto"
+              size="lg"
+              onClick={() => onSelect("wu-bu-coach")}
+            >
               Watch &amp; rotate
             </Button>
           </CardContent>
