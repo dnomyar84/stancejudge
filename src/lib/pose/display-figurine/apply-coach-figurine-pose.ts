@@ -1,5 +1,9 @@
+import { GROUND_LEVEL } from "mannequin-js/src/globals.js";
 import type { CoachFigurinePoseV1 } from "./coach-figurine-pose";
 import { assertCoachFigurinePoseV1 } from "./coach-figurine-pose";
+
+/** World Y of the lowest point after `mannequin-js` `stepOnGround()` (see Mannequin.js). */
+const FOOT_Y_AFTER_STEP_ON_GROUND = GROUND_LEVEL - 0.01;
 
 export type MannequinFigurineTarget = {
   position: { x: number; y: number; z: number };
@@ -37,8 +41,10 @@ export function applyCoachFigurinePoseToMannequin(
     /** @deprecated Use anchorFeetOnGround; kept for legacy semantic compile path. */
     groundLift?: number;
     smoothRootY?: boolean;
-    /** After stepOnGround(), keep computed foot placement (+ pose.root.y). Default true. */
+    /** After stepOnGround(), align feet to scene floor (+ pose.root.y). Default true. */
     anchorFeetOnGround?: boolean;
+    /** Scene floor plane Y (our grid is at 0; mannequin-js uses GROUND_LEVEL). */
+    sceneFloorY?: number;
   },
 ): void {
   assertCoachFigurinePoseV1(pose);
@@ -101,7 +107,9 @@ export function applyCoachFigurinePoseToMannequin(
   const anchorFeet = options?.anchorFeetOnGround ?? true;
   let rootY: number;
   if (anchorFeet) {
-    rootY = man.position.y + pose.root.y;
+    const sceneFloorY = options?.sceneFloorY ?? 0;
+    const liftToSceneFloor = sceneFloorY - FOOT_Y_AFTER_STEP_ON_GROUND;
+    rootY = man.position.y + liftToSceneFloor + pose.root.y;
   } else {
     const groundLift = options?.groundLift ?? 0;
     rootY = pose.root.y + groundLift;

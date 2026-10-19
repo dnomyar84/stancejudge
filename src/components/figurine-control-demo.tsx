@@ -74,8 +74,8 @@ export function FigurineControlDemo({ onBack }: FigurineControlDemoProps) {
         </header>
 
         <p className="text-sm text-muted-foreground">
-          Neutral 开步站立 (shoulder-width). Each button toggles one limb on the
-          mannequin — no choreography, no IK compile.
+          Neutral 开步站立. Buttons apply compiled 定势 arm/leg DOFs from 五步拳
+          (冲拳 / 提膝), with feet re-grounded after each pose.
         </p>
 
         <Card className="overflow-hidden border-cyan-500/25">
