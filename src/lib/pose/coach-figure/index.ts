@@ -6,6 +6,7 @@ import {
   projectCoachPoint,
 } from "./camera";
 import { buildSanDuanCoachSkeleton } from "./poses-san-duan";
+import { buildWuBuCoachSkeleton } from "./poses-wu-bu";
 import type { CoachSkeleton } from "./skeleton";
 
 const CANVAS = 128;
@@ -50,13 +51,25 @@ function skeletonToKeypoints(
   return kps;
 }
 
+export function buildCoachFigureSkeleton(
+  routineId: string,
+  moveId: string,
+): CoachSkeleton | null {
+  if (routineId === "san-duan-chang-quan") {
+    return buildSanDuanCoachSkeleton(moveId);
+  }
+  if (routineId === "wu-bu-quan") {
+    return buildWuBuCoachSkeleton(moveId);
+  }
+  return null;
+}
+
 /** 3D-proportioned coach figure for 三段长拳 rail / scoring templates. */
 export function buildCoachFigureKeypoints(
   routineId: string,
   moveId: string,
 ): PoseKeypoint[] | null {
-  if (routineId !== "san-duan-chang-quan") return null;
-  const sk = buildSanDuanCoachSkeleton(moveId);
+  const sk = buildCoachFigureSkeleton(routineId, moveId);
   if (!sk) return null;
   return skeletonToKeypoints(sk);
 }

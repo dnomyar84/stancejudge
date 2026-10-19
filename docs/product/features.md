@@ -302,6 +302,23 @@
 
 ---
 
+## P0.5 — 3D pose fundamentals (owner visual QA)
+
+### F-048 3D canonical pose program
+- **Status:** `in_progress`
+- **Priority:** P0.5
+- **Scope:** [pose-3d-fundamentals.md](./pose-3d-fundamentals.md), Pose 3D Lab UI, `canonical3d/`, 五步拳 routine, ADR-003.
+- **Acceptance:**
+  - [x] Backlog doc + ADR published
+  - [x] Home → Pose 3D Lab with orbit viewer (tubes, torso, head)
+  - [x] 五步拳 selectable in lab
+  - [ ] Owner sign-off 五步拳 poses
+  - [ ] 三段长拳 batched 3D sign-off
+  - [ ] `MoveFlowSpec` + 冲拳 keyframes in lab
+  - [ ] Scoring uses view-matched 3D (feature flag)
+
+---
+
 ## P3 — Nice to have
 
 ### F-040 Multiple club profiles (local)

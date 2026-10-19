@@ -9,14 +9,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { BookOpen, Camera, FileVideo, Sparkles } from "lucide-react";
+import { BookOpen, Box, Camera, FileVideo, Sparkles } from "lucide-react";
 
 export type PracticeMode =
   | "home"
   | "routine-video"
   | "live-stance"
   | "live-routine"
-  | "syllabus";
+  | "syllabus"
+  | "pose-3d-lab";
 
 type PracticeHomeProps = {
   onSelect: (mode: Exclude<PracticeMode, "home">) => void;
@@ -98,6 +99,26 @@ export function PracticeHome({ onSelect }: PracticeHomeProps) {
           </CardContent>
         </Card>
       </div>
+
+      <Card
+        className="cursor-pointer border-cyan-500/25 transition hover:border-cyan-400/50 hover:bg-cyan-950/15"
+        onClick={() => onSelect("pose-3d-lab")}
+      >
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Box className="h-5 w-5 text-cyan-400" />
+            Pose 3D Lab
+          </CardTitle>
+          <CardDescription>
+            Orbit the 3D coach model — 五步拳 & 三段长拳. Visual QA for the fundamentals revamp.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button type="button" variant="secondary" className="w-full sm:w-auto">
+            Open lab
+          </Button>
+        </CardContent>
+      </Card>
 
       <Card
         className="cursor-pointer border-border/80 transition hover:border-cyan-500/40"

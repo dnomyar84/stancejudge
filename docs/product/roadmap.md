@@ -6,6 +6,19 @@ Phases align with `features.md` and [GitHub Issues](https://github.com/dnomyar84
 
 Static app, pose rail + video scan, live stance %, admin, tests fixture folder.
 
+## Phase 0.5 — **3D pose fundamentals** (parallel, owner visual QA)
+
+**Theme:** Canonical poses in 3D; Pose 3D Lab; 五步拳 + 三段长拳 coach review; movement keyframes later.
+
+| Slice | Backlog |
+| --- | --- |
+| 1 | [pose-3d-fundamentals.md](./pose-3d-fundamentals.md) A + B: lab UI, vocabulary |
+| 2 | 五步拳 (C), then 三段 batches (D) |
+| 3 | Flow framework (E), 2D↔3D match (F) |
+| 4 | Re-integrate rail/DDR/video (H) |
+
+**Exit criteria:** Owner signs off 五步拳 + 三段长拳 3D poses in lab; scoring reads same rig.
+
 ## Phase 1 — **Wushu DDR** (current priority)
 
 **Theme:** Perform live (or play video) and **feel** each move — rewards, penalties, start/end detection, results screen.

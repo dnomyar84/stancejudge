@@ -1,5 +1,7 @@
 # Why poses look wrong vs 三段长拳 (fundamental model)
 
+> **Active program:** 3D canonical model, Pose 3D Lab, and iteration backlog — see [pose-3d-fundamentals.md](../product/pose-3d-fundamentals.md) and ADR-003.
+
 ## Two different systems (the core bug)
 
 | What you see | What actually runs |

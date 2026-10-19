@@ -1,9 +1,14 @@
 import { getCanonicalRoutine } from "../canonical-store";
 import { sanDuanChangQuan } from "./san-duan-chang-quan";
 import { siDuanJian } from "./si-duan-jian";
+import { wuBuQuan } from "./wu-bu-quan";
 import type { CanonicalRoutine, RoutineDefinition } from "../types";
 
-export const ROUTINES: RoutineDefinition[] = [sanDuanChangQuan, siDuanJian];
+export const ROUTINES: RoutineDefinition[] = [
+  sanDuanChangQuan,
+  siDuanJian,
+  wuBuQuan,
+];
 
 export function routineFromCanonical(
   canonical: CanonicalRoutine,
