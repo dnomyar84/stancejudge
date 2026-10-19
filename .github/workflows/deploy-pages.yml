@@ -30,6 +30,7 @@ jobs:
       - run: npm run build:pages
         env:
           NEXT_PUBLIC_YOUTUBE_PROXY: ${{ vars.YOUTUBE_PROXY_URL }}
+          NEXT_PUBLIC_BUILD_SHA: ${{ github.sha }}
 
       - run: node scripts/verify-pages-export.mjs
 

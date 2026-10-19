@@ -7,7 +7,7 @@
     "predev": "node scripts/patch-mannequin-scene.mjs",
     "dev": "next dev -p 4317",
     "build": "node scripts/static-export-build.mjs",
-    "build:pages": "GITHUB_PAGES=true npm run build && node scripts/verify-pages-export.mjs",
+    "build:pages": "GITHUB_PAGES=true NEXT_PUBLIC_BUILD_SHA=$(git rev-parse --short HEAD) npm run build && node scripts/verify-pages-export.mjs",
     "deploy:pages": "node scripts/deploy-gh-pages.mjs",
     "preview:pages": "node scripts/preview-pages.mjs",
     "generate-canonical": "tsx scripts/generate-canonical.ts",

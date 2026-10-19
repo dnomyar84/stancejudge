@@ -30,6 +30,8 @@ export type Pose3DBoneViewerProps = {
   horizontalOrbit?: boolean;
   /** Tween duration when pose target changes (ms). 0 = instant. */
   tweenMs?: number;
+  /** Called when the skinned mesh viewer cannot start (WebGL / model load). */
+  onFatalError?: () => void;
 };
 
 type RebuildFn = (
@@ -46,12 +48,15 @@ export function Pose3DBoneViewer({
   className,
   horizontalOrbit = false,
   tweenMs = 90,
+  onFatalError,
 }: Pose3DBoneViewerProps) {
   const mountRef = useRef<HTMLDivElement>(null);
   const poseRef = useRef(pose);
   const boneRef = useRef(bone);
   const rebuildRef = useRef<RebuildFn | null>(null);
   const sessionRef = useRef(0);
+  const onFatalErrorRef = useRef(onFatalError);
+  onFatalErrorRef.current = onFatalError;
   const [viewerState, setViewerState] = useState<"loading" | "ready" | "error">(
     "loading",
   );
@@ -255,6 +260,7 @@ export function Pose3DBoneViewer({
         console.error("Pose3DBoneViewer:", err);
         setViewerError(message);
         setViewerState("error");
+        onFatalErrorRef.current?.();
       }
     })();
 

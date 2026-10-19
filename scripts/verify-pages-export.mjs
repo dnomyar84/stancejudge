@@ -2,7 +2,8 @@
 /**
  * Sanity-check static export before pushing to gh-pages.
  */
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { execSync } from "node:child_process";
 import { join } from "node:path";
 
 const out = join(process.cwd(), "out");
@@ -74,5 +75,34 @@ if (!existsSync(coachIndex)) {
   console.error("verify-pages-export: missing out/coach/wu-bu-quan/index.html");
   process.exit(1);
 }
+
+const coachHtml = readFileSync(coachIndex, "utf8");
+if (coachHtml.includes("3D coach figure preview")) {
+  console.error(
+    "verify-pages-export: coach page still uses tube mesh viewer (aria-label figure preview)",
+  );
+  process.exit(1);
+}
+if (
+  !coachHtml.includes("3D coach bone rig preview") &&
+  !coachHtml.includes("3D coach mannequin preview")
+) {
+  console.error(
+    "verify-pages-export: coach page missing expected 3D viewer aria-label",
+  );
+  process.exit(1);
+}
+
+let buildSha = "unknown";
+try {
+  buildSha = execSync("git rev-parse --short HEAD", { encoding: "utf8" }).trim();
+} catch {
+  /* ignore */
+}
+writeFileSync(
+  join(out, "build-id.txt"),
+  `${buildSha}\n${new Date().toISOString()}\n`,
+  "utf8",
+);
 
 console.log("verify-pages-export: ok");
