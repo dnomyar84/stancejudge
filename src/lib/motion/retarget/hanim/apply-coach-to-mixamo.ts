@@ -1,10 +1,6 @@
 import type { ExtendedCoachPose } from "@/lib/pose/coach-figure/extended-pose";
 import { coachWorldTargets } from "./coach-world";
-import {
-  captureLimbBind,
-  solveLimbToTargets,
-  worldPointToParentLocal,
-} from "./limb-ik";
+import { captureLimbBind, solveLimbToTargets } from "./limb-ik";
 import { indexMixamoBones, type MixamoBoneMap } from "./mixamo-bones";
 import type * as THREE from "three";
 
@@ -163,6 +159,19 @@ export function applyBindPose(
   settleAvatarOnFloor(THREE, avatar);
 }
 
+function alignPelvisToCoach(
+  THREE: typeof import("three"),
+  avatar: MixamoAvatar,
+  hipMidWorld: THREE.Vector3,
+): void {
+  const hipsWorld = new THREE.Vector3();
+  avatar.bones.hips.updateMatrixWorld(true);
+  avatar.bones.hips.getWorldPosition(hipsWorld);
+  const shift = hipMidWorld.clone().sub(hipsWorld);
+  avatar.root.position.add(shift);
+  avatar.root.updateMatrixWorld(true);
+}
+
 export function applyCoachPoseToMixamo(
   THREE: typeof import("three"),
   avatar: MixamoAvatar,
@@ -171,50 +180,22 @@ export function applyCoachPoseToMixamo(
   applyBindPose(THREE, avatar);
 
   const t = coachWorldTargets(THREE, pose);
-  const { bones, mesh } = avatar;
+  const { mesh } = avatar;
 
-  const hipsParent = bones.hips.parent;
-  if (hipsParent) {
-    bones.hips.position.copy(
-      worldPointToParentLocal(THREE, hipsParent, t.hipMid),
-    );
-  } else {
-    bones.hips.position.copy(t.hipMid);
-  }
-
-  solveLimbToTargets(
-    THREE,
-    avatar.leftLeg,
-    t.leftHip,
-    t.leftKnee,
-    t.leftAnkle,
-    "knee",
-  );
-  solveLimbToTargets(
-    THREE,
-    avatar.rightLeg,
-    t.rightHip,
-    t.rightKnee,
-    t.rightAnkle,
-    "knee",
-  );
-  solveLimbToTargets(
-    THREE,
-    avatar.leftArm,
-    t.leftShoulder,
-    t.leftElbow,
-    t.leftWrist,
-    "elbow",
-  );
+  solveLimbToTargets(THREE, avatar.leftLeg, t.leftKnee, t.leftAnkle, "knee");
+  solveLimbToTargets(THREE, avatar.rightLeg, t.rightKnee, t.rightAnkle, "knee");
+  solveLimbToTargets(THREE, avatar.leftArm, t.leftElbow, t.leftWrist, "elbow");
   solveLimbToTargets(
     THREE,
     avatar.rightArm,
-    t.rightShoulder,
     t.rightElbow,
     t.rightWrist,
     "elbow",
   );
 
+  mesh.skeleton.update();
+  avatar.root.updateMatrixWorld(true);
+  alignPelvisToCoach(THREE, avatar, t.hipMid);
   mesh.skeleton.update();
   settleAvatarOnFloor(THREE, avatar);
 }

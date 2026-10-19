@@ -55,7 +55,6 @@ function setBoneLocalDirection(
 }
 
 function interiorAngleDeg(
-  THREE: typeof import("three"),
   a: THREE.Vector3,
   b: THREE.Vector3,
   c: THREE.Vector3,
@@ -69,25 +68,32 @@ function interiorAngleDeg(
 }
 
 /**
- * Aim upper→lower→end toward coach joint positions; clamp hinge flex.
+ * Aim upper→lower→end toward coach targets using actual bone joint world positions
+ * (keeps skinned mesh connected).
  */
 export function solveLimbToTargets(
   THREE: typeof import("three"),
   limb: LimbBind,
-  root: THREE.Vector3,
   mid: THREE.Vector3,
   end: THREE.Vector3,
   hingeKind: "knee" | "elbow",
 ): void {
-  const upperDir = mid.clone().sub(root);
-  const lowerDir = end.clone().sub(mid);
-  if (upperDir.lengthSq() < 1e-10 || lowerDir.lengthSq() < 1e-10) return;
+  const upperWorld = new THREE.Vector3();
+  const lowerWorld = new THREE.Vector3();
+
+  limb.upper.updateMatrixWorld(true);
+  limb.upper.getWorldPosition(upperWorld);
+  const upperDir = mid.clone().sub(upperWorld);
+  if (upperDir.lengthSq() < 1e-10) return;
 
   setBoneLocalDirection(THREE, limb.upper, limb.upperBindDir, upperDir);
   limb.upper.updateMatrixWorld(true);
 
+  limb.lower.getWorldPosition(lowerWorld);
+  const lowerDir = end.clone().sub(lowerWorld);
+  if (lowerDir.lengthSq() < 1e-10) return;
+
   setBoneLocalDirection(THREE, limb.lower, limb.lowerBindDir, lowerDir);
 
-  const angle = interiorAngleDeg(THREE, root, mid, end);
-  clampInteriorFlex(angle, hingeKind);
+  clampInteriorFlex(interiorAngleDeg(upperWorld, lowerWorld, end), hingeKind);
 }
