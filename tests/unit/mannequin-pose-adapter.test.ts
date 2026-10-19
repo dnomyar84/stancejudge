@@ -34,7 +34,15 @@ describe("applyCoachPoseToMannequin (五步拳起势)", () => {
   it("maps wide 并步 start to downward legs and arms at sides (not crossed)", () => {
     const pose = sampleMoveChoreography(wbq01OpeningChoreography, 0).pose;
     const man = mockMannequin();
+<<<<<<< HEAD
     applyCoachPoseToMannequin(man, pose, 0);
+=======
+    applyCoachPoseToMannequin(
+      man as unknown as Parameters<typeof applyCoachPoseToMannequin>[0],
+      pose,
+      0,
+    );
+>>>>>>> bfee68c (Fix mannequin IK for standing poses (五步拳 opening))
 
     expect(man.l_leg.raise).toBeLessThan(25);
     expect(man.r_leg.raise).toBeLessThan(25);
