@@ -73,6 +73,31 @@ function kneeLift(side: "l" | "r"): JointPoseStmt[] {
   return [jointAt(`${side}_thigh`, 68), jointAt(`${side}_shin`, 95)];
 }
 
+/** 弓步冲拳. `front` is the bent lead leg. The other arm chambers at the hip. */
+function gongBuPunch(front: "left" | "right", punch: "left" | "right"): PoseStmt[] {
+  const lead = front === "left" ? "l" : "r";
+  const rear = front === "left" ? "r" : "l";
+  const punchSide = punch === "left" ? "l" : "r";
+  const chamber = punch === "left" ? "r" : "l";
+  return [
+    jointAt("hips", 15),
+    jointAt("spine", -12),
+    jointAt("chest", -6),
+    jointAt(`${rear}_thigh`, -20, 12, 16),
+    jointAt(`${rear}_shin`, 0),
+    jointAt(`${rear}_foot`, 36, 0, 6),
+    jointAt(`${lead}_thigh`, 64, 6, 0),
+    jointAt(`${lead}_shin`, 74),
+    jointAt(`${lead}_foot`, 18),
+    jointAt(`${punchSide}_upper_arm`, 80, -4, -80),
+    jointAt(`${punchSide}_forearm`, 10, 0, -85),
+    jointAt(`${chamber}_upper_arm`, -10, 0, 0),
+    jointAt(`${chamber}_forearm`, 95),
+    { kind: "hand", side: punch, shape: "fist" },
+    { kind: "hand", side: punch === "left" ? "right" : "left", shape: "fist" },
+  ];
+}
+
 function normalizePhrase(line: string): string {
   return line
     .toLowerCase()
@@ -130,6 +155,15 @@ function compilePhrase(line: string): { statements: PoseStmt[] } | { error: stri
     return { statements: [jointAt(`${prefix}_forearm`, deg)] };
   }
 
+  match = text.match(
+    /^(left|right) (?:gong ?bu|bow stance|bow)(?: (left|right))?(?: arm)? punch$/,
+  );
+  if (match) {
+    const front = match[1] as "left" | "right";
+    const punch = (match[2] as "left" | "right" | undefined) ?? (front === "right" ? "left" : "right");
+    return { statements: gongBuPunch(front, punch) };
+  }
+
   match = text.match(/^(raise|lift) (left|right) arm(?: (-?\d+(?:\.\d+)?))?$/);
   if (match) {
     const prefix = match[2] === "left" ? "l" : "r";
@@ -154,7 +188,7 @@ function compilePhrase(line: string): { statements: PoseStmt[] } | { error: stri
   if (/^(stand|neutral|raise|lift|bend|flex|arms|hands|bring|left|right|both|palm|fist|sword|make|open)\b/.test(text)) {
     return {
       error:
-        'Try "stand", "raise left knee", "hands by the ears", "arms forward", "both palms", "left fist", or "sword fingers"',
+        'Try "stand", "raise left knee", "right gong bu left punch", "hands by the ears", "both palms", or "sword fingers"',
     };
   }
   return null;
@@ -293,4 +327,9 @@ export const EXAMPLE_SWORD = `# 剑指 — index and middle straight
 stand
 arms forward
 sword fingers
+`;
+
+export const EXAMPLE_GONGBU = `# 右弓步左冲拳
+stand
+right gong bu left punch
 `;

@@ -39,6 +39,8 @@ sword fingers
 | `both palms`, `left palm`, `right fist` | 掌 / 拳 |
 | `sword fingers` | 剑指 on both hands |
 | `bend left elbow 40` | Elbow flexion in degrees |
+| `right gong bu left punch` | 右弓步左冲拳 — right bow stance, left fist |
+| `left gong bu right punch` | 左弓步右冲拳 |
 | `raise right arm 70` | Shoulder flexion in degrees |
 
 The precise form still works: `joint l_upper_arm flex 58 abduct 16` and `hand left sword`.

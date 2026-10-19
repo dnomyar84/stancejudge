@@ -7,6 +7,7 @@ import {
 } from "./engine/wooden-dummy";
 import {
   EXAMPLE_FIST,
+  EXAMPLE_GONGBU,
   EXAMPLE_HANDS_BY_EARS,
   EXAMPLE_LEFT_KNEE,
   EXAMPLE_NEUTRAL,
@@ -36,9 +37,10 @@ app.innerHTML = `
         <button type="button" id="ex-palm">掌 Palm</button>
         <button type="button" id="ex-fist">拳 Fist</button>
         <button type="button" id="ex-sword">剑指 Sword</button>
+        <button type="button" id="ex-gongbu">右弓步冲拳</button>
       </div>
       <p id="status" class="status" aria-live="polite"></p>
-      <p class="joint-list">stand · raise left knee · hands by the ears · arms forward · both palms · left fist · sword fingers · or joint lines (${JOINT_IDS.length} joints)</p>
+      <p class="joint-list">stand · right gong bu left punch · raise left knee · hands by the ears · arms forward · both palms · left fist · sword fingers · or joint lines (${JOINT_IDS.length} joints)</p>
     </aside>
     <div class="viewport-wrap" id="viewport">
       <span class="viewport-hint">Drag to orbit · scroll to zoom</span>
@@ -50,7 +52,7 @@ const grammarEl = document.querySelector<HTMLTextAreaElement>("#grammar")!;
 const statusEl = document.querySelector<HTMLParagraphElement>("#status")!;
 const viewportEl = document.querySelector<HTMLDivElement>("#viewport")!;
 
-grammarEl.value = EXAMPLE_NEUTRAL;
+grammarEl.value = EXAMPLE_GONGBU;
 
 const dummy = createWoodenDummy();
 const viewer = createDummyViewer();
@@ -112,6 +114,10 @@ document.querySelector("#ex-fist")!.addEventListener("click", () => {
 });
 document.querySelector("#ex-sword")!.addEventListener("click", () => {
   grammarEl.value = EXAMPLE_SWORD;
+  applyGrammar();
+});
+document.querySelector("#ex-gongbu")!.addEventListener("click", () => {
+  grammarEl.value = EXAMPLE_GONGBU;
   applyGrammar();
 });
 
