@@ -25,7 +25,7 @@ function restoreApi() {
 backupApi();
 rmSync(join(root, ".next"), { recursive: true, force: true });
 const env = { ...process.env };
-const result = spawnSync("next", ["build"], {
+const result = spawnSync("next", ["build", "--webpack"], {
   cwd: root,
   env,
   stdio: "inherit",

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { ExtendedCoachPose } from "@/lib/pose/coach-figure/extended-pose";
 import { applyCoachPoseToMannequin } from "@/lib/pose/mannequin-adapter/coach-pose-to-mannequin";
+import { cn } from "@/lib/utils";
 
 type Pose3DViewerProps = {
   pose: ExtendedCoachPose | null;
@@ -35,7 +36,16 @@ export function Pose3DViewer({
   poseRef.current = pose;
 
   useEffect(() => {
-    if (rebuildRef.current) rebuildRef.current(pose);
+    if (!rebuildRef.current) return;
+    try {
+      rebuildRef.current(pose);
+    } catch (err) {
+      console.error("Pose3DViewer pose update:", err);
+      setViewerError(
+        err instanceof Error ? err.message : "Pose update failed",
+      );
+      setViewerState("error");
+    }
   }, [pose]);
 
   useEffect(() => {
@@ -183,7 +193,12 @@ export function Pose3DViewer({
   }, [horizontalOrbit]);
 
   return (
-    <div className={className ?? "relative min-h-[280px] w-full"}>
+    <div
+      className={cn(
+        "relative min-h-[280px] w-full overflow-hidden",
+        className,
+      )}
+    >
       <div
         ref={mountRef}
         className="absolute inset-0"
