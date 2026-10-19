@@ -20,6 +20,8 @@ Open http://127.0.0.1:4321/
 
 One line per action. `#` starts a comment. Applying a pose eases the figurine from where it is into the new pose, instead of snapping.
 
+The joint sliders list every axis that can move. Root and the hip locator bones are locked, so they have no slider. Dragging a slider changes that axis on the pose currently shown.
+
 ```
 stand
 arms forward

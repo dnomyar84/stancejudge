@@ -15,7 +15,8 @@ import {
   EXAMPLE_SWORD,
   parsePoseGrammar,
 } from "./engine/pose-grammar";
-import { JOINT_IDS, type JointId } from "./engine/joint-catalog";
+import { JOINT_IDS, type AxisName, type JointId } from "./engine/joint-catalog";
+import { listAdjustableAxes } from "./engine/joint-limits";
 import type { JointAnglesDeg } from "./engine/wooden-dummy";
 import { createDummyViewer } from "./engine/viewer";
 
@@ -42,6 +43,11 @@ app.innerHTML = `
       </div>
       <p id="status" class="status" aria-live="polite"></p>
       <p class="joint-list">stand · right gong bu left punch · raise left knee · hands by the ears · arms forward · both palms · left fist · sword fingers · or joint lines (${JOINT_IDS.length} joints)</p>
+      <section class="sliders">
+        <h2>Joint sliders</h2>
+        <p class="hint">Each slider is one movable axis, limited to human range. Dragging it changes the figurine immediately.</p>
+        <div class="slider-scroll" id="sliders"></div>
+      </section>
     </aside>
     <div class="viewport-wrap" id="viewport">
       <span class="viewport-hint">Drag to orbit · scroll to zoom</span>
@@ -96,6 +102,7 @@ function blendPose(from: Record<JointId, JointAnglesDeg>, to: Record<JointId, Jo
     }
     syncBonesFromAngles(dummy);
     groundDummy(dummy);
+    refreshSliders();
     if (u < 1) requestAnimationFrame(step);
   };
   requestAnimationFrame(step);
@@ -132,6 +139,7 @@ function applyGrammar(animate = true) {
     writeAngles(to);
     syncBonesFromAngles(dummy);
     groundDummy(dummy);
+    refreshSliders();
     finish();
     return;
   }
@@ -181,4 +189,68 @@ grammarEl.addEventListener("keydown", (e) => {
   }
 });
 
+const SLIDER_GROUPS: Array<{ title: string; test: (joint: JointId) => boolean }> = [
+  { title: "Torso", test: (id) => ["hips", "spine", "chest", "neck", "head"].includes(id) },
+  { title: "Left arm", test: (id) => /^l_(shoulder|upper_arm|forearm|hand)$/.test(id) },
+  { title: "Right arm", test: (id) => /^r_(shoulder|upper_arm|forearm|hand)$/.test(id) },
+  { title: "Left fingers", test: (id) => /^l_(thumb|index|middle|ring|pinky)/.test(id) },
+  { title: "Right fingers", test: (id) => /^r_(thumb|index|middle|ring|pinky)/.test(id) },
+  { title: "Left leg", test: (id) => /^l_(thigh|shin|foot)$/.test(id) },
+  { title: "Right leg", test: (id) => /^r_(thigh|shin|foot)$/.test(id) },
+];
+
+const sliderInputs = new Map<string, { input: HTMLInputElement; out: HTMLOutputElement }>();
+
+function sliderKey(joint: JointId, axis: AxisName) {
+  return `${joint}:${axis}`;
+}
+
+function refreshSliders() {
+  for (const [key, row] of sliderInputs) {
+    const [joint, axis] = key.split(":") as [JointId, AxisName];
+    const value = dummy.angles[joint][axis];
+    row.input.value = String(value);
+    row.out.textContent = `${Math.round(value)}°`;
+  }
+}
+
+function mountSliders() {
+  const root = document.querySelector<HTMLDivElement>("#sliders")!;
+  const axes = listAdjustableAxes();
+  for (const group of SLIDER_GROUPS) {
+    const mine = axes.filter((axis) => group.test(axis.joint));
+    if (mine.length === 0) continue;
+    const details = document.createElement("details");
+    details.open = group.title === "Torso" || group.title.endsWith("leg") || group.title.endsWith("arm");
+    const summary = document.createElement("summary");
+    summary.textContent = `${group.title} (${mine.length})`;
+    details.appendChild(summary);
+    for (const axis of mine) {
+      const label = document.createElement("label");
+      label.className = "slider-row";
+      const name = document.createElement("span");
+      name.textContent = `${axis.joint} ${axis.axis}`;
+      const out = document.createElement("output");
+      const input = document.createElement("input");
+      input.type = "range";
+      input.min = String(axis.min);
+      input.max = String(axis.max);
+      input.step = "1";
+      input.setAttribute("aria-label", `${axis.joint} ${axis.axis}`);
+      input.addEventListener("input", () => {
+        blendToken += 1;
+        dummy.angles[axis.joint][axis.axis] = Number(input.value);
+        syncBonesFromAngles(dummy);
+        groundDummy(dummy);
+        out.textContent = `${input.value}°`;
+      });
+      label.append(name, out, input);
+      details.appendChild(label);
+      sliderInputs.set(sliderKey(axis.joint, axis.axis), { input, out });
+    }
+    root.appendChild(details);
+  }
+}
+
+mountSliders();
 applyGrammar(false);

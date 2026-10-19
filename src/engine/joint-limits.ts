@@ -1,5 +1,4 @@
-import type { JointId } from "./joint-catalog";
-import type { AxisName } from "./joint-catalog";
+import { JOINT_IDS, type AxisName, type JointId } from "./joint-catalog";
 
 /**
  * Anatomical range of motion for grammar angles (degrees from the standing pose).
@@ -59,6 +58,26 @@ export type ClampNote = {
   requested: number;
   applied: number;
 };
+
+export type AdjustableAxis = {
+  joint: JointId;
+  axis: AxisName;
+  min: number;
+  max: number;
+};
+
+/** Every flex / abduct / twist axis whose anatomical range is not a single locked value. */
+export function listAdjustableAxes(): AdjustableAxis[] {
+  const axes: AdjustableAxis[] = [];
+  for (const joint of JOINT_IDS) {
+    const rom = romFor(joint);
+    for (const axis of ["flex", "abduct", "twist"] as const) {
+      const [min, max] = rom[axis];
+      if (min !== max) axes.push({ joint, axis, min, max });
+    }
+  }
+  return axes;
+}
 
 function clampAxis(value: number, limit: AxisLimit): number {
   return Math.min(limit[1], Math.max(limit[0], value));

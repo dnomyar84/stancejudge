@@ -177,3 +177,58 @@ button:hover {
   line-height: 1.5;
   margin: 0;
 }
+
+.sliders h2 {
+  margin: 0.25rem 0 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.sliders .hint {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.slider-scroll {
+  max-height: 34vh;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.15rem 0.65rem 0.6rem;
+}
+
+@media (min-width: 900px) {
+  .slider-scroll {
+    max-height: min(48vh, 560px);
+  }
+}
+
+.slider-scroll details summary {
+  cursor: pointer;
+  font-size: 0.8rem;
+  padding: 0.45rem 0 0.2rem;
+}
+
+.slider-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.05rem 0.5rem;
+  align-items: baseline;
+  margin: 0.35rem 0 0.5rem;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.slider-row input[type="range"] {
+  grid-column: 1 / -1;
+  width: 100%;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.slider-row output {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
