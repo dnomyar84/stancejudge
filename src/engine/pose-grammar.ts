@@ -125,12 +125,12 @@ export const EXAMPLE_NEUTRAL = `# Neutral 开步 (preset angles applied on reset
 reset
 `;
 
-export const EXAMPLE_HANDS_BY_EARS = `# Arms up beside the ears
+export const EXAMPLE_HANDS_BY_EARS = `# Arms up beside the ears (+abduct = away from body, toward overhead)
 reset
-joint l_upper_arm abduct 92
-joint l_forearm flex 105
-joint r_upper_arm abduct -92
-joint r_forearm flex 105
+joint l_upper_arm abduct 168 flex 8
+joint l_forearm flex 18
+joint r_upper_arm abduct 168 flex 8
+joint r_forearm flex 18
 `;
 
 export const EXAMPLE_LEFT_KNEE = `# Left knee lift

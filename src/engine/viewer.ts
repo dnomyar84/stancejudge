@@ -19,7 +19,7 @@ export function createDummyViewer(): DummyViewer {
   scene.background = new THREE.Color(0x0a1218);
 
   const camera = new THREE.PerspectiveCamera(42, 1, 0.05, 40);
-  camera.position.set(0, 1.35, 2.4);
+  camera.position.set(0.35, 1.15, 2.8);
 
   const renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.shadowMap.enabled = true;

@@ -2,8 +2,8 @@ import * as THREE from "three";
 import {
   JOINT_CATALOG,
   NEUTRAL_STANCE_DEG,
-  type JointId,
   type JointCatalogEntry,
+  type JointId,
 } from "./joint-catalog";
 import type { JointPoseStmt, PoseProgram } from "./pose-grammar";
 
@@ -24,20 +24,24 @@ export type WoodenDummy = {
 
 const DEG = Math.PI / 180;
 
+const SKIN = new THREE.MeshStandardMaterial({
+  color: 0xd7b48a,
+  roughness: 0.62,
+  metalness: 0.02,
+});
 const WOOD = new THREE.MeshStandardMaterial({
-  color: 0xd4b483,
-  roughness: 0.68,
+  color: 0xc49a6c,
+  roughness: 0.7,
   metalness: 0.04,
 });
-const WOOD_DARK = new THREE.MeshStandardMaterial({
-  color: 0xa67c52,
-  roughness: 0.72,
-  metalness: 0.05,
+const JOINT = new THREE.MeshStandardMaterial({
+  color: 0x4a3424,
+  roughness: 0.45,
+  metalness: 0.15,
 });
-const JOINT_MAT = new THREE.MeshStandardMaterial({
-  color: 0x5c3d1e,
-  roughness: 0.55,
-  metalness: 0.12,
+const EYE = new THREE.MeshStandardMaterial({
+  color: 0x1a120c,
+  roughness: 0.4,
 });
 
 function makeBone(id: JointId, x = 0, y = 0, z = 0): THREE.Bone {
@@ -47,76 +51,92 @@ function makeBone(id: JointId, x = 0, y = 0, z = 0): THREE.Bone {
   return b;
 }
 
-const _yUp = new THREE.Vector3(0, 1, 0);
+/** Bind-pose world position (identity rotations). */
+function bindWorld(bone: THREE.Object3D): THREE.Vector3 {
+  const chain: THREE.Vector3[] = [];
+  let node: THREE.Object3D | null = bone;
+  while (node) {
+    chain.push(node.position.clone());
+    node = node.parent;
+  }
+  const out = new THREE.Vector3();
+  for (let i = chain.length - 1; i >= 0; i--) out.add(chain[i]);
+  return out;
+}
 
-/** Cylinder skinned parent→child, aligned to child.position (not forced +Y). */
-function skinnedSegment(
+const Y_UP = new THREE.Vector3(0, 1, 0);
+
+/**
+ * Limb volume in group space, skinned parent→child.
+ * Mesh stays a sibling of the skeleton root — never a child of a bone
+ * (parenting + skinning double-transforms and destroys the silhouette).
+ */
+function addSkinnedSegment(
+  rootGroup: THREE.Group,
   skeleton: THREE.Skeleton,
   parentIndex: number,
   childIndex: number,
   parent: THREE.Bone,
   child: THREE.Bone,
-  radiusProx: number,
-  radiusDist: number,
-  radial = 14,
+  radiusNear: number,
+  radiusFar: number,
 ): THREE.SkinnedMesh {
-  const dir = child.position.clone();
-  const len = dir.length();
-  const dirN =
-    len > 1e-6 ? dir.clone().multiplyScalar(1 / len) : new THREE.Vector3(0, 1, 0);
-  const geom = new THREE.CylinderGeometry(radiusProx, radiusDist, len, radial, 3);
-  geom.translate(0, len / 2, 0);
+  const p0 = bindWorld(parent);
+  const p1 = bindWorld(child);
+  const delta = new THREE.Vector3().subVectors(p1, p0);
+  const len = Math.max(delta.length(), 1e-4);
+  const dir = delta.clone().multiplyScalar(1 / len);
 
-  const quat = new THREE.Quaternion().setFromUnitVectors(_yUp, dirN);
-  geom.applyQuaternion(quat);
-  geom.translate(dir.x * 0.5, dir.y * 0.5, dir.z * 0.5);
+  const geom = new THREE.CylinderGeometry(radiusNear, radiusFar, len, 16, 6, false);
+  geom.translate(0, len / 2, 0);
+  geom.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(Y_UP, dir));
+  geom.translate(p0.x, p0.y, p0.z);
 
   const pos = geom.attributes.position as THREE.BufferAttribute;
   const skinIndex = new Uint16Array(pos.count * 4);
   const skinWeight = new Float32Array(pos.count * 4);
-
   for (let i = 0; i < pos.count; i++) {
-    const v = new THREE.Vector3(pos.getX(i), pos.getY(i), pos.getZ(i));
-    const t = len > 1e-6 ? THREE.MathUtils.clamp(v.dot(dirN) / len, 0, 1) : 0;
-    const wChild = t;
-    const wParent = 1 - wChild;
+    const along = new THREE.Vector3(pos.getX(i), pos.getY(i), pos.getZ(i)).sub(p0).dot(dir);
+    const t = THREE.MathUtils.clamp(along / len, 0, 1);
     skinIndex[i * 4] = parentIndex;
-    skinWeight[i * 4] = wParent;
+    skinWeight[i * 4] = 1 - t;
     skinIndex[i * 4 + 1] = childIndex;
-    skinWeight[i * 4 + 1] = wChild;
+    skinWeight[i * 4 + 1] = t;
   }
-
   geom.setAttribute("skinIndex", new THREE.Uint16BufferAttribute(skinIndex, 4));
   geom.setAttribute("skinWeight", new THREE.Float32BufferAttribute(skinWeight, 4));
   geom.computeVertexNormals();
 
-  const mesh = new THREE.SkinnedMesh(geom, WOOD);
+  const mesh = new THREE.SkinnedMesh(geom, SKIN);
   mesh.castShadow = true;
   mesh.receiveShadow = true;
   mesh.frustumCulled = false;
+  rootGroup.add(mesh);
+  rootGroup.updateMatrixWorld(true);
   mesh.bind(skeleton);
-  parent.add(mesh);
   return mesh;
 }
 
-function jointBall(radius: number, parent: THREE.Bone, y = 0): THREE.Mesh {
-  const m = new THREE.Mesh(new THREE.SphereGeometry(radius, 16, 12), JOINT_MAT);
-  m.position.y = y;
+function ball(parent: THREE.Object3D, r: number, x = 0, y = 0, z = 0, mat: THREE.Material = JOINT) {
+  const m = new THREE.Mesh(new THREE.SphereGeometry(r, 18, 14), mat);
+  m.position.set(x, y, z);
   m.castShadow = true;
   parent.add(m);
   return m;
 }
 
-function rigidBox(
-  parent: THREE.Bone,
+function box(
+  parent: THREE.Object3D,
   sx: number,
   sy: number,
   sz: number,
-  mat: THREE.Material,
-  oy = 0,
-): THREE.Mesh {
+  x = 0,
+  y = 0,
+  z = 0,
+  mat: THREE.Material = WOOD,
+) {
   const m = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), mat);
-  m.position.y = oy;
+  m.position.set(x, y, z);
   m.castShadow = true;
   m.receiveShadow = true;
   parent.add(m);
@@ -134,35 +154,35 @@ export function createWoodenDummy(): WoodenDummy {
     return b;
   };
 
-  // ~1.72 m, Y-up, faces +Z
+  // Adult ~1.75 m. +Y up, +Z forward, +X figure's left (viewer's right when facing camera).
+  // Foot bones sit on the floor (y = 0) so grounding is the sole.
   const root = mk("root");
-  const hips = mk("hips", 0, 0.94, 0);
-  const spine = mk("spine", 0, 0.2, 0);
-  const chest = mk("chest", 0, 0.24, 0);
-  const neck = mk("neck", 0, 0.16, 0);
-  const head = mk("head", 0, 0.12, 0);
+  const hips = mk("hips", 0, 0.96, 0);
+  const spine = mk("spine", 0, 0.18, 0);
+  const chest = mk("chest", 0, 0.22, 0);
+  const neck = mk("neck", 0, 0.18, 0);
+  const head = mk("head", 0, 0.1, 0);
 
-  const shoulderW = 0.2;
-  const lShoulder = mk("l_shoulder", -shoulderW, 0.06, 0);
-  const lUpper = mk("l_upper_arm", 0, -0.3, 0);
-  const lFore = mk("l_forearm", 0, -0.28, 0);
-  const lHand = mk("l_hand", 0, -0.1, 0);
+  // Limb bone sits at the joint that swings the segment below it.
+  const lShoulder = mk("l_shoulder", -0.2, 0.02, 0);
+  const lUpper = mk("l_upper_arm", 0, 0, 0);
+  const lFore = mk("l_forearm", 0, -0.32, 0);
+  const lHand = mk("l_hand", 0, -0.26, 0);
 
-  const rShoulder = mk("r_shoulder", shoulderW, 0.06, 0);
-  const rUpper = mk("r_upper_arm", 0, -0.3, 0);
-  const rFore = mk("r_forearm", 0, -0.28, 0);
-  const rHand = mk("r_hand", 0, -0.1, 0);
+  const rShoulder = mk("r_shoulder", 0.2, 0.02, 0);
+  const rUpper = mk("r_upper_arm", 0, 0, 0);
+  const rFore = mk("r_forearm", 0, -0.32, 0);
+  const rHand = mk("r_hand", 0, -0.26, 0);
 
-  const hipW = 0.11;
-  const lHip = mk("l_hip", -hipW, 0, 0);
-  const lThigh = mk("l_thigh", 0, -0.44, 0);
-  const lShin = mk("l_shin", 0, -0.42, 0);
-  const lFoot = mk("l_foot", 0, -0.05, 0.1);
+  const lHip = mk("l_hip", -0.1, -0.02, 0);
+  const lThigh = mk("l_thigh", 0, 0, 0);
+  const lShin = mk("l_shin", 0, -0.44, 0);
+  const lFoot = mk("l_foot", 0, -0.42, 0.02);
 
-  const rHip = mk("r_hip", hipW, 0, 0);
-  const rThigh = mk("r_thigh", 0, -0.44, 0);
-  const rShin = mk("r_shin", 0, -0.42, 0);
-  const rFoot = mk("r_foot", 0, -0.05, 0.1);
+  const rHip = mk("r_hip", 0.1, -0.02, 0);
+  const rThigh = mk("r_thigh", 0, 0, 0);
+  const rShin = mk("r_shin", 0, -0.44, 0);
+  const rFoot = mk("r_foot", 0, -0.42, 0.02);
 
   root.add(hips);
   hips.add(spine);
@@ -170,104 +190,92 @@ export function createWoodenDummy(): WoodenDummy {
   chest.add(neck);
   neck.add(head);
 
-  rigidBox(hips, 0.34, 0.16, 0.2, WOOD_DARK, -0.04);
-  jointBall(0.07, chest, 0.02);
-  jointBall(0.11, head, 0.06);
-  rigidBox(head, 0.2, 0.22, 0.22, WOOD, 0.08);
-
   chest.add(lShoulder);
   lShoulder.add(lUpper);
   lUpper.add(lFore);
   lFore.add(lHand);
-  jointBall(0.05, lShoulder);
-  jointBall(0.042, lUpper, -0.3);
-  rigidBox(lHand, 0.06, 0.1, 0.04, WOOD_DARK, -0.05);
 
   chest.add(rShoulder);
   rShoulder.add(rUpper);
   rUpper.add(rFore);
   rFore.add(rHand);
-  jointBall(0.05, rShoulder);
-  jointBall(0.042, rUpper, -0.3);
-  rigidBox(rHand, 0.06, 0.1, 0.04, WOOD_DARK, -0.05);
 
   hips.add(lHip);
   lHip.add(lThigh);
   lThigh.add(lShin);
   lShin.add(lFoot);
-  jointBall(0.055, lHip);
-  jointBall(0.05, lThigh, -0.44);
-  rigidBox(lFoot, 0.1, 0.05, 0.22, WOOD_DARK, -0.02);
 
   hips.add(rHip);
   rHip.add(rThigh);
   rThigh.add(rShin);
   rShin.add(rFoot);
-  jointBall(0.055, rHip);
-  jointBall(0.05, rThigh, -0.44);
-  rigidBox(rFoot, 0.1, 0.05, 0.22, WOOD_DARK, -0.02);
+
+  // Solid parts that must keep their shape (not skinned).
+  box(hips, 0.28, 0.14, 0.18, 0, -0.02, 0);
+  ball(chest, 0.05, -0.2, 0.02, 0);
+  ball(chest, 0.05, 0.2, 0.02, 0);
+  ball(head, 0.11, 0, 0.06, 0, SKIN);
+  ball(head, 0.018, -0.035, 0.08, 0.09, EYE);
+  ball(head, 0.018, 0.035, 0.08, 0.09, EYE);
+  box(lHand, 0.07, 0.1, 0.035, 0, -0.06, 0.01, WOOD);
+  box(rHand, 0.07, 0.1, 0.035, 0, -0.06, 0.01, WOOD);
+  box(lFoot, 0.09, 0.05, 0.22, 0, 0.025, 0.06, WOOD);
+  box(rFoot, 0.09, 0.05, 0.22, 0, 0.025, 0.06, WOOD);
+  ball(lUpper, 0.04, 0, 0, 0);
+  ball(rUpper, 0.04, 0, 0, 0);
+  ball(lFore, 0.035, 0, 0, 0);
+  ball(rFore, 0.035, 0, 0, 0);
+  ball(lThigh, 0.05, 0, 0, 0);
+  ball(rThigh, 0.05, 0, 0, 0);
+  ball(lShin, 0.04, 0, 0, 0);
+  ball(rShin, 0.04, 0, 0, 0);
 
   rootGroup.add(root);
+  rootGroup.updateMatrixWorld(true);
 
   const boneList = Object.values(bones);
-  const boneIndex = new Map<THREE.Bone, number>();
-  boneList.forEach((b, i) => boneIndex.set(b, i));
+  const indexOf = new Map<THREE.Bone, number>();
+  boneList.forEach((b, i) => indexOf.set(b, i));
   const skeleton = new THREE.Skeleton(boneList);
 
   const skinnedMeshes: THREE.SkinnedMesh[] = [];
-  const seg = (
-    a: JointId,
-    b: JointId,
-    r0: number,
-    r1: number,
-  ) => {
-    const mesh = skinnedSegment(
-      skeleton,
-      boneIndex.get(bones[a])!,
-      boneIndex.get(bones[b])!,
-      bones[a],
-      bones[b],
-      r0,
-      r1,
+  const seg = (a: JointId, b: JointId, r0: number, r1: number) => {
+    skinnedMeshes.push(
+      addSkinnedSegment(
+        rootGroup,
+        skeleton,
+        indexOf.get(bones[a])!,
+        indexOf.get(bones[b])!,
+        bones[a],
+        bones[b],
+        r0,
+        r1,
+      ),
     );
-    skinnedMeshes.push(mesh);
   };
 
-  seg("hips", "spine", 0.12, 0.11);
-  seg("spine", "chest", 0.13, 0.14);
-  seg("chest", "neck", 0.08, 0.07);
-  seg("neck", "head", 0.065, 0.075);
-  seg("l_shoulder", "l_upper_arm", 0.06, 0.055);
-  seg("l_upper_arm", "l_forearm", 0.052, 0.046);
-  seg("l_forearm", "l_hand", 0.042, 0.036);
-  seg("r_shoulder", "r_upper_arm", 0.06, 0.055);
-  seg("r_upper_arm", "r_forearm", 0.052, 0.046);
-  seg("r_forearm", "r_hand", 0.042, 0.036);
-  seg("l_hip", "l_thigh", 0.072, 0.065);
-  seg("l_thigh", "l_shin", 0.062, 0.055);
-  seg("l_shin", "l_foot", 0.05, 0.044);
-  seg("r_hip", "r_thigh", 0.072, 0.065);
-  seg("r_thigh", "r_shin", 0.062, 0.055);
-  seg("r_shin", "r_foot", 0.05, 0.044);
+  seg("hips", "spine", 0.13, 0.11);
+  seg("spine", "chest", 0.12, 0.15);
+  seg("chest", "neck", 0.07, 0.055);
+  seg("neck", "head", 0.05, 0.06);
+  seg("l_upper_arm", "l_forearm", 0.055, 0.045);
+  seg("l_forearm", "l_hand", 0.042, 0.034);
+  seg("r_upper_arm", "r_forearm", 0.055, 0.045);
+  seg("r_forearm", "r_hand", 0.042, 0.034);
+  seg("l_thigh", "l_shin", 0.075, 0.055);
+  seg("l_shin", "l_foot", 0.05, 0.04);
+  seg("r_thigh", "r_shin", 0.075, 0.055);
+  seg("r_shin", "r_foot", 0.05, 0.04);
 
   const restRotations = new Map<THREE.Bone, THREE.Euler>();
-  for (const b of boneList) {
-    restRotations.set(b, b.rotation.clone());
-  }
+  for (const b of boneList) restRotations.set(b, b.rotation.clone());
 
   const angles = {} as Record<JointId, JointAnglesDeg>;
   for (const id of Object.keys(JOINT_CATALOG) as JointId[]) {
     angles[id] = { flex: 0, abduct: 0, twist: 0 };
   }
 
-  return {
-    root: rootGroup,
-    bones,
-    skeleton,
-    skinnedMeshes,
-    angles,
-    restRotations,
-  };
+  return { root: rootGroup, bones, skeleton, skinnedMeshes, angles, restRotations };
 }
 
 function applyAnglesToBone(
@@ -282,9 +290,9 @@ function applyAnglesToBone(
     else if (axis === 1) euler.y += deg * DEG;
     else euler.z += deg * DEG;
   };
-  add(entry.flex, angles.flex);
-  add(entry.abduct, angles.abduct);
-  add(entry.twist, angles.twist);
+  add(entry.flex, angles.flex * entry.flexSign);
+  add(entry.abduct, angles.abduct * entry.abductSign);
+  add(entry.twist, angles.twist * entry.twistSign);
   bone.rotation.copy(euler);
 }
 
@@ -312,30 +320,34 @@ export function resetPoseAngles(dummy: WoodenDummy): void {
 
 export function syncBonesFromAngles(dummy: WoodenDummy): void {
   for (const id of Object.keys(JOINT_CATALOG) as JointId[]) {
-    const bone = dummy.bones[id];
-    const entry = JOINT_CATALOG[id];
-    const rest = dummy.restRotations.get(bone)!;
-    applyAnglesToBone(bone, entry, dummy.angles[id], rest);
+    applyAnglesToBone(
+      dummy.bones[id],
+      JOINT_CATALOG[id],
+      dummy.angles[id],
+      dummy.restRotations.get(dummy.bones[id])!,
+    );
   }
   dummy.skeleton.update();
 }
 
 export function executePoseProgram(dummy: WoodenDummy, program: PoseProgram): void {
   for (const stmt of program.statements) {
-    if (stmt.kind === "reset") {
-      resetPoseAngles(dummy);
-      continue;
-    }
-    applyJointStatement(dummy, stmt);
+    if (stmt.kind === "reset") resetPoseAngles(dummy);
+    else applyJointStatement(dummy, stmt);
   }
   syncBonesFromAngles(dummy);
 }
 
+/** Drop the lower sole onto y = 0. Foot boxes sit on the foot bone origin. */
 export function groundDummy(dummy: WoodenDummy): void {
   dummy.root.position.y = 0;
   dummy.root.updateMatrixWorld(true);
-  const box = new THREE.Box3().setFromObject(dummy.root);
-  if (box.isEmpty()) return;
-  dummy.root.position.y -= box.min.y;
+  const footY = (id: JointId) => {
+    const p = new THREE.Vector3();
+    dummy.bones[id].getWorldPosition(p);
+    return p.y;
+  };
+  const lowest = Math.min(footY("l_foot"), footY("r_foot"));
+  dummy.root.position.y -= lowest;
   dummy.root.updateMatrixWorld(true);
 }
