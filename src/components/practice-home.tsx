@@ -140,7 +140,12 @@ export function PracticeHome({ onSelect }: PracticeHomeProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button type="button" variant="secondary" className="w-full sm:w-auto">
+          <Button
+            type="button"
+            variant="secondary"
+            className="w-full sm:w-auto"
+            onClick={() => onSelect("pose-3d-lab")}
+          >
             Open lab
           </Button>
         </CardContent>
@@ -171,6 +176,19 @@ export function PracticeHome({ onSelect }: PracticeHomeProps) {
         <Link href="/admin/" className="text-cyan-400 underline">
           Admin / settings
         </Link>
+        {" · "}
+        <a
+          href="https://dnomyar84.github.io/stancejudge/"
+          className="text-cyan-400 underline"
+          rel="noopener noreferrer"
+        >
+          GitHub Pages link
+        </a>
+        <span className="mt-1 block text-[11px] opacity-80">
+          Use the full URL above (includes <code className="text-[10px]">/stancejudge/</code>
+          ). Local preview:{" "}
+          <code className="text-[10px]">npm run preview:pages</code> → port 4322.
+        </span>
       </p>
     </div>
   );

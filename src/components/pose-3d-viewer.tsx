@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ExtendedCoachPose } from "@/lib/pose/coach-figure/extended-pose";
 import { applyCoachPoseToMannequin } from "@/lib/pose/mannequin-adapter/coach-pose-to-mannequin";
 
@@ -27,6 +27,10 @@ export function Pose3DViewer({
   const mountRef = useRef<HTMLDivElement>(null);
   const poseRef = useRef(pose);
   const rebuildRef = useRef<RebuildFn | null>(null);
+  const [viewerState, setViewerState] = useState<"loading" | "ready" | "error">(
+    "loading",
+  );
+  const [viewerError, setViewerError] = useState<string | null>(null);
 
   poseRef.current = pose;
 
@@ -44,6 +48,7 @@ export function Pose3DViewer({
     let mannequin: MannequinFigure | null = null;
 
     void (async () => {
+      try {
       const THREE = await import("three");
       const { OrbitControls } = await import(
         "three/examples/jsm/controls/OrbitControls.js"
@@ -150,8 +155,17 @@ export function Pose3DViewer({
         frameId = requestAnimationFrame(animate);
       };
       animate();
+      setViewerState("ready");
 
       return () => window.removeEventListener("resize", onResize);
+      } catch (err) {
+        if (disposed) return;
+        const message =
+          err instanceof Error ? err.message : "3D viewer failed to start";
+        console.error("Pose3DViewer:", err);
+        setViewerError(message);
+        setViewerState("error");
+      }
     })();
 
     return () => {
@@ -169,11 +183,31 @@ export function Pose3DViewer({
   }, [horizontalOrbit]);
 
   return (
-    <div
-      ref={mountRef}
-      className={className}
-      role="img"
-      aria-label="3D coach mannequin preview"
-    />
+    <div className={className ?? "relative min-h-[280px] w-full"}>
+      <div
+        ref={mountRef}
+        className="absolute inset-0"
+        role="img"
+        aria-label="3D coach mannequin preview"
+      />
+      {viewerState === "loading" && (
+        <p className="pointer-events-none absolute inset-x-0 bottom-3 text-center text-xs text-muted-foreground">
+          Loading 3D figure…
+        </p>
+      )}
+      {viewerState === "error" && (
+        <div
+          className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-background/90 px-4 text-center"
+          role="alert"
+        >
+          <p className="text-sm font-medium text-destructive">
+            3D preview could not load
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {viewerError ?? "Try another browser or enable WebGL."}
+          </p>
+        </div>
+      )}
+    </div>
   );
 }

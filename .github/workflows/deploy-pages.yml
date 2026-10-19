@@ -10,7 +10,8 @@ permissions:
 
 concurrency:
   group: pages
-  cancel-in-progress: true
+  # Never cancel mid-deploy — a half-pushed gh-pages branch breaks asset URLs.
+  cancel-in-progress: false
 
 jobs:
   build-and-deploy:
@@ -28,6 +29,8 @@ jobs:
       - run: GITHUB_PAGES=true npm run build
         env:
           NEXT_PUBLIC_YOUTUBE_PROXY: ${{ vars.YOUTUBE_PROXY_URL }}
+
+      - run: node scripts/verify-pages-export.mjs
 
       - name: Push static export to gh-pages branch
         run: |
