@@ -121,20 +121,20 @@ export function parsePoseGrammar(source: string): ParseResult {
   return { ok: true, program: { statements } };
 }
 
-export const EXAMPLE_NEUTRAL = `# Neutral standing (open stance)
+export const EXAMPLE_NEUTRAL = `# Neutral 开步 (preset angles applied on reset)
 reset
 `;
 
 export const EXAMPLE_HANDS_BY_EARS = `# Arms up beside the ears
 reset
-joint l_upper_arm flex 165 abduct 18
-joint l_forearm flex 25
-joint r_upper_arm flex 165 abduct 18
-joint r_forearm flex 25
+joint l_upper_arm abduct 92
+joint l_forearm flex 105
+joint r_upper_arm abduct -92
+joint r_forearm flex 105
 `;
 
 export const EXAMPLE_LEFT_KNEE = `# Left knee lift
 reset
-joint l_thigh flex 72 abduct 8
+joint l_thigh flex 68
 joint l_shin flex 95
 `;

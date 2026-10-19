@@ -28,108 +28,58 @@ export type JointId = (typeof JOINT_IDS)[number];
 
 export type AxisName = "flex" | "abduct" | "twist";
 
+/**
+ * Limb joint axes (local, bind pose):
+ * - flex (X): forward / backward swing
+ * - abduct (Z): lift away from body (coronal)
+ * - twist (Y): roll
+ */
 export type JointCatalogEntry = {
   id: JointId;
-  /** Euler axis index on the bone: 0=x, 1=y, 2=z */
   flex: 0 | 1 | 2;
   abduct: 0 | 1 | 2;
   twist: 0 | 1 | 2;
-  /** Sign multiplier per axis (anatomical mirroring). */
-  flexSign: number;
-  abductSign: number;
-  twistSign: number;
 };
 
-/** Maps grammar axes to bone local Euler components (radians applied in XYZ order). */
+function entry(id: JointId): JointCatalogEntry {
+  return { id, flex: 0, abduct: 2, twist: 1 };
+}
+
 export const JOINT_CATALOG: Record<JointId, JointCatalogEntry> = {
-  root: { id: "root", flex: 0, abduct: 2, twist: 1, flexSign: 1, abductSign: 1, twistSign: 1 },
-  hips: { id: "hips", flex: 0, abduct: 2, twist: 1, flexSign: 1, abductSign: 1, twistSign: 1 },
-  spine: { id: "spine", flex: 0, abduct: 2, twist: 1, flexSign: 1, abductSign: 1, twistSign: 1 },
-  chest: { id: "chest", flex: 0, abduct: 2, twist: 1, flexSign: 1, abductSign: 1, twistSign: 1 },
-  neck: { id: "neck", flex: 0, abduct: 2, twist: 1, flexSign: 1, abductSign: 1, twistSign: 1 },
-  head: { id: "head", flex: 0, abduct: 2, twist: 1, flexSign: 1, abductSign: 1, twistSign: 1 },
-  l_shoulder: {
-    id: "l_shoulder",
-    flex: 2,
-    abduct: 0,
-    twist: 1,
-    flexSign: 1,
-    abductSign: 1,
-    twistSign: 1,
-  },
-  l_upper_arm: {
-    id: "l_upper_arm",
-    flex: 2,
-    abduct: 0,
-    twist: 1,
-    flexSign: 1,
-    abductSign: 1,
-    twistSign: 1,
-  },
-  l_forearm: {
-    id: "l_forearm",
-    flex: 0,
-    abduct: 1,
-    twist: 2,
-    flexSign: 1,
-    abductSign: 1,
-    twistSign: 1,
-  },
-  l_hand: {
-    id: "l_hand",
-    flex: 0,
-    abduct: 2,
-    twist: 1,
-    flexSign: 1,
-    abductSign: 1,
-    twistSign: 1,
-  },
-  r_shoulder: {
-    id: "r_shoulder",
-    flex: 2,
-    abduct: 0,
-    twist: 1,
-    flexSign: -1,
-    abductSign: -1,
-    twistSign: -1,
-  },
-  r_upper_arm: {
-    id: "r_upper_arm",
-    flex: 2,
-    abduct: 0,
-    twist: 1,
-    flexSign: -1,
-    abductSign: -1,
-    twistSign: -1,
-  },
-  r_forearm: {
-    id: "r_forearm",
-    flex: 0,
-    abduct: 1,
-    twist: 2,
-    flexSign: -1,
-    abductSign: -1,
-    twistSign: -1,
-  },
-  r_hand: {
-    id: "r_hand",
-    flex: 0,
-    abduct: 2,
-    twist: 1,
-    flexSign: -1,
-    abductSign: -1,
-    twistSign: -1,
-  },
-  l_hip: { id: "l_hip", flex: 0, abduct: 2, twist: 1, flexSign: 1, abductSign: 1, twistSign: 1 },
-  l_thigh: { id: "l_thigh", flex: 0, abduct: 2, twist: 1, flexSign: 1, abductSign: 1, twistSign: 1 },
-  l_shin: { id: "l_shin", flex: 0, abduct: 1, twist: 2, flexSign: 1, abductSign: 1, twistSign: 1 },
-  l_foot: { id: "l_foot", flex: 0, abduct: 2, twist: 1, flexSign: 1, abductSign: 1, twistSign: 1 },
-  r_hip: { id: "r_hip", flex: 0, abduct: 2, twist: 1, flexSign: -1, abductSign: -1, twistSign: -1 },
-  r_thigh: { id: "r_thigh", flex: 0, abduct: 2, twist: 1, flexSign: -1, abductSign: -1, twistSign: -1 },
-  r_shin: { id: "r_shin", flex: 0, abduct: 1, twist: 2, flexSign: -1, abductSign: -1, twistSign: -1 },
-  r_foot: { id: "r_foot", flex: 0, abduct: 2, twist: 1, flexSign: -1, abductSign: -1, twistSign: -1 },
+  root: entry("root"),
+  hips: entry("hips"),
+  spine: entry("spine"),
+  chest: entry("chest"),
+  neck: entry("neck"),
+  head: entry("head"),
+  l_shoulder: entry("l_shoulder"),
+  l_upper_arm: entry("l_upper_arm"),
+  l_forearm: entry("l_forearm"),
+  l_hand: entry("l_hand"),
+  r_shoulder: entry("r_shoulder"),
+  r_upper_arm: entry("r_upper_arm"),
+  r_forearm: entry("r_forearm"),
+  r_hand: entry("r_hand"),
+  l_hip: entry("l_hip"),
+  l_thigh: entry("l_thigh"),
+  l_shin: entry("l_shin"),
+  l_foot: entry("l_foot"),
+  r_hip: entry("r_hip"),
+  r_thigh: entry("r_thigh"),
+  r_shin: entry("r_shin"),
+  r_foot: entry("r_foot"),
 };
 
 export function isJointId(s: string): s is JointId {
   return (JOINT_IDS as readonly string[]).includes(s);
 }
+
+/** Default standing pose baked into `reset` (开步). */
+export const NEUTRAL_STANCE_DEG: Partial<
+  Record<JointId, { flex?: number; abduct?: number; twist?: number }>
+> = {
+  l_upper_arm: { abduct: 14 },
+  r_upper_arm: { abduct: -14 },
+  l_thigh: { abduct: 10, flex: 4 },
+  r_thigh: { abduct: -10, flex: 4 },
+};

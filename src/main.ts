@@ -2,6 +2,7 @@ import {
   createWoodenDummy,
   executePoseProgram,
   groundDummy,
+  resetPoseAngles,
   syncBonesFromAngles,
 } from "./engine/wooden-dummy";
 import {
@@ -44,13 +45,14 @@ const grammarEl = document.querySelector<HTMLTextAreaElement>("#grammar")!;
 const statusEl = document.querySelector<HTMLParagraphElement>("#status")!;
 const viewportEl = document.querySelector<HTMLDivElement>("#viewport")!;
 
-grammarEl.value = EXAMPLE_HANDS_BY_EARS;
+grammarEl.value = EXAMPLE_NEUTRAL;
 
 const dummy = createWoodenDummy();
 const viewer = createDummyViewer();
 viewer.mount(viewportEl);
-viewer.setDummy(dummy);
+resetPoseAngles(dummy);
 syncBonesFromAngles(dummy);
+viewer.setDummy(dummy);
 groundDummy(dummy);
 
 function setStatus(ok: boolean, message: string) {

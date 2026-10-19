@@ -26,7 +26,7 @@ export function createDummyViewer(): DummyViewer {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
   const controls = new OrbitControls(camera, renderer.domElement);
-  controls.target.set(0, 1.0, 0);
+  controls.target.set(0, 0.95, 0);
   controls.enableDamping = true;
   controls.enablePan = false;
   controls.minDistance = 1.2;
