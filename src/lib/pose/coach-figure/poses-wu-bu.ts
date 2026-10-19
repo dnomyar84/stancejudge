@@ -1,4 +1,4 @@
-import { wbq01EndPose } from "../choreography/wbq-01-opening";
+import { wbq01EndPose } from "@/lib/disciplines/wushu/choreography/wbq-01-opening";
 import {
   skeletonGongBuChongQuan,
   skeletonMaBuJiaDaDing,
@@ -7,7 +7,7 @@ import {
   skeletonTiXiChuanZhangDing,
   skeletonXieBuChongQuanDing,
   skeletonXuBuTiaoZhangDing,
-} from "../choreography/wbq-standard";
+} from "@/lib/disciplines/wushu/choreography/wbq-standard";
 import type { CoachSkeleton } from "./skeleton";
 
 /** Map 五步拳 move ids to coach skeleton recipes (国标左式定势). */

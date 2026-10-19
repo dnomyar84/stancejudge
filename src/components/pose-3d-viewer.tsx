@@ -5,8 +5,8 @@ import type { ExtendedCoachPose } from "@/lib/pose/coach-figure/extended-pose";
 import {
   loadMixamoAvatar,
   retargetCoachPose,
-} from "@/lib/pose/hanim/load-mixamo-avatar";
-import type { MixamoAvatar } from "@/lib/pose/hanim/apply-coach-to-mixamo";
+} from "@/lib/motion/retarget/hanim/load-mixamo-avatar";
+import type { MixamoAvatar } from "@/lib/motion/retarget/hanim/apply-coach-to-mixamo";
 import { cn } from "@/lib/utils";
 
 type Pose3DViewerProps = {

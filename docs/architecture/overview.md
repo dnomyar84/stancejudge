@@ -35,7 +35,9 @@ flowchart LR
 | `src/components/pose-rail.tsx` | Horizontal move strip |
 | `src/lib/wushu/sequence.ts` | Video scan + alignment |
 | `src/lib/wushu/classify.ts` | Per-frame leg/hand |
-| `src/lib/pose/*` | Landmarks, draw, athletic analyze |
+| `src/lib/pose/*` | Landmarks, draw, athletic analyze, coach rig |
+| `src/lib/motion/*` | Visual-coach registry, glTF retarget (see [motion-coach-platform](../product/motion-coach-platform.md)) |
+| `src/lib/disciplines/wushu/*` | 五步拳 choreography (first discipline pack) |
 | `src/data/canonical/*.json` | Coach timings (committed) |
 | `src/lib/admin/store.ts` | Browser overrides |
 
