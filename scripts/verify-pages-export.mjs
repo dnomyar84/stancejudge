@@ -38,4 +38,29 @@ for (const rel of [...new Set(chunkMatch)].slice(0, 8)) {
   }
 }
 
+const cssMatch = html.match(/\/stancejudge\/_next\/static\/css\/[a-z0-9_.-]+\.css/gi);
+if (!cssMatch?.length) {
+  console.error("verify-pages-export: no CSS references in index.html");
+  process.exit(1);
+}
+
+let utilitiesOk = false;
+for (const rel of [...new Set(cssMatch)]) {
+  const file = join(out, rel.replace(/^\/stancejudge\//, ""));
+  if (!existsSync(file)) {
+    console.error(`verify-pages-export: referenced CSS missing on disk: ${rel}`);
+    process.exit(1);
+  }
+  const css = readFileSync(file, "utf8");
+  if (css.includes(".rounded-xl") || css.includes(".bg-card")) {
+    utilitiesOk = true;
+  }
+}
+if (!utilitiesOk) {
+  console.error(
+    "verify-pages-export: built CSS lacks Tailwind utilities (e.g. .rounded-xl) — check postcss.config.mjs",
+  );
+  process.exit(1);
+}
+
 console.log("verify-pages-export: ok");
