@@ -16,7 +16,8 @@ https://dnomyar84.github.io/stancejudge/
 | `main` | Application source, `docs/`, workflows |
 | `gh-pages` | Static `out/` export served by GitHub Pages (legacy source) |
 
-Settings → Pages should use the **`gh-pages`** branch (root `/`), as configured today.
+Settings → Pages → **Build and deployment** → Source: **GitHub Actions** (workflow `Deploy GitHub Pages`).  
+Legacy `gh-pages` branch pushes are optional (`npm run deploy:pages`); the live site is updated by the Actions deploy job.
 
 ## Agent workflow (sole developer)
 
@@ -29,8 +30,10 @@ Settings → Pages should use the **`gh-pages`** branch (root `/`), as configure
 
 | Method | When |
 | --- | --- |
-| **CI (default)** | Push to `main` → `.github/workflows/deploy-pages.yml` builds and force-pushes `out/` to `gh-pages`. |
-| **Manual / agent** | `npm run deploy:pages` (build + push `gh-pages`) if you need the site updated immediately or CI is down. |
+| **CI (default)** | Push to `main` → workflow builds `out/` and **`actions/deploy-pages`** publishes (no Jekyll). |
+| **Manual / agent** | `npm run deploy:pages` only updates the `gh-pages` git branch; use if Pages source is still set to that branch. |
+
+If the coach still shows **cyan tube sticks**, GitHub Pages is serving an **old successful build** while newer deploys failed. Open [Pages builds](https://github.com/dnomyar84/stancejudge/settings/pages) and confirm the latest deploy succeeded. On the coach page, check the footer **Build** line or `https://dnomyar84.github.io/stancejudge/build-id.txt` (should match latest `main`).
 
 Before deploy when reference videos changed: `npm run generate-canonical`.
 
