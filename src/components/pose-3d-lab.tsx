@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { ActiveCuesCard } from "@/components/active-cues-card";
 import { Pose3DViewer } from "@/components/pose-3d-viewer";
 import { Button } from "@/components/ui/button";
 import {
@@ -342,22 +343,8 @@ export function Pose3DLab({ onBack }: Pose3DLabProps) {
               </Card>
             ) : null}
 
-            {sampled && sampled.activeCues.length > 0 ? (
-              <Card className="border-cyan-500/30">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base">Active cues</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2 text-sm">
-                  {sampled.activeCues.map((c) => (
-                    <div key={c.id}>
-                      <p className="font-medium">{c.labelZh}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {c.descriptionZh}
-                      </p>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
+            {sampled ? (
+              <ActiveCuesCard cues={sampled.activeCues} />
             ) : null}
 
             {choreography && !coachMode ? (

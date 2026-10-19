@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ActiveCuesCard } from "@/components/active-cues-card";
 import { Pose3DViewer } from "@/components/pose-3d-viewer";
 import { Button } from "@/components/ui/button";
 import {
@@ -186,6 +187,8 @@ export function WuBuQuanVisualCoach({ onBack }: WuBuQuanVisualCoachProps) {
             </label>
           </CardContent>
         </Card>
+
+        {sampled ? <ActiveCuesCard cues={sampled.activeCues} /> : null}
       </div>
     </div>
   );
