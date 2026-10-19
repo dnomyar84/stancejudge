@@ -5,7 +5,8 @@ import {
   type JointCatalogEntry,
   type JointId,
 } from "./joint-catalog";
-import type { JointPoseStmt, PoseProgram } from "./pose-grammar";
+import { applyHandShape } from "./hand-shapes";
+import type { HandShapeStmt, JointPoseStmt, PoseProgram } from "./pose-grammar";
 
 export type JointAnglesDeg = {
   flex: number;
@@ -125,6 +126,27 @@ function ball(parent: THREE.Object3D, r: number, x = 0, y = 0, z = 0, mat: THREE
   return m;
 }
 
+/** Rigid stick from this bone's origin toward `child` (local). */
+function stickToward(parent: THREE.Bone, child: THREE.Bone, radius: number, mat: THREE.Material) {
+  const len = child.position.length();
+  if (len < 1e-4) return;
+  const dir = child.position.clone().multiplyScalar(1 / len);
+  const geom = new THREE.CylinderGeometry(radius, radius * 0.82, len, 7);
+  geom.translate(0, len / 2, 0);
+  geom.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(Y_UP, dir));
+  const mesh = new THREE.Mesh(geom, mat);
+  mesh.castShadow = true;
+  parent.add(mesh);
+}
+
+function stickDown(parent: THREE.Bone, len: number, radius: number, mat: THREE.Material) {
+  const geom = new THREE.CylinderGeometry(radius, radius * 0.7, len, 7);
+  geom.translate(0, -len / 2, 0);
+  const mesh = new THREE.Mesh(geom, mat);
+  mesh.castShadow = true;
+  parent.add(mesh);
+}
+
 function box(
   parent: THREE.Object3D,
   sx: number,
@@ -141,6 +163,37 @@ function box(
   m.receiveShadow = true;
   parent.add(m);
   return m;
+}
+
+function buildHand(
+  hand: THREE.Bone,
+  side: "l" | "r",
+  mk: (id: JointId, x?: number, y?: number, z?: number) => THREE.Bone,
+) {
+  const s = side === "l" ? 1 : -1;
+  box(hand, 0.08, 0.095, 0.022, 0, -0.05, 0, WOOD);
+
+  const fingers: Array<[string, number, number, number]> = [
+    ["index", s * -0.014, -0.095, 0.052],
+    ["middle", 0, -0.098, 0.058],
+    ["ring", s * 0.015, -0.094, 0.05],
+    ["pinky", s * 0.03, -0.088, 0.042],
+  ];
+  for (const [name, x, y, len] of fingers) {
+    const prox = mk(`${side}_${name}` as JointId, x, y, 0.006);
+    const tip = mk(`${side}_${name}_tip` as JointId, 0, -len, 0);
+    hand.add(prox);
+    prox.add(tip);
+    stickToward(prox, tip, 0.009, SKIN);
+    stickDown(tip, len * 0.75, 0.0075, SKIN);
+  }
+
+  const thumb = mk(`${side}_thumb` as JointId, s * 0.04, -0.028, 0.014);
+  const thumbTip = mk(`${side}_thumb_tip` as JointId, s * 0.014, -0.036, 0.008);
+  hand.add(thumb);
+  thumb.add(thumbTip);
+  stickToward(thumb, thumbTip, 0.01, WOOD);
+  stickDown(thumbTip, 0.03, 0.008, WOOD);
 }
 
 export function createWoodenDummy(): WoodenDummy {
@@ -217,8 +270,8 @@ export function createWoodenDummy(): WoodenDummy {
   ball(head, 0.11, 0, 0.06, 0, SKIN);
   ball(head, 0.018, -0.035, 0.08, 0.09, EYE);
   ball(head, 0.018, 0.035, 0.08, 0.09, EYE);
-  box(lHand, 0.07, 0.1, 0.035, 0, -0.06, 0.01, WOOD);
-  box(rHand, 0.07, 0.1, 0.035, 0, -0.06, 0.01, WOOD);
+  buildHand(lHand, "l", mk);
+  buildHand(rHand, "r", mk);
   box(lFoot, 0.09, 0.05, 0.22, 0, 0.025, 0.06, WOOD);
   box(rFoot, 0.09, 0.05, 0.22, 0, 0.025, 0.06, WOOD);
   ball(lUpper, 0.04, 0, 0, 0);
@@ -333,6 +386,7 @@ export function syncBonesFromAngles(dummy: WoodenDummy): void {
 export function executePoseProgram(dummy: WoodenDummy, program: PoseProgram): void {
   for (const stmt of program.statements) {
     if (stmt.kind === "reset") resetPoseAngles(dummy);
+    else if (stmt.kind === "hand") applyHandShape(dummy.angles, stmt.side, stmt.shape);
     else applyJointStatement(dummy, stmt);
   }
   syncBonesFromAngles(dummy);

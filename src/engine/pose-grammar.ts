@@ -1,3 +1,4 @@
+import { parseHandShapeToken, parseHandSideToken, type HandShape, type HandSide } from "./hand-shapes";
 import { isJointId, type AxisName, type JointId } from "./joint-catalog";
 
 export type PoseResetStmt = { kind: "reset" };
@@ -10,8 +11,14 @@ export type JointPoseStmt = {
   twist?: number;
 };
 
+export type HandShapeStmt = {
+  kind: "hand";
+  side: HandSide;
+  shape: HandShape;
+};
+
 export type PoseProgram = {
-  statements: Array<PoseResetStmt | JointPoseStmt>;
+  statements: Array<PoseResetStmt | JointPoseStmt | HandShapeStmt>;
 };
 
 const AXIS_ALIASES: Record<string, AxisName> = {
@@ -66,10 +73,24 @@ export function parsePoseGrammar(source: string): ParseResult {
       continue;
     }
 
+    if (head === "hand") {
+      const side = parts[1] ? parseHandSideToken(parts[1]) : null;
+      const shape = parts[2] ? parseHandShapeToken(parts[2]) : null;
+      if (!side || !shape || parts.length !== 3) {
+        return {
+          ok: false,
+          error: 'Use "hand left|right palm|fist|sword" (aliases: zhang, quan, jianzhi)',
+          line: lineNo,
+        };
+      }
+      statements.push({ kind: "hand", side, shape });
+      continue;
+    }
+
     if (head !== "joint") {
       return {
         ok: false,
-        error: `Expected "joint" or "reset", got "${parts[0]}"`,
+        error: `Expected "joint", "hand", or "reset", got "${parts[0]}"`,
         line: lineNo,
       };
     }
@@ -137,4 +158,26 @@ export const EXAMPLE_LEFT_KNEE = `# Left knee lift
 reset
 joint l_thigh flex 68
 joint l_shin flex 95
+`;
+
+const ARMS_FORWARD = `reset
+joint l_upper_arm flex 58 abduct 16
+joint l_forearm flex 30
+joint r_upper_arm flex 58 abduct 16
+joint r_forearm flex 30
+`;
+
+export const EXAMPLE_PALM = `# 掌 — open palm
+${ARMS_FORWARD}hand left palm
+hand right palm
+`;
+
+export const EXAMPLE_FIST = `# 拳 — fist
+${ARMS_FORWARD}hand left fist
+hand right fist
+`;
+
+export const EXAMPLE_SWORD = `# 剑指 — index and middle straight, ring and pinky curled
+${ARMS_FORWARD}hand left sword
+hand right sword
 `;

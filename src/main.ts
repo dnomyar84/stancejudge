@@ -6,9 +6,12 @@ import {
   syncBonesFromAngles,
 } from "./engine/wooden-dummy";
 import {
+  EXAMPLE_FIST,
   EXAMPLE_HANDS_BY_EARS,
   EXAMPLE_LEFT_KNEE,
   EXAMPLE_NEUTRAL,
+  EXAMPLE_PALM,
+  EXAMPLE_SWORD,
   parsePoseGrammar,
 } from "./engine/pose-grammar";
 import { JOINT_IDS } from "./engine/joint-catalog";
@@ -31,9 +34,12 @@ app.innerHTML = `
         <button type="button" id="ex-neutral">Neutral</button>
         <button type="button" id="ex-ears">Hands by ears</button>
         <button type="button" id="ex-knee">Left knee</button>
+        <button type="button" id="ex-palm">掌 Palm</button>
+        <button type="button" id="ex-fist">拳 Fist</button>
+        <button type="button" id="ex-sword">剑指 Sword</button>
       </div>
       <p id="status" class="status" aria-live="polite"></p>
-      <p class="joint-list">Joints: ${JOINT_IDS.join(", ")}</p>
+      <p class="joint-list">hand left|right palm|fist|sword · joints include fingers (${JOINT_IDS.length})</p>
     </aside>
     <div class="viewport-wrap" id="viewport">
       <span class="viewport-hint">Drag to orbit · scroll to zoom</span>
@@ -87,6 +93,18 @@ document.querySelector("#ex-ears")!.addEventListener("click", () => {
 });
 document.querySelector("#ex-knee")!.addEventListener("click", () => {
   grammarEl.value = EXAMPLE_LEFT_KNEE;
+  applyGrammar();
+});
+document.querySelector("#ex-palm")!.addEventListener("click", () => {
+  grammarEl.value = EXAMPLE_PALM;
+  applyGrammar();
+});
+document.querySelector("#ex-fist")!.addEventListener("click", () => {
+  grammarEl.value = EXAMPLE_FIST;
+  applyGrammar();
+});
+document.querySelector("#ex-sword")!.addEventListener("click", () => {
+  grammarEl.value = EXAMPLE_SWORD;
   applyGrammar();
 });
 
