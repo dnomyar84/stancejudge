@@ -133,6 +133,36 @@ export function legsXieBu(): Pick<
 }
 
 /** 提膝: support leg straight (hip–knee–ankle line); other knee raised. */
+/** 弹踢：右腿屈膝提起（左支撑），国标五步拳弹腿冲拳。 */
+export function legsRightSnapKickChamber(): Pick<
+  CoachSkeleton,
+  "leftKnee" | "rightKnee" | "leftAnkle" | "rightAnkle"
+> {
+  const lifted = legsTiXi("right");
+  return lifted;
+}
+
+/** 弹踢击出：左腿支撑，右腿向前弹击。 */
+export function legsRightSnapKickStrike(): Pick<
+  CoachSkeleton,
+  "leftKnee" | "rightKnee" | "leftAnkle" | "rightAnkle"
+> {
+  const hy = hipY();
+  const thigh = ANATOMY.thigh;
+  const shin = ANATOMY.shin;
+  const lHip = v(-ANATOMY.hipHalfWidth, 0, hy);
+  const lAnkle = v(-ANATOMY.hipHalfWidth - 0.02, 0.02, ANATOMY.ankleUp);
+  const lKnee = lerp3(lHip, lAnkle, thigh / (thigh + shin));
+  const rKnee = v(0.06, 0.28, hy - 0.1);
+  const rAnkle = v(0.08, 0.44, hy - 0.2);
+  return {
+    leftKnee: lKnee,
+    leftAnkle: lAnkle,
+    rightKnee: rKnee,
+    rightAnkle: rAnkle,
+  };
+}
+
 export function legsTiXi(lift: "left" | "right" = "left"): Pick<
   CoachSkeleton,
   "leftKnee" | "rightKnee" | "leftAnkle" | "rightAnkle"

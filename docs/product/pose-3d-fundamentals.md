@@ -51,7 +51,7 @@
 | 3D rig | `coach-figure/skeleton.ts` | `canonical3d/` + shared rig |
 | Vocabulary | `LegStanceType`, `HandProfileType` | `canonical3d/vocabulary.ts` + richer tags |
 | Display 2D rail | projected KP + `draw.ts` | same projection |
-| Display 3D lab | — | `pose-3d-viewer.tsx` (tubes, torso, head) |
+| Display 3D lab | `mannequin-js` solid figure | `pose-3d-viewer.tsx` + IK adapter |
 | Flows | single frame per move | `MoveFlowSpec` per move |
 
 ---
@@ -108,7 +108,7 @@ Each iteration:
 | --- | --- | --- |
 | C-01 | **Routine definition** `wu-bu-quan` in `routines/` | Listed in lab |
 | C-02 | Author **定形** 3D pose per move (coach) | Owner signs off each of 5–8 moves |
-| C-03 | Align names with commonly taught 五步拳 (verify with owner) | zh labels correct |
+| C-03 | Align names with 国标/段位左式五步拳 | See [wu-bu-quan-international-standard.md](./wu-bu-quan-international-standard.md) |
 | C-04 | Use 五步拳 to regression-test **stance dictionary** before long 22-move pass | All leg tags exercised |
 
 **Draft move list (to confirm with owner):**

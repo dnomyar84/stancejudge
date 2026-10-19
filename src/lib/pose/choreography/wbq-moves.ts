@@ -8,12 +8,18 @@ import {
   baseStandingTorso,
   legsGongBu,
   legsMaBu,
-  legsTiXi,
+  legsRightSnapKickChamber,
+  legsRightSnapKickStrike,
   legsXieBu,
   mergeSkeleton,
 } from "../coach-figure/skeleton";
 import { wbq01EndPose } from "./wbq-01-opening";
 import { wbqDingPose } from "./wbq-poses";
+import {
+  armsChongQuanFromGongBu,
+  skeletonTiXiShouShiDing,
+  WBQ_GONG_BU_LEAD,
+} from "./wbq-standard";
 
 function skPose(
   legs: Partial<ReturnType<typeof mergeSkeleton>>,
@@ -64,6 +70,8 @@ function twoKeyframePhase(
   };
 }
 
+const gongBuLegs = () => legsGongBu(WBQ_GONG_BU_LEAD);
+
 export const wbq02Choreography: MoveChoreographySpec = moveSpec(
   "wbq-02",
   "弓步冲拳",
@@ -87,14 +95,17 @@ export const wbq02Choreography: MoveChoreographySpec = moveSpec(
         {
           id: "k0",
           t: 0,
-          labelZh: "收拳",
-          pose: skPose(legsGongBu("right"), armsFistWaist()),
+          labelZh: "抱腰",
+          pose: skPose(gongBuLegs(), armsFistWaist()),
         },
         {
           id: "k1",
           t: 0.5,
-          labelZh: "出拳中段",
-          pose: skPose(legsGongBu("right"), armsPunchForward("right")),
+          labelZh: "右冲拳中段",
+          pose: skPose(
+            gongBuLegs(),
+            armsChongQuanFromGongBu(WBQ_GONG_BU_LEAD),
+          ),
         },
         {
           id: "k2",
@@ -108,7 +119,14 @@ export const wbq02Choreography: MoveChoreographySpec = moveSpec(
   ],
 );
 
-const wbq03TiXi = skPose(legsTiXi("left"), armsPunchForward("right"));
+const wbq03Chamber = skPose(
+  legsRightSnapKickChamber(),
+  armsPunchForward("left"),
+);
+const wbq03Kick = skPose(
+  legsRightSnapKickStrike(),
+  armsPunchForward("left"),
+);
 
 export const wbq03Choreography: MoveChoreographySpec = moveSpec(
   "wbq-03",
@@ -117,21 +135,31 @@ export const wbq03Choreography: MoveChoreographySpec = moveSpec(
   5200,
   [
     twoKeyframePhase(
-      "ti_xi",
+      "chamber",
       "提膝",
       wbqDingPose("wbq-02"),
-      wbq03TiXi,
+      wbq03Chamber,
       "弓步冲拳",
-      "提膝",
-      tiXiDingConstraintSet(inferTiXiSupportLeg(wbq03TiXi.skeleton)),
+      "右腿提膝",
+      tiXiDingConstraintSet(
+        inferTiXiSupportLeg(wbq03Chamber.skeleton),
+      ),
     ),
     twoKeyframePhase(
       "tan_ti",
       "弹踢",
-      wbq03TiXi,
+      wbq03Chamber,
+      wbq03Kick,
+      "右腿提膝",
+      "弹踢出腿",
+    ),
+    twoKeyframePhase(
+      "ding",
+      "定势",
+      wbq03Kick,
       wbqDingPose("wbq-03"),
-      "提膝",
-      "弹踢定势",
+      "弹踢",
+      "弹踢冲拳定势",
     ),
   ],
 );
@@ -165,28 +193,28 @@ export const wbq05Choreography: MoveChoreographySpec = moveSpec(
   "wbq-05",
   "歇步冲拳",
   "Cross stance punch",
-  4500,
+  4800,
   [
     twoKeyframePhase(
-      "xie_bu",
-      "歇步",
+      "gai_zhang",
+      "盖掌",
       wbqDingPose("wbq-04"),
-      skPose(legsXieBu(), armsPunchForward("right")),
+      skPose(legsXieBu(), armsBlockElbow()),
       "马步架打",
-      "歇步冲拳",
+      "后插步盖掌",
     ),
     twoKeyframePhase(
-      "ding",
-      "定势",
+      "xie_bu",
+      "歇步冲拳",
       skPose(legsXieBu(), armsFistWaist()),
       wbqDingPose("wbq-05"),
-      "收拳",
-      "歇步冲拳定势",
+      "歇步下蹲",
+      "左冲拳定势",
     ),
   ],
 );
 
-const wbq06TiXi = skPose(legsTiXi("left"), armsFistWaist());
+const wbq06TiXi = extendedFromSkeleton(skeletonTiXiShouShiDing());
 
 export const wbq06Choreography: MoveChoreographySpec = moveSpec(
   "wbq-06",
