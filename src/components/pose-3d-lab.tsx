@@ -13,6 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { extendedFromSkeleton } from "@/lib/pose/coach-figure/extended-pose";
+import { extendedToCoachFigurinePose } from "@/lib/pose/mannequin-adapter/coach-pose-to-mannequin";
 import { buildCoachFigureSkeleton } from "@/lib/pose/coach-figure";
 import {
   sampleMoveChoreography,
@@ -78,20 +79,21 @@ export function Pose3DLab({ onBack }: Pose3DLabProps) {
       return sampleMoveChoreography(choreography, moveT);
     }
     const sk = move ? buildCoachFigureSkeleton(routine.id, move.id) : null;
-    return sk
-      ? {
-          pose: extendedFromSkeleton(sk),
-          moveId: move?.id ?? "",
-          moveNameZh: move?.nameZh ?? "",
-          phaseId: null,
-          phaseNameZh: null,
-          keyframeLabelZh: null,
-          activeCues: [],
-          stanceConstraints: null,
-          moveT: 1,
-          routineT: 0,
-        }
-      : null;
+    if (!sk) return null;
+    const pose = extendedFromSkeleton(sk);
+    return {
+      pose,
+      figurine: extendedToCoachFigurinePose(pose),
+      moveId: move?.id ?? "",
+      moveNameZh: move?.nameZh ?? "",
+      phaseId: null,
+      phaseNameZh: null,
+      keyframeLabelZh: null,
+      activeCues: [],
+      stanceConstraints: null,
+      moveT: 1,
+      routineT: 0,
+    };
   }, [
     coachMode,
     visualCoach,
@@ -232,6 +234,7 @@ export function Pose3DLab({ onBack }: Pose3DLabProps) {
             <CardContent className="space-y-3 p-4 pt-0">
               <Pose3DViewer
                 pose={sampled?.pose ?? null}
+                figurine={sampled?.figurine ?? null}
                 horizontalOrbit
                 className="h-[min(52vh,420px)] w-full rounded-lg border border-border/60"
               />

@@ -2,12 +2,16 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { ExtendedCoachPose } from "@/lib/pose/coach-figure/extended-pose";
+import { applyCoachFigurinePoseToMannequin } from "@/lib/pose/display-figurine/apply-coach-figurine-pose";
+import type { CoachFigurinePoseV1 } from "@/lib/pose/display-figurine/coach-figurine-pose";
 import { applyCoachPoseToMannequin } from "@/lib/pose/mannequin-adapter/coach-pose-to-mannequin";
 import { removeStrayFullscreenCanvases } from "@/lib/pose/mannequin-adapter/cleanup-stray-canvas";
 import { cn } from "@/lib/utils";
 
 type Pose3DViewerProps = {
   pose: ExtendedCoachPose | null;
+  /** When set, applied 1:1 to the figurine (display truth). */
+  figurine?: CoachFigurinePoseV1 | null;
   className?: string;
   horizontalOrbit?: boolean;
 };
@@ -16,7 +20,10 @@ type MannequinFigure = import("three").Object3D & {
   dispose?: () => void;
 };
 
-type RebuildFn = (pose: ExtendedCoachPose | null) => void;
+type RebuildFn = (
+  pose: ExtendedCoachPose | null,
+  figurine: CoachFigurinePoseV1 | null | undefined,
+) => void;
 
 /**
  * Visual coach uses mannequin-js (solid procedural figure).
@@ -25,11 +32,13 @@ type RebuildFn = (pose: ExtendedCoachPose | null) => void;
  */
 export function Pose3DViewer({
   pose,
+  figurine,
   className,
   horizontalOrbit = false,
 }: Pose3DViewerProps) {
   const mountRef = useRef<HTMLDivElement>(null);
   const poseRef = useRef(pose);
+  const figurineRef = useRef(figurine);
   const rebuildRef = useRef<RebuildFn | null>(null);
   const sessionRef = useRef(0);
   const [viewerState, setViewerState] = useState<"loading" | "ready" | "error">(
@@ -38,11 +47,12 @@ export function Pose3DViewer({
   const [viewerError, setViewerError] = useState<string | null>(null);
 
   poseRef.current = pose;
+  figurineRef.current = figurine;
 
   useEffect(() => {
     if (!rebuildRef.current) return;
     try {
-      rebuildRef.current(pose);
+      rebuildRef.current(pose, figurine);
     } catch (err) {
       console.error("Pose3DViewer pose update:", err);
       setViewerError(
@@ -50,7 +60,7 @@ export function Pose3DViewer({
       );
       setViewerState("error");
     }
-  }, [pose]);
+  }, [pose, figurine]);
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -153,19 +163,24 @@ export function Pose3DViewer({
         mannequin = new Male(1.75) as MannequinFigure;
         scene.add(mannequin);
 
-        const rebuildFigure = (p: ExtendedCoachPose | null) => {
-          if (!mannequin || !p) return;
-          applyCoachPoseToMannequin(
-            mannequin as unknown as Parameters<
-              typeof applyCoachPoseToMannequin
-            >[0],
-            p,
-            groundLift,
-          );
+        const rebuildFigure = (
+          p: ExtendedCoachPose | null,
+          fig: CoachFigurinePoseV1 | null | undefined,
+        ) => {
+          if (!mannequin) return;
+          const target = mannequin as unknown as Parameters<
+            typeof applyCoachFigurinePoseToMannequin
+          >[0];
+          if (fig) {
+            applyCoachFigurinePoseToMannequin(target, fig, { groundLift });
+            return;
+          }
+          if (!p) return;
+          applyCoachPoseToMannequin(target, p, groundLift);
         };
 
         rebuildRef.current = rebuildFigure;
-        if (poseRef.current) rebuildFigure(poseRef.current);
+        rebuildFigure(poseRef.current, figurineRef.current);
 
         const onResize = () => {
           if (!mount || !renderer || !camera) return;

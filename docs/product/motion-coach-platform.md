@@ -23,6 +23,8 @@ Wushu reference: `disciplines/wushu/register.ts` registers **五步拳** (`wu-bu
 ## Display vs retarget (important)
 
 | What kids see | **mannequin-js** via `pose-3d-viewer.tsx` — solid procedural figure, GPL-3.0 |
+| Display storage | **`CoachFigurinePoseV1`** on keyframes — 1:1 mannequin angles ([display-figurine-pose.md](./display-figurine-pose.md), ADR-004) |
+| Semantic storage | **`ExtendedCoachPose`** — joint positions for cues / scoring / 2D |
 | In progress | glTF/Xbot retarget in `motion/retarget/hanim/` + optional `pose-3d-viewer-gltf.impl.tsx` |
 
 The Xbot path is for **H-Anim / Mixamo standards** and future TKD/dance retarget — not because it looked better in the UI. We switched back to mannequin-js for the visual coach until glTF quality matches.

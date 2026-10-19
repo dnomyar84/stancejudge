@@ -120,6 +120,7 @@ export function WuBuQuanVisualCoach({ onBack }: WuBuQuanVisualCoachProps) {
           <CardContent className="space-y-3 px-4 pb-4">
             <Pose3DViewer
               pose={sampled?.pose ?? null}
+              figurine={sampled?.figurine ?? null}
               horizontalOrbit
               className="h-[min(58vh,480px)] w-full touch-pan-y rounded-lg border border-border/60"
             />

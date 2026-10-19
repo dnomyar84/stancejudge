@@ -51,7 +51,7 @@
 | 3D rig | `coach-figure/skeleton.ts` | `canonical3d/` + shared rig |
 | Vocabulary | `LegStanceType`, `HandProfileType` | `canonical3d/vocabulary.ts` + richer tags |
 | Display 2D rail | projected KP + `draw.ts` | same projection |
-| Display 3D lab | `mannequin-js` solid figure | `pose-3d-viewer.tsx` + IK adapter |
+| Display 3D lab | `mannequin-js` solid figure (`pose-3d-viewer.tsx`) | glTF retarget optional in `pose-3d-viewer-gltf.impl.tsx` |
 | Flows | single frame per move | `MoveFlowSpec` per move |
 
 ---

@@ -6,6 +6,12 @@ import {
 import { settlePoseOnFloor } from "../coach-figure/gravity";
 import type { ExtendedCoachPose } from "../coach-figure/extended-pose";
 import { lerpExtendedPose } from "../coach-figure/interpolate-pose";
+import type { CoachFigurinePoseV1 } from "../display-figurine/coach-figurine-pose";
+import {
+  resolveFigurineAtKeyframe,
+  resolveFigurineBetweenKeyframes,
+} from "../display-figurine/resolve-figurine-frame";
+import { extendedToCoachFigurinePose } from "../mannequin-adapter/coach-pose-to-mannequin";
 import type { StanceConstraintSet } from "./constraints";
 
 /** Body layer a coaching cue applies to. */
@@ -33,7 +39,13 @@ export type RigKeyframe = {
   t: number;
   labelZh: string;
   labelEn?: string;
+  /** Semantic rig (scoring, 2D projection, cues). */
   pose: ExtendedCoachPose;
+  /**
+   * Display truth for the 3D figurine (mannequin DOFs).
+   * When set, the viewer applies this directly — no IK.
+   */
+  figurine?: CoachFigurinePoseV1;
   /** Cues the athlete is executing *toward* this keyframe. */
   activeCueIds?: string[];
 };
@@ -79,6 +91,8 @@ export type RoutineVisualCoachSpec = {
 
 export type SampledCoachFrame = {
   pose: ExtendedCoachPose;
+  /** Resolved display pose for the figurine at this instant. */
+  figurine: CoachFigurinePoseV1;
   moveId: string;
   moveNameZh: string;
   phaseId: string | null;
@@ -148,11 +162,9 @@ export function sampleMoveChoreography(
   const segT = w > 0 ? (localT - acc) / w : 1;
   const from = kfs[seg];
   const to = kfs[seg + 1];
-  const pose = lerpExtendedPose(
-    from.pose,
-    to.pose,
-    Math.max(0, Math.min(1, segT)),
-  );
+  const blendT = Math.max(0, Math.min(1, segT));
+  const pose = lerpExtendedPose(from.pose, to.pose, blendT);
+  const figurine = resolveFigurineBetweenKeyframes(from, to, blendT);
   const cueIds =
     segT < 0.5
       ? (from.activeCueIds ?? to.activeCueIds ?? [])
@@ -161,6 +173,7 @@ export function sampleMoveChoreography(
 
   return {
     pose,
+    figurine,
     moveId: spec.moveId,
     moveNameZh: spec.nameZh,
     phaseId: phase.id,
@@ -183,6 +196,7 @@ function frameResult(
 ): SampledCoachFrame {
   return {
     pose: settlePoseOnFloor(kf.pose),
+    figurine: resolveFigurineAtKeyframe(kf),
     moveId: spec.moveId,
     moveNameZh: spec.nameZh,
     phaseId: phase.id,
@@ -220,9 +234,15 @@ export function sampleRoutineVisualCoach(
         const to = getMoveStartPose(moves[i + 1]);
         const blend = ms / spec.transitionMs;
         const pose = lerpExtendedPose(from, to, blend);
+        const figurine = resolveFigurineBetweenKeyframes(
+          { pose: from, figurine: extendedToCoachFigurinePose(from) },
+          { pose: to, figurine: extendedToCoachFigurinePose(to) },
+          blend,
+        );
         const next = moves[i + 1];
         return {
           pose,
+          figurine,
           moveId: next.moveId,
           moveNameZh: next.nameZh,
           phaseId: null,
