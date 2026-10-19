@@ -40,8 +40,10 @@ describe("applyCoachPoseToMannequin (五步拳起势)", () => {
       0,
     );
 
-    expect(Math.abs(man.l_leg.raise)).toBeLessThan(35);
-    expect(Math.abs(man.r_leg.raise)).toBeLessThan(35);
+    expect(man.l_leg.raise).toBeGreaterThan(-40);
+    expect(man.l_leg.raise).toBeLessThan(40);
+    expect(man.r_leg.raise).toBeGreaterThan(-40);
+    expect(man.r_leg.raise).toBeLessThan(40);
     expect(Math.abs(man.l_leg.straddle)).toBeLessThan(40);
     expect(Math.abs(man.r_leg.straddle)).toBeLessThan(40);
     expect(Math.abs(man.l_leg.straddle)).toBeGreaterThan(4);

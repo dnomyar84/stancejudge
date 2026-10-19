@@ -2,10 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { ExtendedCoachPose } from "@/lib/pose/coach-figure/extended-pose";
-import {
-  buildCoachMeshFigure,
-  disposeCoachMeshGroup,
-} from "@/lib/pose/coach-figure/render-coach-mesh-three";
+import { applyCoachPoseToMannequin } from "@/lib/pose/mannequin-adapter/coach-pose-to-mannequin";
 import { removeStrayFullscreenCanvases } from "@/lib/pose/mannequin-adapter/cleanup-stray-canvas";
 import { cn } from "@/lib/utils";
 
@@ -14,6 +11,10 @@ type Pose3DViewerProps = {
   className?: string;
   /** Lock camera to horizontal ring — swipe/drag rotates around figure. */
   horizontalOrbit?: boolean;
+};
+
+type MannequinFigure = import("three").Object3D & {
+  dispose?: () => void;
 };
 
 type RebuildFn = (pose: ExtendedCoachPose | null) => void;
@@ -53,17 +54,18 @@ export function Pose3DViewer({
     let disposed = false;
     let renderer: import("three").WebGLRenderer | null = null;
     let frameId = 0;
-    let figureRoot: import("three").Group | null = null;
-    let THREE: typeof import("three") | null = null;
+    let mannequin: MannequinFigure | null = null;
 
     removeStrayFullscreenCanvases();
 
     void (async () => {
       try {
-        THREE = await import("three");
+        const THREE = await import("three");
         const { OrbitControls } = await import(
           "three/examples/jsm/controls/OrbitControls.js"
         );
+        const { Male } = await import("mannequin-js/src/bodies/Male.js");
+        const { GROUND_LEVEL } = await import("mannequin-js/src/globals.js");
 
         if (disposed) return;
 
@@ -74,7 +76,7 @@ export function Pose3DViewer({
         scene.background = new THREE.Color(0x0a1218);
 
         const camera = new THREE.PerspectiveCamera(42, width / height, 0.05, 20);
-        camera.position.set(0, 0.95, 2.15);
+        camera.position.set(0, 1.0, 2.2);
 
         const canvasOpts = { alpha: false, powerPreference: "default" as const };
         try {
@@ -94,7 +96,7 @@ export function Pose3DViewer({
         mount.appendChild(canvas);
 
         const controls = new OrbitControls(camera, renderer.domElement);
-        controls.target.set(0, 0.88, 0);
+        controls.target.set(0, 0.9, 0);
         controls.enableDamping = true;
         controls.enablePan = false;
         if (horizontalOrbit) {
@@ -140,16 +142,20 @@ export function Pose3DViewer({
         const figureGroup = new THREE.Group();
         scene.add(figureGroup);
 
+        const groundLift = -GROUND_LEVEL;
+
+        mannequin = new Male(1.75) as MannequinFigure;
+        figureGroup.add(mannequin);
+
         const rebuildFigure = (p: ExtendedCoachPose | null) => {
-          if (!THREE || !figureGroup) return;
-          if (figureRoot) {
-            figureGroup.remove(figureRoot);
-            disposeCoachMeshGroup(figureRoot);
-            figureRoot = null;
-          }
-          if (!p) return;
-          figureRoot = buildCoachMeshFigure(p, THREE);
-          figureGroup.add(figureRoot);
+          if (!mannequin || !p) return;
+          applyCoachPoseToMannequin(
+            mannequin as unknown as Parameters<
+              typeof applyCoachPoseToMannequin
+            >[0],
+            p,
+            groundLift,
+          );
         };
 
         rebuildRef.current = rebuildFigure;
@@ -190,9 +196,7 @@ export function Pose3DViewer({
       rebuildRef.current = null;
       removeStrayFullscreenCanvases();
       cancelAnimationFrame(frameId);
-      if (figureRoot && THREE) {
-        disposeCoachMeshGroup(figureRoot);
-      }
+      if (mannequin?.parent) mannequin.parent.remove(mannequin);
       if (renderer) {
         renderer.dispose();
         if (renderer.domElement.parentElement === mount) {
@@ -213,7 +217,7 @@ export function Pose3DViewer({
         ref={mountRef}
         className="absolute inset-0"
         role="img"
-        aria-label="3D coach figure preview"
+        aria-label="3D coach mannequin preview"
       />
       {viewerState === "loading" && (
         <p className="pointer-events-none absolute inset-x-0 bottom-3 text-center text-xs text-muted-foreground">
