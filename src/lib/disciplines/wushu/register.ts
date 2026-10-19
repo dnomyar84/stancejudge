@@ -1,4 +1,4 @@
-import { registerVisualCoachRoutine } from "@/lib/motion/visual-coach/registry";
+import { registerVisualCoachRoutine } from "@/lib/motion/visual-coach/registry-core";
 import {
   buildWuBuQuanVisualCoach,
   getWuBuQuanMoveChoreography,

@@ -40,6 +40,8 @@ export type CoachWorldTargets = {
   rightElbow: THREE.Vector3;
   leftWrist: THREE.Vector3;
   rightWrist: THREE.Vector3;
+  nose: THREE.Vector3;
+  chest: THREE.Vector3;
 };
 
 export function coachWorldTargets(
@@ -64,5 +66,7 @@ export function coachWorldTargets(
     rightElbow: coachToWorld(THREE, sk.rightElbow),
     leftWrist: coachToWorld(THREE, sk.leftWrist),
     rightWrist: coachToWorld(THREE, sk.rightWrist),
+    nose: coachToWorld(THREE, sk.nose),
+    chest: midVec3(THREE, sk.leftShoulder, sk.rightShoulder),
   };
 }

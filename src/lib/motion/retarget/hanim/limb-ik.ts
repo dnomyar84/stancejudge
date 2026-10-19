@@ -9,6 +9,16 @@ type LimbBind = {
   lowerBindDir: THREE.Vector3;
 };
 
+export function worldPointToParentLocal(
+  THREE: typeof import("three"),
+  parent: THREE.Object3D,
+  world: THREE.Vector3,
+): THREE.Vector3 {
+  parent.updateMatrixWorld(true);
+  const inv = new THREE.Matrix4().copy(parent.matrixWorld).invert();
+  return world.clone().applyMatrix4(inv);
+}
+
 export function captureLimbBind(
   THREE: typeof import("three"),
   upper: THREE.Bone,

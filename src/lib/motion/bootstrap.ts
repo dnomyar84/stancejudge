@@ -1,10 +1,6 @@
-import { registerWushuDiscipline } from "@/lib/disciplines/wushu/register";
+/** @deprecated Import `@/lib/motion/visual-coach/registry` (auto-registers disciplines). */
+import "@/lib/motion/disciplines-init";
 
-let registered = false;
-
-/** Idempotent: loads discipline packs (wushu first; TKD, dance, etc. later). */
 export function ensureMotionDisciplinesRegistered(): void {
-  if (registered) return;
-  registerWushuDiscipline();
-  registered = true;
+  /* side effect runs on import */
 }

@@ -13,7 +13,14 @@ export async function loadMixamoAvatar(
   const { GLTFLoader } = await import("three/examples/jsm/loaders/GLTFLoader.js");
   const loader = new GLTFLoader();
   const url = hanimModelUrl();
-  const gltf = await loader.loadAsync(url);
+  let gltf;
+  try {
+    gltf = await loader.loadAsync(url);
+  } catch (err) {
+    const hint =
+      err instanceof Error ? err.message : "GLTF load failed";
+    throw new Error(`${hint} (model: ${url})`);
+  }
   const scene = gltf.scene;
   scene.rotation.y = Math.PI;
   return prepareMixamoAvatar(THREE, scene);

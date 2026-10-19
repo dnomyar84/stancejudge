@@ -1,6 +1,10 @@
 import type { ExtendedCoachPose } from "@/lib/pose/coach-figure/extended-pose";
 import { coachWorldTargets } from "./coach-world";
-import { captureLimbBind, solveLimbToTargets } from "./limb-ik";
+import {
+  captureLimbBind,
+  solveLimbToTargets,
+  worldPointToParentLocal,
+} from "./limb-ik";
 import { indexMixamoBones, type MixamoBoneMap } from "./mixamo-bones";
 import type * as THREE from "three";
 
@@ -70,6 +74,29 @@ export function prepareMixamoAvatar(
   };
 }
 
+function aimBoneWorldDirection(
+  THREE: typeof import("three"),
+  bone: THREE.Bone,
+  bindDirLocal: THREE.Vector3,
+  fromWorld: THREE.Vector3,
+  toWorld: THREE.Vector3,
+): void {
+  const dir = toWorld.clone().sub(fromWorld);
+  if (dir.lengthSq() < 1e-10) return;
+  const parent = bone.parent;
+  if (!parent) return;
+  parent.updateMatrixWorld(true);
+  const invParent = new THREE.Quaternion();
+  parent.getWorldQuaternion(invParent).invert();
+  const localDir = dir.normalize().applyQuaternion(invParent);
+  if (bindDirLocal.lengthSq() < 1e-8) return;
+  const q = new THREE.Quaternion().setFromUnitVectors(
+    bindDirLocal.clone().normalize(),
+    localDir,
+  );
+  bone.quaternion.copy(q);
+}
+
 export function applyCoachPoseToMixamo(
   THREE: typeof import("three"),
   avatar: MixamoAvatar,
@@ -78,10 +105,17 @@ export function applyCoachPoseToMixamo(
   const t = coachWorldTargets(THREE, pose);
   const { bones, mesh } = avatar;
 
+  avatar.root.position.set(0, 0, 0);
   mesh.skeleton.pose();
 
-  const hipMid = t.hipMid.clone();
-  bones.hips.position.copy(hipMid);
+  const hipsParent = bones.hips.parent;
+  if (hipsParent) {
+    bones.hips.position.copy(
+      worldPointToParentLocal(THREE, hipsParent, t.hipMid),
+    );
+  } else {
+    bones.hips.position.copy(t.hipMid);
+  }
 
   solveLimbToTargets(
     THREE,
@@ -116,13 +150,44 @@ export function applyCoachPoseToMixamo(
     "elbow",
   );
 
-  mesh.skeleton.update();
+  bones.hips.updateMatrixWorld(true);
+  const hipsWorld = new THREE.Vector3();
+  bones.hips.getWorldPosition(hipsWorld);
+  aimBoneWorldDirection(
+    THREE,
+    bones.spine,
+    new THREE.Vector3(0, 1, 0),
+    hipsWorld,
+    t.chest,
+  );
+  bones.spine.updateMatrixWorld(true);
+  const spine1World = new THREE.Vector3();
+  bones.spine1.getWorldPosition(spine1World);
+  aimBoneWorldDirection(
+    THREE,
+    bones.spine1,
+    new THREE.Vector3(0, 1, 0),
+    spine1World,
+    t.chest,
+  );
+  bones.spine1.updateMatrixWorld(true);
+  const neckBase = new THREE.Vector3();
+  bones.spine2.getWorldPosition(neckBase);
+  aimBoneWorldDirection(
+    THREE,
+    bones.neck,
+    new THREE.Vector3(0, 1, 0),
+    neckBase,
+    t.nose,
+  );
 
+  mesh.skeleton.update();
   avatar.root.updateMatrixWorld(true);
+
   const box = new THREE.Box3().setFromObject(avatar.root);
   const floorDelta = -box.min.y;
   if (Math.abs(floorDelta) > 1e-5) {
-    bones.hips.position.y += floorDelta;
+    avatar.root.position.y += floorDelta;
   }
   mesh.skeleton.update();
   avatar.root.updateMatrixWorld(true);

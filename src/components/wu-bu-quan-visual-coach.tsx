@@ -1,5 +1,6 @@
 "use client";
 
+import "@/lib/motion/disciplines-init";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActiveCuesCard } from "@/components/active-cues-card";
 import { Pose3DViewer } from "@/components/pose-3d-viewer";

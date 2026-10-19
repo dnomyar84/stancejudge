@@ -64,8 +64,12 @@ export function Pose3DViewer({
 
         if (disposed) return;
 
-        const width = mount.clientWidth || 400;
-        const height = mount.clientHeight || 360;
+        let width = mount.clientWidth;
+        let height = mount.clientHeight;
+        if (width < 8 || height < 8) {
+          width = 400;
+          height = Math.max(mount.parentElement?.clientHeight ?? 360, 280);
+        }
 
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x0a1218);
@@ -156,11 +160,15 @@ export function Pose3DViewer({
           if (!mount || !renderer) return;
           const w = mount.clientWidth || 400;
           const h = mount.clientHeight || 360;
+          if (w < 8 || h < 8) return;
           camera.aspect = w / h;
           camera.updateProjectionMatrix();
           renderer.setSize(w, h);
         };
+        const resizeObserver = new ResizeObserver(onResize);
+        resizeObserver.observe(mount);
         window.addEventListener("resize", onResize);
+        onResize();
 
         const animate = () => {
           if (disposed) return;
@@ -171,7 +179,10 @@ export function Pose3DViewer({
         animate();
         setViewerState("ready");
 
-        return () => window.removeEventListener("resize", onResize);
+        return () => {
+          resizeObserver.disconnect();
+          window.removeEventListener("resize", onResize);
+        };
       } catch (err) {
         if (disposed) return;
         const message =
