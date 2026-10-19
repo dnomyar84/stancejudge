@@ -1,5 +1,6 @@
 import { hanimModelUrl } from "./asset-url";
 import {
+  applyBindPose,
   applyCoachPoseToMixamo,
   prepareMixamoAvatar,
   type MixamoAvatar,
@@ -35,7 +36,6 @@ export function retargetCoachPose(
     applyCoachPoseToMixamo(THREE, avatar, pose);
   } catch (err) {
     console.error("retargetCoachPose:", err);
-    avatar.mesh.skeleton.pose();
-    avatar.mesh.skeleton.update();
+    applyBindPose(THREE, avatar);
   }
 }

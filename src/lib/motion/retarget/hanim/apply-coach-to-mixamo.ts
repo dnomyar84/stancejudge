@@ -8,7 +8,8 @@ import {
 import { indexMixamoBones, type MixamoBoneMap } from "./mixamo-bones";
 import type * as THREE from "three";
 
-/** glTF bind height for Mixamo Xbot in this repo (~0.018 m). */
+/** Measured bind height of `public/models/xbot.glb` (meters in glTF units). */
+export const MIXAMO_BIND_HEIGHT_M = 0.01806;
 export const MIXAMO_TARGET_HEIGHT_M = 1.75;
 
 export type MixamoAvatar = {
@@ -31,12 +32,21 @@ function brightenAvatarMaterials(root: THREE.Object3D): void {
     for (const mat of mats) {
       const standard = mat as THREE.MeshStandardMaterial;
       if (standard.color) {
-        standard.color.offsetHSL(0, 0, 0.08);
+        standard.color.setHex(0xb8c8d8);
       }
-      standard.metalness = Math.min(standard.metalness ?? 0, 0.15);
-      standard.roughness = Math.max(standard.roughness ?? 0.5, 0.45);
+      standard.emissive?.setHex(0x1a2838);
+      standard.emissiveIntensity = 0.35;
+      standard.metalness = 0.05;
+      standard.roughness = 0.55;
     }
   });
+}
+
+/** SkinnedMesh bind boxes are often wrong; use measured fallback when tiny. */
+export function mixamoSceneScaleFactor(measuredHeightM: number): number {
+  const h =
+    measuredHeightM > 0.05 ? measuredHeightM : MIXAMO_BIND_HEIGHT_M;
+  return MIXAMO_TARGET_HEIGHT_M / h;
 }
 
 export function prepareMixamoAvatar(
@@ -53,16 +63,14 @@ export function prepareMixamoAvatar(
 
   mesh.frustumCulled = false;
   brightenAvatarMaterials(scene);
+
   scene.updateMatrixWorld(true);
   const bindBox = new THREE.Box3().setFromObject(scene);
   const bindSize = bindBox.getSize(new THREE.Vector3());
-  const bindHeight = bindSize.y;
-  let sceneScale = 1;
-  if (bindHeight > 1e-6) {
-    sceneScale = MIXAMO_TARGET_HEIGHT_M / bindHeight;
-    scene.scale.setScalar(sceneScale);
-    scene.updateMatrixWorld(true);
-  }
+  const sceneScale = mixamoSceneScaleFactor(bindSize.y);
+  scene.scale.setScalar(sceneScale);
+  scene.rotation.y = Math.PI;
+  scene.updateMatrixWorld(true);
 
   const bones = indexMixamoBones(mesh.skeleton);
   mesh.skeleton.pose();
@@ -107,13 +115,13 @@ export function prepareMixamoAvatar(
   };
 }
 
-/** Fit camera to the retargeted figure (world space). */
 export function frameAvatarInView(
   THREE: typeof import("three"),
   root: THREE.Object3D,
   camera: THREE.PerspectiveCamera,
   controls: { target: THREE.Vector3; update: () => void },
 ): void {
+  root.updateMatrixWorld(true);
   const box = new THREE.Box3().setFromObject(root);
   if (box.isEmpty()) return;
   const center = box.getCenter(new THREE.Vector3());
@@ -122,13 +130,37 @@ export function frameAvatarInView(
   controls.target.copy(center);
   camera.position.set(
     center.x,
-    center.y + span * 0.12,
-    center.z + span * 1.55,
+    center.y + span * 0.15,
+    center.z + span * 1.45,
   );
-  camera.near = Math.max(0.02, span / 50);
-  camera.far = Math.max(50, span * 20);
+  camera.near = Math.max(0.02, span / 80);
+  camera.far = Math.max(50, span * 25);
   camera.updateProjectionMatrix();
   controls.update();
+}
+
+function settleAvatarOnFloor(
+  THREE: typeof import("three"),
+  avatar: MixamoAvatar,
+): void {
+  avatar.root.updateMatrixWorld(true);
+  const box = new THREE.Box3().setFromObject(avatar.root);
+  if (!box.isEmpty()) {
+    avatar.root.position.y = -box.min.y;
+  }
+  avatar.mesh.skeleton.update();
+  avatar.root.updateMatrixWorld(true);
+}
+
+/** Bind pose only — guaranteed visible while limb IK is tuned. */
+export function applyBindPose(
+  THREE: typeof import("three"),
+  avatar: MixamoAvatar,
+): void {
+  avatar.root.position.set(0, 0, 0);
+  avatar.mesh.skeleton.pose();
+  avatar.mesh.skeleton.update();
+  settleAvatarOnFloor(THREE, avatar);
 }
 
 export function applyCoachPoseToMixamo(
@@ -136,12 +168,10 @@ export function applyCoachPoseToMixamo(
   avatar: MixamoAvatar,
   pose: ExtendedCoachPose,
 ): void {
+  applyBindPose(THREE, avatar);
+
   const t = coachWorldTargets(THREE, pose);
   const { bones, mesh } = avatar;
-
-  avatar.root.position.set(0, 0, 0);
-  avatar.root.rotation.y = Math.PI;
-  mesh.skeleton.pose();
 
   const hipsParent = bones.hips.parent;
   if (hipsParent) {
@@ -186,15 +216,5 @@ export function applyCoachPoseToMixamo(
   );
 
   mesh.skeleton.update();
-  avatar.root.updateMatrixWorld(true);
-
-  const box = new THREE.Box3().setFromObject(avatar.root);
-  if (!box.isEmpty()) {
-    const floorDelta = -box.min.y;
-    if (Math.abs(floorDelta) > 1e-5) {
-      avatar.root.position.y += floorDelta;
-    }
-  }
-  mesh.skeleton.update();
-  avatar.root.updateMatrixWorld(true);
+  settleAvatarOnFloor(THREE, avatar);
 }

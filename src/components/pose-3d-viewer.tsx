@@ -2,6 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { ExtendedCoachPose } from "@/lib/pose/coach-figure/extended-pose";
+import {
+  createCoachSceneOverlay,
+  updateCoachSceneOverlay,
+} from "@/lib/motion/coach-figure/scene-overlay";
 import { frameAvatarInView } from "@/lib/motion/retarget/hanim/apply-coach-to-mixamo";
 import {
   loadMixamoAvatar,
@@ -56,12 +60,12 @@ export function Pose3DViewer({
     let renderer: import("three").WebGLRenderer | null = null;
     let frameId = 0;
     let avatar: MixamoAvatar | null = null;
+    let coachOverlay: import("@/lib/motion/coach-figure/scene-overlay").CoachSceneOverlay | null =
+      null;
     let THREE: typeof import("three") | null = null;
     let controls: import("three/examples/jsm/controls/OrbitControls.js").OrbitControls | null =
       null;
     let camera: import("three").PerspectiveCamera | null = null;
-    let framed = false;
-
     void (async () => {
       try {
         THREE = await import("three");
@@ -148,6 +152,9 @@ export function Pose3DViewer({
           ),
         );
 
+        coachOverlay = createCoachSceneOverlay(THREE);
+        scene.add(coachOverlay);
+
         const animate = () => {
           if (disposed || session !== sessionRef.current) return;
           controls?.update();
@@ -169,23 +176,40 @@ export function Pose3DViewer({
         });
         scene.add(avatar.root);
 
-        const rebuildFigure = (p: ExtendedCoachPose | null) => {
-          if (!THREE || !avatar || !camera || !controls) return;
-          retargetCoachPose(THREE, avatar, p);
-          if (!framed && p) {
+        const frameScene = () => {
+          if (!THREE || !avatar || !camera || !controls || !coachOverlay) return;
+          const box = new THREE.Box3();
+          box.expandByObject(avatar.root);
+          box.expandByObject(coachOverlay);
+          if (box.isEmpty()) {
             frameAvatarInView(THREE, avatar.root, camera, controls);
-            framed = true;
+            return;
           }
+          const center = box.getCenter(new THREE.Vector3());
+          const size = box.getSize(new THREE.Vector3());
+          const span = Math.max(size.x, size.y, size.z, 0.5);
+          controls.target.copy(center);
+          camera.position.set(
+            center.x,
+            center.y + span * 0.15,
+            center.z + span * 1.45,
+          );
+          camera.near = Math.max(0.02, span / 80);
+          camera.far = Math.max(50, span * 25);
+          camera.updateProjectionMatrix();
+          controls.update();
+        };
+
+        const rebuildFigure = (p: ExtendedCoachPose | null) => {
+          if (!THREE || !avatar || !camera || !controls || !coachOverlay) return;
+          updateCoachSceneOverlay(THREE, coachOverlay, p);
+          retargetCoachPose(THREE, avatar, p);
+          frameScene();
         };
 
         rebuildRef.current = rebuildFigure;
         if (poseRef.current) rebuildFigure(poseRef.current);
-        else {
-          avatar.mesh.skeleton.pose();
-          avatar.mesh.skeleton.update();
-          frameAvatarInView(THREE, avatar.root, camera, controls);
-          framed = true;
-        }
+        else frameScene();
 
         const onResize = () => {
           if (!mount || !renderer || !camera) return;

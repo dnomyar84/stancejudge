@@ -22,5 +22,8 @@ const hasWebgl = count > 0;
 console.log(JSON.stringify({ url, canvasCount: count, loading, error, hasWebgl }, null, 2));
 if (logs.length) console.log("logs:\n" + logs.slice(-30).join("\n"));
 
+await page.locator("canvas").first().screenshot({
+  path: "/opt/cursor/artifacts/3d-coach-viewport.png",
+});
 await page.screenshot({ path: "/opt/cursor/artifacts/3d-coach-debug.png", fullPage: true });
 await browser.close();
