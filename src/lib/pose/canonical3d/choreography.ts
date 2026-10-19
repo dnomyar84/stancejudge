@@ -6,6 +6,8 @@ import {
 import { settlePoseOnFloor } from "../coach-figure/gravity";
 import type { ExtendedCoachPose } from "../coach-figure/extended-pose";
 import { lerpExtendedPose } from "../coach-figure/interpolate-pose";
+import type { CoachBonePoseV1 } from "../bone-rig/schema";
+import { lerpCoachBonePose } from "../bone-rig/lerp-bone-pose";
 import type { CoachFigurinePoseV1 } from "../display-figurine/coach-figurine-pose";
 import {
   resolveFigurineAtKeyframe,
@@ -46,6 +48,8 @@ export type RigKeyframe = {
    * When set, the viewer applies this directly — no IK.
    */
   figurine?: CoachFigurinePoseV1;
+  /** Native bone rotations (Three.js display truth). */
+  bone?: CoachBonePoseV1;
   /** Cues the athlete is executing *toward* this keyframe. */
   activeCueIds?: string[];
 };
@@ -93,6 +97,8 @@ export type SampledCoachFrame = {
   pose: ExtendedCoachPose;
   /** Resolved display pose for the figurine at this instant. */
   figurine: CoachFigurinePoseV1;
+  /** Present when keyframes store `bone` or after client compile. */
+  bone?: CoachBonePoseV1;
   moveId: string;
   moveNameZh: string;
   phaseId: string | null;
@@ -165,6 +171,10 @@ export function sampleMoveChoreography(
   const blendT = Math.max(0, Math.min(1, segT));
   const pose = lerpExtendedPose(from.pose, to.pose, blendT);
   const figurine = resolveFigurineBetweenKeyframes(from, to, blendT);
+  const bone =
+    from.bone && to.bone
+      ? lerpCoachBonePose(from.bone, to.bone, blendT)
+      : undefined;
   const cueIds =
     segT < 0.5
       ? (from.activeCueIds ?? to.activeCueIds ?? [])
@@ -174,6 +184,7 @@ export function sampleMoveChoreography(
   return {
     pose,
     figurine,
+    bone,
     moveId: spec.moveId,
     moveNameZh: spec.nameZh,
     phaseId: phase.id,
@@ -197,6 +208,7 @@ function frameResult(
   return {
     pose: settlePoseOnFloor(kf.pose),
     figurine: resolveFigurineAtKeyframe(kf),
+    bone: kf.bone,
     moveId: spec.moveId,
     moveNameZh: spec.nameZh,
     phaseId: phase.id,

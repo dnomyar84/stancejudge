@@ -23,7 +23,8 @@ Wushu reference: `disciplines/wushu/register.ts` registers **五步拳** (`wu-bu
 ## Display vs retarget (important)
 
 | What kids see | **mannequin-js** via `pose-3d-viewer.tsx` — solid procedural figure, GPL-3.0 |
-| Display storage | **`CoachFigurinePoseV1`** on keyframes — 1:1 mannequin angles ([display-figurine-pose.md](./display-figurine-pose.md), ADR-004) |
+| Display storage (default) | **`CoachBonePoseV1`** — native `THREE.Bone` Euler map + Tween.js (ADR-005) |
+| Display storage (legacy) | **`CoachFigurinePoseV1`** — mannequin only (`NEXT_PUBLIC_COACH_RENDERER=mannequin`, ADR-004) |
 | Semantic storage | **`ExtendedCoachPose`** — joint positions for cues / scoring / 2D |
 | In progress | glTF/Xbot retarget in `motion/retarget/hanim/` + optional `pose-3d-viewer-gltf.impl.tsx` |
 

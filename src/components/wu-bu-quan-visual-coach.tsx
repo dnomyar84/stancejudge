@@ -121,6 +121,7 @@ export function WuBuQuanVisualCoach({ onBack }: WuBuQuanVisualCoachProps) {
             <Pose3DViewer
               pose={sampled?.pose ?? null}
               figurine={sampled?.figurine ?? null}
+              bone={sampled?.bone ?? null}
               horizontalOrbit
               className="h-[min(58vh,480px)] w-full touch-pan-y rounded-lg border border-border/60"
             />

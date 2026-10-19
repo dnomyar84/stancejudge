@@ -235,6 +235,7 @@ export function Pose3DLab({ onBack }: Pose3DLabProps) {
               <Pose3DViewer
                 pose={sampled?.pose ?? null}
                 figurine={sampled?.figurine ?? null}
+                bone={sampled?.bone ?? null}
                 horizontalOrbit
                 className="h-[min(52vh,420px)] w-full rounded-lg border border-border/60"
               />
