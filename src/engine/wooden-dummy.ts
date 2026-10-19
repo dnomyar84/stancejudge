@@ -72,6 +72,7 @@ const Y_UP = new THREE.Vector3(0, 1, 0);
  * Limb volume in group space, skinned parent→child.
  * Mesh stays a sibling of the skeleton root — never a child of a bone
  * (parenting + skinning double-transforms and destroys the silhouette).
+ * A rigid segment follows only the parent bone, so the hinge is the child joint.
  */
 function addSkinnedSegment(
   rootGroup: THREE.Group,
@@ -82,6 +83,7 @@ function addSkinnedSegment(
   child: THREE.Bone,
   radiusNear: number,
   radiusFar: number,
+  rigid = false,
 ): THREE.SkinnedMesh {
   const p0 = bindWorld(parent);
   const p1 = bindWorld(child);
@@ -99,7 +101,7 @@ function addSkinnedSegment(
   const skinWeight = new Float32Array(pos.count * 4);
   for (let i = 0; i < pos.count; i++) {
     const along = new THREE.Vector3(pos.getX(i), pos.getY(i), pos.getZ(i)).sub(p0).dot(dir);
-    const t = THREE.MathUtils.clamp(along / len, 0, 1);
+    const t = rigid ? 0 : THREE.MathUtils.clamp(along / len, 0, 1);
     skinIndex[i * 4] = parentIndex;
     skinWeight[i * 4] = 1 - t;
     skinIndex[i * 4 + 1] = childIndex;
@@ -342,7 +344,7 @@ export function createWoodenDummy(): WoodenDummy {
   const skeleton = new THREE.Skeleton(boneList);
 
   const skinnedMeshes: THREE.SkinnedMesh[] = [];
-  const seg = (a: JointId, b: JointId, r0: number, r1: number) => {
+  const seg = (a: JointId, b: JointId, r0: number, r1: number, rigid = false) => {
     skinnedMeshes.push(
       addSkinnedSegment(
         rootGroup,
@@ -353,6 +355,7 @@ export function createWoodenDummy(): WoodenDummy {
         bones[b],
         r0,
         r1,
+        rigid,
       ),
     );
   };
@@ -361,14 +364,15 @@ export function createWoodenDummy(): WoodenDummy {
   seg("spine", "chest", 0.12, 0.15);
   seg("chest", "neck", 0.07, 0.055);
   seg("neck", "head", 0.05, 0.06);
-  seg("l_upper_arm", "l_forearm", 0.055, 0.045);
-  seg("l_forearm", "l_hand", 0.042, 0.034);
-  seg("r_upper_arm", "r_forearm", 0.055, 0.045);
-  seg("r_forearm", "r_hand", 0.042, 0.034);
-  seg("l_thigh", "l_shin", 0.075, 0.055);
-  seg("l_shin", "l_foot", 0.05, 0.04);
-  seg("r_thigh", "r_shin", 0.075, 0.055);
-  seg("r_shin", "r_foot", 0.05, 0.04);
+  // Limb bones stay straight. The named joint at the far end is the hinge.
+  seg("l_upper_arm", "l_forearm", 0.055, 0.045, true);
+  seg("l_forearm", "l_hand", 0.042, 0.034, true);
+  seg("r_upper_arm", "r_forearm", 0.055, 0.045, true);
+  seg("r_forearm", "r_hand", 0.042, 0.034, true);
+  seg("l_thigh", "l_shin", 0.075, 0.055, true);
+  seg("l_shin", "l_foot", 0.05, 0.04, true);
+  seg("r_thigh", "r_shin", 0.075, 0.055, true);
+  seg("r_shin", "r_foot", 0.05, 0.04, true);
 
   const restRotations = new Map<THREE.Bone, THREE.Euler>();
   for (const b of boneList) {
