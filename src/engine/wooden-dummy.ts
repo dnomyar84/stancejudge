@@ -148,6 +148,43 @@ function stickDown(parent: THREE.Bone, len: number, radius: number, mat: THREE.M
   parent.add(mesh);
 }
 
+/** Sole on local y = 0, heel thick, toe narrow and thin. +Z is forward. */
+function footWedge(parent: THREE.Object3D) {
+  const heelZ = -0.035;
+  const toeZ = 0.19;
+  const heelHalfW = 0.048;
+  const toeHalfW = 0.02;
+  const heelH = 0.058;
+  const toeH = 0.012;
+  const positions = new Float32Array([
+    -heelHalfW, 0, heelZ,
+    heelHalfW, 0, heelZ,
+    heelHalfW, heelH, heelZ,
+    -heelHalfW, heelH, heelZ,
+    -toeHalfW, 0, toeZ,
+    toeHalfW, 0, toeZ,
+    toeHalfW, toeH, toeZ,
+    -toeHalfW, toeH, toeZ,
+  ]);
+  const indices = [
+    0, 1, 5, 0, 5, 4,
+    3, 7, 6, 3, 6, 2,
+    0, 4, 7, 0, 7, 3,
+    1, 2, 6, 1, 6, 5,
+    0, 3, 2, 0, 2, 1,
+    4, 5, 6, 4, 6, 7,
+  ];
+  const geom = new THREE.BufferGeometry();
+  geom.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+  geom.setIndex(indices);
+  geom.computeVertexNormals();
+  const mesh = new THREE.Mesh(geom, WOOD);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  parent.add(mesh);
+  return mesh;
+}
+
 function box(
   parent: THREE.Object3D,
   sx: number,
@@ -285,8 +322,8 @@ export function createWoodenDummy(): WoodenDummy {
   ball(head, 0.018, 0.035, 0.08, 0.09, EYE);
   buildHand(lHand, "l", mk);
   buildHand(rHand, "r", mk);
-  box(lFoot, 0.09, 0.05, 0.22, 0, 0.025, 0.06, WOOD);
-  box(rFoot, 0.09, 0.05, 0.22, 0, 0.025, 0.06, WOOD);
+  footWedge(lFoot);
+  footWedge(rFoot);
   ball(lUpper, 0.04, 0, 0, 0);
   ball(rUpper, 0.04, 0, 0, 0);
   ball(lFore, 0.035, 0, 0, 0);
@@ -428,7 +465,7 @@ export function executePoseProgram(dummy: WoodenDummy, program: PoseProgram): Cl
   return syncBonesFromAngles(dummy);
 }
 
-/** Drop the lower sole onto y = 0. Foot boxes sit on the foot bone origin. */
+/** Drop the lower sole onto y = 0. Foot wedges sit on the foot bone origin. */
 export function groundDummy(dummy: WoodenDummy): void {
   dummy.root.position.y = 0;
   dummy.root.updateMatrixWorld(true);
