@@ -2,6 +2,7 @@ import type { ExtendedCoachPose } from "@/lib/pose/coach-figure/extended-pose";
 import { coachWorldTargets } from "./coach-world";
 import { captureLimbBind, solveLimbToTargets } from "./limb-ik";
 import { indexMixamoBones, type MixamoBoneMap } from "./mixamo-bones";
+import { DoubleSide, type MeshStandardMaterial } from "three";
 import type * as THREE from "three";
 
 /** Measured bind height of `public/models/xbot.glb` (meters in glTF units). */
@@ -26,14 +27,15 @@ function brightenAvatarMaterials(root: THREE.Object3D): void {
     if (!mesh.isMesh || !mesh.material) return;
     const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
     for (const mat of mats) {
-      const standard = mat as THREE.MeshStandardMaterial;
+      const standard = mat as MeshStandardMaterial;
       if (standard.color) {
         standard.color.setHex(0xb8c8d8);
       }
       standard.emissive?.setHex(0x1a2838);
-      standard.emissiveIntensity = 0.35;
+      standard.emissiveIntensity = 0.55;
       standard.metalness = 0.05;
       standard.roughness = 0.55;
+      standard.side = DoubleSide;
     }
   });
 }

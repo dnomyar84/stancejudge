@@ -7,7 +7,7 @@ import {
   applyCoachBonePose,
   captureCoachBonePose,
 } from "@/lib/pose/bone-rig/capture-apply";
-import { compileCoachBonePoseFromSemantic } from "@/lib/pose/bone-rig/compile-semantic";
+import { applyCoachPoseToMixamo } from "@/lib/motion/retarget/hanim/apply-coach-to-mixamo";
 import type { CoachBonePoseV1 } from "@/lib/pose/bone-rig/schema";
 import {
   tweenCoachBonePose,
@@ -113,9 +113,17 @@ export function Pose3DBoneViewer({
 
         const canvasOpts = { alpha: false, powerPreference: "high-performance" as const };
         try {
-          renderer = new THREE.WebGLRenderer({ ...canvasOpts, antialias: true });
+          renderer = new THREE.WebGLRenderer({
+            ...canvasOpts,
+            antialias: true,
+            preserveDrawingBuffer: true,
+          });
         } catch {
-          renderer = new THREE.WebGLRenderer({ ...canvasOpts, antialias: false });
+          renderer = new THREE.WebGLRenderer({
+            ...canvasOpts,
+            antialias: false,
+            preserveDrawingBuffer: true,
+          });
         }
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.setSize(width, height);
@@ -176,45 +184,41 @@ export function Pose3DBoneViewer({
         setCachedBindBonePose(captureCoachBonePose(avatar));
         scene.add(avatar.root);
 
-        const resolveTarget = (
-          p: ExtendedCoachPose | null,
-          b: CoachBonePoseV1 | null | undefined,
-        ): CoachBonePoseV1 | null => {
-          if (!avatar || !THREE) return null;
-          if (b) return b;
-          if (!p) return null;
-          return compileCoachBonePoseFromSemantic(THREE, avatar, p);
-        };
-
         const rebuildFigure = (
           p: ExtendedCoachPose | null,
           b: CoachBonePoseV1 | null | undefined,
         ) => {
           if (!avatar || !THREE) return;
-          const target = resolveTarget(p, b);
-          if (!target) return;
 
           activeTween?.stop();
           activeTween = null;
 
-          if (tweenMs <= 0) {
-            applyCoachBonePose(avatar, target);
+          if (b) {
+            if (tweenMs <= 0) {
+              applyCoachBonePose(avatar, b);
+            } else {
+              activeTween = tweenCoachBonePose(avatar, b, tweenMs);
+            }
+          } else if (p) {
+            // Semantic path: limb IK on the live skeleton (do not round-trip capture→apply).
+            applyCoachPoseToMixamo(THREE, avatar, p);
           } else {
-            activeTween = tweenCoachBonePose(avatar, target, tweenMs);
+            applyBindPose(THREE, avatar);
           }
 
-          if (!cameraFramed && camera && controls) {
+          if (camera && controls) {
             frameAvatarInView(THREE, avatar.root, camera, controls);
             cameraFramed = true;
           }
         };
 
         rebuildRef.current = rebuildFigure;
-        rebuildFigure(poseRef.current, boneRef.current);
-        if (!cameraFramed && avatar && camera && controls && THREE) {
-          frameAvatarInView(THREE, avatar.root, camera, controls);
-          cameraFramed = true;
-        }
+        applyBindPose(THREE, avatar);
+        frameAvatarInView(THREE, avatar.root, camera, controls);
+        cameraFramed = true;
+        requestAnimationFrame(() => {
+          if (!disposed) rebuildFigure(poseRef.current, boneRef.current);
+        });
 
         const onResize = () => {
           if (!mount || !renderer || !camera) return;
