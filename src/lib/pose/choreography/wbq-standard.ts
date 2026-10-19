@@ -1,18 +1,20 @@
 /**
  * 五步拳 — 武术段位 / 国标入门套路（左式）定势要点。
- * QA routine uses a shortened move list (wbq-01…06); poses follow the standard left-side form.
  */
 import type { CoachSkeleton } from "../coach-figure/skeleton";
 import {
   armsBlockElbow,
-  armsFistWaist,
+  armsPuBuChuanZhang,
   armsPunchForward,
+  armsTiXiChuanZhang,
+  armsXuBuTiaoZhang,
   baseStandingTorso,
   legsGongBu,
   legsMaBu,
-  legsRightSnapKickChamber,
+  legsPuBu,
   legsRightSnapKickStrike,
   legsTiXi,
+  legsWuBuRightXuBu,
   legsXieBu,
   mergeSkeleton,
 } from "../coach-figure/skeleton";
@@ -39,7 +41,6 @@ export function skeletonGongBuChongQuan(
   ]);
 }
 
-/** 弹腿冲拳定势：右腿弹击，左拳前冲，右拳抱腰。 */
 export function skeletonTanTiChongQuanDing(): CoachSkeleton {
   return mergeSkeleton([
     baseStandingTorso(),
@@ -48,12 +49,10 @@ export function skeletonTanTiChongQuanDing(): CoachSkeleton {
   ]);
 }
 
-/** 马步架打定势：左掌上架，右拳侧向冲拳。 */
 export function skeletonMaBuJiaDaDing(): CoachSkeleton {
   return mergeSkeleton([baseStandingTorso(), legsMaBu(), armsBlockElbow()]);
 }
 
-/** 歇步冲拳定势（歇步盖打之冲拳）：左拳平冲，右拳抱腰。 */
 export function skeletonXieBuChongQuanDing(): CoachSkeleton {
   return mergeSkeleton([
     baseStandingTorso(),
@@ -62,12 +61,30 @@ export function skeletonXieBuChongQuanDing(): CoachSkeleton {
   ]);
 }
 
-/** 提膝收势（缩写收势）：左提膝，双拳抱腰。 */
-export function skeletonTiXiShouShiDing(): CoachSkeleton {
+/** 提膝穿掌定势：左提膝，右穿掌。 */
+export function skeletonTiXiChuanZhangDing(): CoachSkeleton {
   return mergeSkeleton([
     baseStandingTorso(),
     legsTiXi("left"),
-    armsFistWaist(),
+    armsTiXiChuanZhang(),
+  ]);
+}
+
+/** 仆步穿掌定势：左仆步，左掌穿至脚面。 */
+export function skeletonPuBuChuanZhangDing(): CoachSkeleton {
+  return mergeSkeleton([
+    baseStandingTorso(),
+    legsPuBu("left"),
+    armsPuBuChuanZhang(),
+  ]);
+}
+
+/** 虚步挑掌定势：右虚步，左勾右挑。 */
+export function skeletonXuBuTiaoZhangDing(): CoachSkeleton {
+  return mergeSkeleton([
+    baseStandingTorso(),
+    legsWuBuRightXuBu(),
+    armsXuBuTiaoZhang(),
   ]);
 }
 
@@ -82,5 +99,3 @@ export function isRightPunchExtended(sk: CoachSkeleton): boolean {
 export function isLeftPunchExtended(sk: CoachSkeleton): boolean {
   return sk.leftWrist.fwd > sk.rightWrist.fwd + 0.2;
 }
-
-export { legsRightSnapKickChamber, legsRightSnapKickStrike };

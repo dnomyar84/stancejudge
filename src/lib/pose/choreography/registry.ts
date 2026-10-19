@@ -2,11 +2,16 @@ import type { MoveChoreographySpec, RoutineVisualCoachSpec } from "../canonical3
 import { getMoveEndPose, totalRoutineDurationMs } from "./move-boundaries";
 import { wbq01OpeningChoreography } from "./wbq-01-opening";
 import {
+  wbq06Choreography,
+  wbq07Choreography,
+  wbq08Choreography,
+  wbq09Choreography,
+} from "./wbq-moves-closing";
+import {
   wbq02Choreography,
   wbq03Choreography,
   wbq04Choreography,
   wbq05Choreography,
-  wbq06Choreography,
 } from "./wbq-moves";
 import { wuBuQuan } from "@/lib/wushu/routines/wu-bu-quan";
 
@@ -17,6 +22,9 @@ const MOVE_CHOREOGRAPHY: Record<string, MoveChoreographySpec> = {
   "wbq-04": wbq04Choreography,
   "wbq-05": wbq05Choreography,
   "wbq-06": wbq06Choreography,
+  "wbq-07": wbq07Choreography,
+  "wbq-08": wbq08Choreography,
+  "wbq-09": wbq09Choreography,
 };
 
 export const WU_BU_TRANSITION_MS = 600;

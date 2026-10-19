@@ -1,11 +1,15 @@
 import { describe, expect, it } from "vitest";
+import { getRoutineVisualCoach } from "@/lib/pose/choreography/registry";
 import { buildWuBuCoachSkeleton } from "@/lib/pose/coach-figure/poses-wu-bu";
+import { wuBuQuan } from "@/lib/wushu/routines/wu-bu-quan";
 import {
   isLeftGongBuFront,
   isLeftPunchExtended,
   isRightPunchExtended,
   skeletonGongBuChongQuan,
+  skeletonPuBuChuanZhangDing,
   skeletonTanTiChongQuanDing,
+  skeletonTiXiChuanZhangDing,
   skeletonXieBuChongQuanDing,
 } from "@/lib/pose/choreography/wbq-standard";
 
@@ -33,5 +37,15 @@ describe("五步拳国标左式定势", () => {
     expect(buildWuBuCoachSkeleton("wbq-02")).toEqual(skeletonGongBuChongQuan());
     expect(buildWuBuCoachSkeleton("wbq-03")).toEqual(skeletonTanTiChongQuanDing());
     expect(buildWuBuCoachSkeleton("wbq-05")).toEqual(skeletonXieBuChongQuanDing());
+    expect(buildWuBuCoachSkeleton("wbq-06")).toEqual(skeletonTiXiChuanZhangDing());
+    expect(buildWuBuCoachSkeleton("wbq-07")).toEqual(skeletonPuBuChuanZhangDing());
+  });
+
+  it("visual coach chains all nine syllabus moves", () => {
+    const coach = getRoutineVisualCoach("wu-bu-quan");
+    expect(coach?.moves).toHaveLength(wuBuQuan.moves.length);
+    expect(coach?.moves.map((m) => m.moveId)).toEqual(
+      wuBuQuan.moves.map((m) => m.id),
+    );
   });
 });

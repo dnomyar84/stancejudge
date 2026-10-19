@@ -15,11 +15,7 @@ import {
 } from "../coach-figure/skeleton";
 import { wbq01EndPose } from "./wbq-01-opening";
 import { wbqDingPose } from "./wbq-poses";
-import {
-  armsChongQuanFromGongBu,
-  skeletonTiXiShouShiDing,
-  WBQ_GONG_BU_LEAD,
-} from "./wbq-standard";
+import { armsChongQuanFromGongBu, WBQ_GONG_BU_LEAD } from "./wbq-standard";
 
 function skPose(
   legs: Partial<ReturnType<typeof mergeSkeleton>>,
@@ -210,34 +206,6 @@ export const wbq05Choreography: MoveChoreographySpec = moveSpec(
       wbqDingPose("wbq-05"),
       "歇步下蹲",
       "左冲拳定势",
-    ),
-  ],
-);
-
-const wbq06TiXi = extendedFromSkeleton(skeletonTiXiShouShiDing());
-
-export const wbq06Choreography: MoveChoreographySpec = moveSpec(
-  "wbq-06",
-  "提膝收势",
-  "Knee lift close",
-  4200,
-  [
-    twoKeyframePhase(
-      "ti_xi_shou",
-      "提膝收势",
-      wbqDingPose("wbq-05"),
-      wbq06TiXi,
-      "歇步冲拳",
-      "提膝收势",
-      tiXiDingConstraintSet(inferTiXiSupportLeg(wbq06TiXi.skeleton)),
-    ),
-    twoKeyframePhase(
-      "ding",
-      "收势定势",
-      wbq06TiXi,
-      wbqDingPose("wbq-06"),
-      "提膝",
-      "收势",
     ),
   ],
 );

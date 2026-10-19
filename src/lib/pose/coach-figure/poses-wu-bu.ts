@@ -2,9 +2,11 @@ import { wbq01EndPose } from "../choreography/wbq-01-opening";
 import {
   skeletonGongBuChongQuan,
   skeletonMaBuJiaDaDing,
+  skeletonPuBuChuanZhangDing,
   skeletonTanTiChongQuanDing,
-  skeletonTiXiShouShiDing,
+  skeletonTiXiChuanZhangDing,
   skeletonXieBuChongQuanDing,
+  skeletonXuBuTiaoZhangDing,
 } from "../choreography/wbq-standard";
 import type { CoachSkeleton } from "./skeleton";
 
@@ -22,7 +24,13 @@ export function buildWuBuCoachSkeleton(moveId: string): CoachSkeleton | null {
     case "wbq-05":
       return skeletonXieBuChongQuanDing();
     case "wbq-06":
-      return skeletonTiXiShouShiDing();
+      return skeletonTiXiChuanZhangDing();
+    case "wbq-07":
+      return skeletonPuBuChuanZhangDing();
+    case "wbq-08":
+      return skeletonXuBuTiaoZhangDing();
+    case "wbq-09":
+      return wbq01EndPose().skeleton;
     default:
       return null;
   }

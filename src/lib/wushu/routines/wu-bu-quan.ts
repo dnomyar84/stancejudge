@@ -1,17 +1,13 @@
 import type { RoutineDefinition } from "../types";
 
-/**
- * 五步拳 — 武术段位 / 国标入门左式。
- * This app uses a shortened six-move chain for 3D QA; poses follow the standard
- * 左弓步右冲拳 → 右腿弹踢左冲拳 → 马步架打 → 歇步盖冲左拳 → 提膝收势（完整套路另有仆步穿掌、虚步挑掌、并步抱拳）。
- */
+/** 五步拳 — 武术段位 / 国标入门左式（完整九段）。 */
 export const wuBuQuan: RoutineDefinition = {
   id: "wu-bu-quan",
   name: "Wu Bu Quan (五步拳)",
   nameZh: "五步拳",
   weapon: "unarmed",
   description:
-    "National introductory 五步拳 (left-side form): bow punch, snap kick punch, horse block-strike, cross-stance punch, knee lift close.",
+    "Full national introductory 五步拳 (left-side form) for 3D visual coach and stance QA.",
   moves: [
     {
       id: "wbq-01",
@@ -66,12 +62,42 @@ export const wuBuQuan: RoutineDefinition = {
     {
       id: "wbq-06",
       order: 6,
-      name: "Knee lift close (abbrev.)",
-      nameZh: "提膝收势",
+      name: "Knee lift, palm thrust",
+      nameZh: "提膝穿掌",
       expectedLeg: "ti_xi",
+      expectedHand: "push_palm",
+      coachTip:
+        "两腿起立左转；左拳变掌收至右腋下，右拳变掌经左手背向前穿出，手心向上；同时左腿屈膝提起，目视右掌。",
+    },
+    {
+      id: "wbq-07",
+      order: 7,
+      name: "Drop stance palm along leg",
+      nameZh: "仆步穿掌",
+      expectedLeg: "walking",
+      expectedHand: "push_palm",
+      coachTip:
+        "左脚落地成仆步；左掌指朝前，沿左腿内侧穿至左脚面，目视左掌。",
+    },
+    {
+      id: "wbq-08",
+      order: 8,
+      name: "Empty stance, rising palm",
+      nameZh: "虚步挑掌",
+      expectedLeg: "xu_bu",
+      expectedHand: "chop_palm",
+      coachTip:
+        "左腿屈膝前弓，右脚前上成右虚步；左手向后划弧成勾手，右手顺右腿外侧向上挑掌，目视前方。",
+    },
+    {
+      id: "wbq-09",
+      order: 9,
+      name: "Close — feet together, embrace fists",
+      nameZh: "并步抱拳",
+      expectedLeg: "feet_together",
       expectedHand: "fist_waist",
       coachTip:
-        "提膝收势（本应用缩写）：左腿提膝，双拳抱于腰间。完整国标套路此后接仆步穿掌、虚步挑掌、并步抱拳。",
+        "左脚向右脚并拢成并步；左勾手、右掌变拳，回收抱于腰间，目视前方。",
     },
   ],
 };

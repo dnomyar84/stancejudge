@@ -119,6 +119,42 @@ export function legsXuBu(): Pick<
   return { leftKnee: lk, rightKnee: rk, leftAnkle: la, rightAnkle: ra };
 }
 
+/** 五步拳虚步挑掌：左弓、右脚前点成右虚步。 */
+export function legsWuBuRightXuBu(): Pick<
+  CoachSkeleton,
+  "leftKnee" | "rightKnee" | "leftAnkle" | "rightAnkle"
+> {
+  const hy = hipY();
+  return {
+    leftKnee: v(-0.1, 0.24, hy - 0.14),
+    leftAnkle: v(-0.12, 0.3, hy - 0.28),
+    rightKnee: v(0.1, 0.22, hy - 0.16),
+    rightAnkle: v(0.08, 0.36, hy - 0.34),
+  };
+}
+
+/** 仆步：一腿伸直平仆，另一腿全蹲（左仆步 = 左腿伸直）。 */
+export function legsPuBu(straight: "left" | "right" = "left"): Pick<
+  CoachSkeleton,
+  "leftKnee" | "rightKnee" | "leftAnkle" | "rightAnkle"
+> {
+  const hy = hipY();
+  if (straight === "left") {
+    return {
+      leftKnee: v(-0.24, 0.4, hy - 0.08),
+      leftAnkle: v(-0.28, 0.58, hy - 0.3),
+      rightKnee: v(0.1, -0.04, hy - 0.24),
+      rightAnkle: v(0.12, 0.02, hy - 0.4),
+    };
+  }
+  return {
+    leftKnee: v(-0.1, -0.04, hy - 0.24),
+    leftAnkle: v(-0.12, 0.02, hy - 0.4),
+    rightKnee: v(0.24, 0.4, hy - 0.08),
+    rightAnkle: v(0.28, 0.58, hy - 0.3),
+  };
+}
+
 export function legsXieBu(): Pick<
   CoachSkeleton,
   "leftKnee" | "rightKnee" | "leftAnkle" | "rightAnkle"
@@ -347,6 +383,48 @@ export function armsChopPalm(): Pick<
     leftWrist: v(-0.1, 0.14, hipY() + 0.16),
     rightElbow: v(0.1, 0.18, sy - 0.04),
     rightWrist: v(0.08, 0.24, sy + 0.02),
+  };
+}
+
+/** 提膝穿掌：左掌收腋下，右掌经左手背向前穿出。 */
+export function armsTiXiChuanZhang(): Pick<
+  CoachSkeleton,
+  "leftElbow" | "rightElbow" | "leftWrist" | "rightWrist"
+> {
+  const sy = shoulderY();
+  return {
+    leftElbow: v(-0.08, 0.14, sy - 0.08),
+    leftWrist: v(-0.05, 0.18, sy - 0.04),
+    rightElbow: v(0.1, 0.22, sy - 0.06),
+    rightWrist: v(0.08, 0.4, sy - 0.02),
+  };
+}
+
+/** 仆步穿掌：左掌沿左腿内侧穿至脚面。 */
+export function armsPuBuChuanZhang(): Pick<
+  CoachSkeleton,
+  "leftElbow" | "rightElbow" | "leftWrist" | "rightWrist"
+> {
+  const hy = hipY();
+  return {
+    leftElbow: v(-0.18, 0.32, hy - 0.1),
+    leftWrist: v(-0.26, 0.52, hy - 0.34),
+    rightElbow: v(0.14, 0.06, shoulderY() - 0.14),
+    rightWrist: v(0.12, 0.1, hy + 0.14),
+  };
+}
+
+/** 虚步挑掌：左勾手，右挑掌。 */
+export function armsXuBuTiaoZhang(): Pick<
+  CoachSkeleton,
+  "leftElbow" | "rightElbow" | "leftWrist" | "rightWrist"
+> {
+  const sy = shoulderY();
+  return {
+    leftElbow: v(-0.2, -0.04, sy - 0.06),
+    leftWrist: v(-0.26, -0.1, sy + 0.04),
+    rightElbow: v(0.08, 0.24, sy + 0.02),
+    rightWrist: v(0.06, 0.4, sy + 0.1),
   };
 }
 
