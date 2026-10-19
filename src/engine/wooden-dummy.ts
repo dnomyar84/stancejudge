@@ -148,23 +148,22 @@ function stickDown(parent: THREE.Bone, len: number, radius: number, mat: THREE.M
   parent.add(mesh);
 }
 
-/** Sole on local y = 0, heel thick, toe narrow and thin. +Z is forward. */
+/** Sole on local y = 0. Heel is thick, toe is thin. Width stays even. +Z is forward. */
 function footWedge(parent: THREE.Object3D) {
   const heelZ = -0.035;
   const toeZ = 0.19;
-  const heelHalfW = 0.048;
-  const toeHalfW = 0.02;
+  const halfW = 0.046;
   const heelH = 0.058;
   const toeH = 0.012;
   const positions = new Float32Array([
-    -heelHalfW, 0, heelZ,
-    heelHalfW, 0, heelZ,
-    heelHalfW, heelH, heelZ,
-    -heelHalfW, heelH, heelZ,
-    -toeHalfW, 0, toeZ,
-    toeHalfW, 0, toeZ,
-    toeHalfW, toeH, toeZ,
-    -toeHalfW, toeH, toeZ,
+    -halfW, 0, heelZ,
+    halfW, 0, heelZ,
+    halfW, heelH, heelZ,
+    -halfW, heelH, heelZ,
+    -halfW, 0, toeZ,
+    halfW, 0, toeZ,
+    halfW, toeH, toeZ,
+    -halfW, toeH, toeZ,
   ]);
   const indices = [
     0, 1, 5, 0, 5, 4,
