@@ -41,16 +41,128 @@ function parseNumber(token: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+type PoseStmt = PoseResetStmt | JointPoseStmt | HandShapeStmt;
+
+function jointAt(joint: JointId, flex?: number, abduct?: number, twist?: number): JointPoseStmt {
+  const stmt: JointPoseStmt = { kind: "joint", joint };
+  if (flex !== undefined) stmt.flex = flex;
+  if (abduct !== undefined) stmt.abduct = abduct;
+  if (twist !== undefined) stmt.twist = twist;
+  return stmt;
+}
+
+function armsForward(): JointPoseStmt[] {
+  return [
+    jointAt("l_upper_arm", 58, 16),
+    jointAt("l_forearm", 30),
+    jointAt("r_upper_arm", 58, 16),
+    jointAt("r_forearm", 30),
+  ];
+}
+
+function handsByEars(): JointPoseStmt[] {
+  return [
+    jointAt("l_upper_arm", 8, 168),
+    jointAt("l_forearm", 18),
+    jointAt("r_upper_arm", 8, 168),
+    jointAt("r_forearm", 18),
+  ];
+}
+
+function kneeLift(side: "l" | "r"): JointPoseStmt[] {
+  return [jointAt(`${side}_thigh`, 68), jointAt(`${side}_shin`, 95)];
+}
+
+function normalizePhrase(line: string): string {
+  return line
+    .toLowerCase()
+    .replace(/[.,!?;:]/g, " ")
+    .replace(/\b(the|a|an|please|to)\b/g, " ")
+    .replace(/\bpalms\b/g, "palm")
+    .replace(/\bfists\b/g, "fist")
+    .replace(/\bsword fingers\b/g, "sword")
+    .replace(/\bsword finger\b/g, "sword")
+    .replace(/\bopen palm\b/g, "palm")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+const SHAPE_WORD = "(palm|zhang|fist|quan|sword|jianzhi)";
+
+function shapeFromWord(word: string): HandShape | null {
+  return parseHandShapeToken(word);
+}
+
+function sidesOf(word: string): HandSide[] | null {
+  if (word === "both") return ["left", "right"];
+  const side = parseHandSideToken(word);
+  return side ? [side] : null;
+}
+
 /**
- * Pose grammar v1 (degrees):
- *
- * ```
- * reset
- * joint l_upper_arm flex 165 abduct 12
- * joint l_forearm flex 25
- * ```
- *
- * Lines starting with `#` are comments. `reset` clears all joint angles.
+ * Plain phrases compile to the same joint / hand statements.
+ * Returns null when the line is not a phrase (try the joint syntax).
+ */
+function compilePhrase(line: string): { statements: PoseStmt[] } | { error: string } | null {
+  let text = normalizePhrase(line);
+  if (/^open (left|right|both)\b/.test(text)) text = text.replace(/^open /, "");
+
+  if (/^(stand|neutral|open stance|stand open|reset)$/.test(text)) {
+    return { statements: [{ kind: "reset" }] };
+  }
+  if (/^(hands by ears|arms up|arms overhead|raise both arms|raise arms)$/.test(text)) {
+    return { statements: handsByEars() };
+  }
+  if (/^(arms forward|bring arms forward)$/.test(text)) {
+    return { statements: armsForward() };
+  }
+
+  let match = text.match(/^(raise|lift) (left|right|both) knees?$/);
+  if (match) {
+    const sides = match[2] === "both" ? (["l", "r"] as const) : match[2] === "left" ? (["l"] as const) : (["r"] as const);
+    return { statements: sides.flatMap((side) => kneeLift(side)) };
+  }
+
+  match = text.match(/^(bend|flex) (left|right) elbow(?: (-?\d+(?:\.\d+)?))?$/);
+  if (match) {
+    const prefix = match[2] === "left" ? "l" : "r";
+    const deg = match[3] ? Number(match[3]) : 40;
+    return { statements: [jointAt(`${prefix}_forearm`, deg)] };
+  }
+
+  match = text.match(/^(raise|lift) (left|right) arm(?: (-?\d+(?:\.\d+)?))?$/);
+  if (match) {
+    const prefix = match[2] === "left" ? "l" : "r";
+    const deg = match[3] ? Number(match[3]) : 70;
+    return { statements: [jointAt(`${prefix}_upper_arm`, deg, 16)] };
+  }
+
+  match = text.match(new RegExp(`^(left|right|both)(?: hand| hands)? ${SHAPE_WORD}$`));
+  if (!match) match = text.match(new RegExp(`^${SHAPE_WORD}(?: (left|right|both))?$`));
+  if (match) {
+    const leadingShape = parseHandShapeToken(match[1]);
+    const shapeWord = leadingShape ? match[1] : match[2];
+    const sideWord = leadingShape ? (match[2] ?? "both") : match[1];
+    const shape = shapeFromWord(shapeWord);
+    const sides = sidesOf(sideWord);
+    if (!shape || !sides) return { error: `Unknown hand phrase "${line.trim()}"` };
+    return {
+      statements: sides.map((side) => ({ kind: "hand", side, shape })),
+    };
+  }
+
+  if (/^(stand|neutral|raise|lift|bend|flex|arms|hands|bring|left|right|both|palm|fist|sword|make|open)\b/.test(text)) {
+    return {
+      error:
+        'Try "stand", "raise left knee", "hands by the ears", "arms forward", "both palms", "left fist", or "sword fingers"',
+    };
+  }
+  return null;
+}
+
+/**
+ * Pose lines. Phrases ("raise left knee", "both palms") or joint degrees.
+ * Lines starting with `#` are comments. `stand` / `reset` clears angles.
  */
 export function parsePoseGrammar(source: string): ParseResult {
   const statements: PoseProgram["statements"] = [];
@@ -61,6 +173,15 @@ export function parsePoseGrammar(source: string): ParseResult {
     const lineNo = i + 1;
     const trimmed = raw.trim();
     if (!trimmed || trimmed.startsWith("#")) continue;
+
+    const phrase = compilePhrase(trimmed);
+    if (phrase && "error" in phrase) {
+      return { ok: false, error: phrase.error, line: lineNo };
+    }
+    if (phrase) {
+      statements.push(...phrase.statements);
+      continue;
+    }
 
     const parts = trimmed.split(/\s+/);
     const head = parts[0].toLowerCase();
@@ -90,7 +211,7 @@ export function parsePoseGrammar(source: string): ParseResult {
     if (head !== "joint") {
       return {
         ok: false,
-        error: `Expected "joint", "hand", or "reset", got "${parts[0]}"`,
+        error: `Unrecognized line "${trimmed}". Try "raise left knee" or "both palms", or a joint line.`,
         line: lineNo,
       };
     }
@@ -142,42 +263,34 @@ export function parsePoseGrammar(source: string): ParseResult {
   return { ok: true, program: { statements } };
 }
 
-export const EXAMPLE_NEUTRAL = `# Neutral 开步 (preset angles applied on reset)
-reset
+export const EXAMPLE_NEUTRAL = `# Neutral 开步
+stand
 `;
 
-export const EXAMPLE_HANDS_BY_EARS = `# Arms up beside the ears (+abduct = away from body, toward overhead)
-reset
-joint l_upper_arm abduct 168 flex 8
-joint l_forearm flex 18
-joint r_upper_arm abduct 168 flex 8
-joint r_forearm flex 18
+export const EXAMPLE_HANDS_BY_EARS = `# Arms up beside the ears
+stand
+hands by the ears
 `;
 
 export const EXAMPLE_LEFT_KNEE = `# Left knee lift
-reset
-joint l_thigh flex 68
-joint l_shin flex 95
-`;
-
-const ARMS_FORWARD = `reset
-joint l_upper_arm flex 58 abduct 16
-joint l_forearm flex 30
-joint r_upper_arm flex 58 abduct 16
-joint r_forearm flex 30
+stand
+raise left knee
 `;
 
 export const EXAMPLE_PALM = `# 掌 — open palm
-${ARMS_FORWARD}hand left palm
-hand right palm
+stand
+arms forward
+both palms
 `;
 
 export const EXAMPLE_FIST = `# 拳 — fist
-${ARMS_FORWARD}hand left fist
-hand right fist
+stand
+arms forward
+both fists
 `;
 
-export const EXAMPLE_SWORD = `# 剑指 — index and middle straight, ring and pinky curled
-${ARMS_FORWARD}hand left sword
-hand right sword
+export const EXAMPLE_SWORD = `# 剑指 — index and middle straight
+stand
+arms forward
+sword fingers
 `;

@@ -24,8 +24,7 @@ app.innerHTML = `
     <aside class="panel">
       <h1>Wooden dummy — pose grammar</h1>
       <p class="lede">
-        Frontend-only: Three.js (CDN) + procedural <code>THREE.Bone</code> /
-        <code>SkinnedMesh</code> figurine. Edit the text program and apply.
+        Write a pose in plain lines, then apply. Joint angles still work when you need them.
       </p>
       <label for="grammar">Pose program</label>
       <textarea id="grammar" class="grammar" spellcheck="false"></textarea>
@@ -39,7 +38,7 @@ app.innerHTML = `
         <button type="button" id="ex-sword">剑指 Sword</button>
       </div>
       <p id="status" class="status" aria-live="polite"></p>
-      <p class="joint-list">hand left|right palm|fist|sword · joints include fingers (${JOINT_IDS.length})</p>
+      <p class="joint-list">stand · raise left knee · hands by the ears · arms forward · both palms · left fist · sword fingers · or joint lines (${JOINT_IDS.length} joints)</p>
     </aside>
     <div class="viewport-wrap" id="viewport">
       <span class="viewport-hint">Drag to orbit · scroll to zoom</span>

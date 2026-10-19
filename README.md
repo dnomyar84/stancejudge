@@ -16,18 +16,32 @@ npm run dev
 
 Open http://127.0.0.1:4321/
 
-## Pose grammar (v1)
+## Pose grammar
 
-Degrees, one statement per line. `#` starts a comment.
+One line per action. `#` starts a comment.
 
 ```
-reset
-joint l_upper_arm flex 58 abduct 16
-hand left palm
-hand right sword
+stand
+arms forward
+both palms
+raise left knee
+hands by the ears
+left fist
+sword fingers
 ```
 
-Hand shapes (武术): `hand left|right palm|fist|sword`
+| Phrase | Pose |
+|--------|------|
+| `stand` | Neutral 开步 |
+| `raise left knee` / `raise right knee` | Thigh lifts, knee folds back |
+| `hands by the ears` | Both arms overhead |
+| `arms forward` | Both arms in front |
+| `both palms`, `left palm`, `right fist` | 掌 / 拳 |
+| `sword fingers` | 剑指 on both hands |
+| `bend left elbow 40` | Elbow flexion in degrees |
+| `raise right arm 70` | Shoulder flexion in degrees |
+
+The precise form still works: `joint l_upper_arm flex 58 abduct 16` and `hand left sword`.
 
 | Token | Shape |
 |-------|--------|
