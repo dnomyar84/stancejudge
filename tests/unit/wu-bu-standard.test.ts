@@ -41,6 +41,19 @@ describe("五步拳国标左式定势", () => {
     expect(buildWuBuCoachSkeleton("wbq-07")).toEqual(skeletonPuBuChuanZhangDing());
   });
 
+  it("wbq-02…09 choreography phases include leg/hand cues", () => {
+    const coach = getRoutineVisualCoach("wu-bu-quan");
+    const moves = coach!.moves.filter((m) => m.moveId !== "wbq-01");
+    for (const m of moves) {
+      const withCues = m.phases.filter((p) => p.cues.length > 0);
+      expect(withCues.length).toBeGreaterThan(0);
+      const legOrHand = m.phases.some((p) =>
+        p.cues.some((c) => c.layer === "legs" || c.layer === "hands"),
+      );
+      expect(legOrHand).toBe(true);
+    }
+  });
+
   it("visual coach chains all nine syllabus moves", () => {
     const coach = getRoutineVisualCoach("wu-bu-quan");
     expect(coach?.moves).toHaveLength(wuBuQuan.moves.length);
