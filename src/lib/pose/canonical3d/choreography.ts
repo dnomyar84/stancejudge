@@ -153,7 +153,10 @@ export function sampleMoveChoreography(
     to.pose,
     Math.max(0, Math.min(1, segT)),
   );
-  const cueIds = to.activeCueIds ?? [];
+  const cueIds =
+    segT < 0.5
+      ? (from.activeCueIds ?? to.activeCueIds ?? [])
+      : (to.activeCueIds ?? from.activeCueIds ?? []);
   const activeCues = phase.cues.filter((c) => cueIds.includes(c.id));
 
   return {

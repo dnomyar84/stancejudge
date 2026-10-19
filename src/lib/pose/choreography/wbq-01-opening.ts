@@ -6,6 +6,7 @@ import {
   handBaoQuanAtSide,
   type ExtendedCoachPose,
 } from "../coach-figure/extended-pose";
+import { ANATOMY } from "../coach-figure/anatomy";
 import {
   baseStandingTorso,
   legsFeetTogether,
@@ -13,15 +14,17 @@ import {
 } from "../coach-figure/skeleton";
 import { v } from "../coach-figure/vec3";
 
+/** Arms at sides, palms toward body — elbows beside torso, not behind. */
 function armsHangPalmsIn(): Partial<
   import("../coach-figure/skeleton").CoachSkeleton
 > {
-  const hy = 0.52;
+  const sy = ANATOMY.shoulderUp;
+  const sw = ANATOMY.shoulderHalfWidth;
   return {
-    leftElbow: v(-0.15, -0.04, hy + 0.14),
-    rightElbow: v(0.15, -0.04, hy + 0.14),
-    leftWrist: v(-0.13, 0.02, hy - 0.04),
-    rightWrist: v(0.13, 0.02, hy - 0.04),
+    leftElbow: v(-(sw + 0.04), 0.02, sy - 0.14),
+    rightElbow: v(sw + 0.04, 0.02, sy - 0.14),
+    leftWrist: v(-sw, 0.04, sy - 0.28),
+    rightWrist: v(sw, 0.04, sy - 0.28),
   };
 }
 

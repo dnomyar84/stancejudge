@@ -11,6 +11,13 @@ describe("wbq-01 opening choreography", () => {
     ]);
   });
 
+  it("起势 start has arms at sides (not behind torso in depth)", () => {
+    const start = sampleMoveChoreography(wbq01OpeningChoreography, 0);
+    expect(start.pose.skeleton.leftElbow.fwd).toBeGreaterThanOrEqual(0);
+    expect(start.pose.skeleton.rightElbow.fwd).toBeGreaterThanOrEqual(0);
+    expect(start.activeCues[0]?.labelZh).toBe("开步站立");
+  });
+
   it("interpolates feet closer at mid 并步", () => {
     const start = sampleMoveChoreography(wbq01OpeningChoreography, 0);
     const mid = sampleMoveChoreography(wbq01OpeningChoreography, 0.2);
