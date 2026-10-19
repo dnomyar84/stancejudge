@@ -44,3 +44,11 @@ npm run preview
 ```
 
 Output is in `dist/` (still uses CDN for Three.js at runtime).
+
+## GitHub Pages
+
+```bash
+npm run deploy:pages
+```
+
+Live site: https://dnomyar84.github.io/stancejudge/

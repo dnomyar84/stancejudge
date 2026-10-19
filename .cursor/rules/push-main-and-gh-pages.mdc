@@ -1,0 +1,33 @@
+---
+description: Push finished work to main and publish GitHub Pages after every shippable change
+alwaysApply: true
+---
+
+# Ship to main + GitHub Pages
+
+When you finish a **shippable** change (feature, fix, or user-visible update), **always**:
+
+1. **Verify** — `npm run build` succeeds.
+2. **Commit** on `main` with a clear message.
+3. **Push** — `git push -u origin main` (or `github` if that is the configured remote).
+4. **Publish Pages** — `npm run deploy:pages` (builds `dist/`, force-pushes `gh-pages`).
+
+Do **not** skip Pages deploy because the user will check the live site. Mention the site URL after deploy:
+
+`https://dnomyar84.github.io/stancejudge/`
+
+## When to skip
+
+- User explicitly says not to push or deploy.
+- Exploratory/local-only work with no commit yet (still commit before ending a completed task).
+
+## If deploy fails
+
+- Fix the build, retry `npm run deploy:pages` once.
+- Report the error; do not claim the site is updated.
+
+## Git notes
+
+- Default branch: `main`.
+- Pages branch: `gh-pages` (static `dist/` only, includes `.nojekyll`).
+- Three.js stays on CDN via `index.html` import map — do not bundle it into Pages output.
