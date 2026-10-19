@@ -171,14 +171,16 @@ function buildHand(
   side: "l" | "r",
   mk: (id: JointId, x?: number, y?: number, z?: number) => THREE.Bone,
 ) {
-  const s = side === "l" ? 1 : -1;
+  // Thumb is radial / lateral: +X on the figure's left hand, −X on the right.
+  // Index sits beside the thumb; pinky is toward the midline.
+  const lateral = side === "l" ? 1 : -1;
   box(hand, 0.08, 0.095, 0.022, 0, -0.05, 0, WOOD);
 
   const fingers: Array<[string, number, number, number]> = [
-    ["index", s * -0.014, -0.095, 0.052],
+    ["index", lateral * 0.016, -0.095, 0.052],
     ["middle", 0, -0.098, 0.058],
-    ["ring", s * 0.015, -0.094, 0.05],
-    ["pinky", s * 0.03, -0.088, 0.042],
+    ["ring", lateral * -0.014, -0.094, 0.05],
+    ["pinky", lateral * -0.028, -0.088, 0.042],
   ];
   for (const [name, x, y, len] of fingers) {
     const prox = mk(`${side}_${name}` as JointId, x, y, 0.006);
@@ -189,8 +191,8 @@ function buildHand(
     stickDown(tip, len * 0.75, 0.0075, SKIN);
   }
 
-  const thumb = mk(`${side}_thumb` as JointId, s * 0.04, -0.028, 0.014);
-  const thumbTip = mk(`${side}_thumb_tip` as JointId, s * 0.014, -0.036, 0.008);
+  const thumb = mk(`${side}_thumb` as JointId, lateral * 0.042, -0.028, 0.014);
+  const thumbTip = mk(`${side}_thumb_tip` as JointId, lateral * 0.016, -0.036, 0.008);
   hand.add(thumb);
   thumb.add(thumbTip);
   stickToward(thumb, thumbTip, 0.01, WOOD);
@@ -218,22 +220,22 @@ export function createWoodenDummy(): WoodenDummy {
   const head = mk("head", 0, 0.1, 0);
 
   // Limb bone sits at the joint that swings the segment below it.
-  const lShoulder = mk("l_shoulder", -0.2, 0.02, 0);
+  const lShoulder = mk("l_shoulder", 0.2, 0.02, 0);
   const lUpper = mk("l_upper_arm", 0, 0, 0);
   const lFore = mk("l_forearm", 0, -0.32, 0);
   const lHand = mk("l_hand", 0, -0.26, 0);
 
-  const rShoulder = mk("r_shoulder", 0.2, 0.02, 0);
+  const rShoulder = mk("r_shoulder", -0.2, 0.02, 0);
   const rUpper = mk("r_upper_arm", 0, 0, 0);
   const rFore = mk("r_forearm", 0, -0.32, 0);
   const rHand = mk("r_hand", 0, -0.26, 0);
 
-  const lHip = mk("l_hip", -0.1, -0.02, 0);
+  const lHip = mk("l_hip", 0.1, -0.02, 0);
   const lThigh = mk("l_thigh", 0, 0, 0);
   const lShin = mk("l_shin", 0, -0.44, 0);
   const lFoot = mk("l_foot", 0, -0.42, 0.02);
 
-  const rHip = mk("r_hip", 0.1, -0.02, 0);
+  const rHip = mk("r_hip", -0.1, -0.02, 0);
   const rThigh = mk("r_thigh", 0, 0, 0);
   const rShin = mk("r_shin", 0, -0.44, 0);
   const rFoot = mk("r_foot", 0, -0.42, 0.02);

@@ -72,7 +72,7 @@ function torso(id: JointId): JointCatalogEntry {
   };
 }
 
-/** Left side: +abduct swings the limb away from the body (out to −X). */
+/** Figure's left (+X, viewer's right). +abduct swings away from the midline. */
 function leftLimb(id: JointId): JointCatalogEntry {
   return {
     id,
@@ -80,12 +80,12 @@ function leftLimb(id: JointId): JointCatalogEntry {
     abduct: 2,
     twist: 1,
     flexSign: -1,
-    abductSign: -1,
+    abductSign: 1,
     twistSign: 1,
   };
 }
 
-/** Right side: +abduct swings the limb away from the body (out to +X). */
+/** Figure's right (−X, viewer's left). +abduct swings away from the midline. */
 function rightLimb(id: JointId): JointCatalogEntry {
   return {
     id,
@@ -93,7 +93,7 @@ function rightLimb(id: JointId): JointCatalogEntry {
     abduct: 2,
     twist: 1,
     flexSign: -1,
-    abductSign: 1,
+    abductSign: -1,
     twistSign: -1,
   };
 }
