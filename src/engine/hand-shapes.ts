@@ -12,25 +12,25 @@ type Curl = { flex: number; abduct?: number; twist?: number };
 /** +flex curls the digit into the palm. Sword = 剑指 (index + middle straight). */
 const SHAPES: Record<HandShape, Record<(typeof DIGITS)[number], { prox: Curl; tip: Curl }>> = {
   palm: {
-    thumb: { prox: { flex: 6, abduct: 22 }, tip: { flex: 4 } },
-    index: { prox: { flex: 0, abduct: 6 }, tip: { flex: 0 } },
+    thumb: { prox: { flex: 22, abduct: -18 }, tip: { flex: 16 } },
+    index: { prox: { flex: 0 }, tip: { flex: 0 } },
     middle: { prox: { flex: 0 }, tip: { flex: 0 } },
-    ring: { prox: { flex: 0, abduct: -4 }, tip: { flex: 0 } },
-    pinky: { prox: { flex: 0, abduct: -8 }, tip: { flex: 0 } },
+    ring: { prox: { flex: 0 }, tip: { flex: 0 } },
+    pinky: { prox: { flex: 0 }, tip: { flex: 0 } },
   },
   fist: {
-    thumb: { prox: { flex: 62, abduct: -16 }, tip: { flex: 48 } },
-    index: { prox: { flex: 92 }, tip: { flex: 100 } },
-    middle: { prox: { flex: 94 }, tip: { flex: 100 } },
-    ring: { prox: { flex: 94 }, tip: { flex: 100 } },
-    pinky: { prox: { flex: 90 }, tip: { flex: 96 } },
+    thumb: { prox: { flex: 78, abduct: -48, twist: 12 }, tip: { flex: 85 } },
+    index: { prox: { flex: 95 }, tip: { flex: 100 } },
+    middle: { prox: { flex: 95 }, tip: { flex: 100 } },
+    ring: { prox: { flex: 95 }, tip: { flex: 100 } },
+    pinky: { prox: { flex: 95 }, tip: { flex: 100 } },
   },
   sword: {
-    thumb: { prox: { flex: 50, abduct: 6 }, tip: { flex: 30 } },
-    index: { prox: { flex: 0, abduct: 2 }, tip: { flex: 0 } },
-    middle: { prox: { flex: 0, abduct: -2 }, tip: { flex: 0 } },
-    ring: { prox: { flex: 92 }, tip: { flex: 100 } },
-    pinky: { prox: { flex: 92 }, tip: { flex: 100 } },
+    thumb: { prox: { flex: 58, abduct: -42 }, tip: { flex: 55 } },
+    index: { prox: { flex: 0 }, tip: { flex: 0 } },
+    middle: { prox: { flex: 0 }, tip: { flex: 0 } },
+    ring: { prox: { flex: 95 }, tip: { flex: 100 } },
+    pinky: { prox: { flex: 95 }, tip: { flex: 100 } },
   },
 };
 

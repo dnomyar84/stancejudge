@@ -41,8 +41,8 @@ const ROM: Record<string, Rom> = {
 
 const FINGER: Rom = { flex: [-15, 95], abduct: [-12, 20], twist: [-5, 5] };
 const FINGER_TIP: Rom = { flex: [0, 100], abduct: [0, 0], twist: [0, 0] };
-const THUMB: Rom = { flex: [-15, 70], abduct: [-25, 40], twist: [-20, 20] };
-const THUMB_TIP: Rom = { flex: [0, 80], abduct: [0, 0], twist: [0, 0] };
+const THUMB: Rom = { flex: [-15, 80], abduct: [-55, 40], twist: [-25, 25] };
+const THUMB_TIP: Rom = { flex: [0, 90], abduct: [0, 0], twist: [0, 0] };
 
 function romFor(id: JointId): Rom {
   const name = id.replace(/^[lr]_/, "");

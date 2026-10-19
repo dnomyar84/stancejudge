@@ -191,8 +191,8 @@ function buildHand(
     stickDown(tip, len * 0.75, 0.0075, SKIN);
   }
 
-  const thumb = mk(`${side}_thumb` as JointId, lateral * 0.042, -0.028, 0.014);
-  const thumbTip = mk(`${side}_thumb_tip` as JointId, lateral * 0.016, -0.036, 0.008);
+  const thumb = mk(`${side}_thumb` as JointId, lateral * 0.032, -0.035, 0.01);
+  const thumbTip = mk(`${side}_thumb_tip` as JointId, lateral * 0.004, -0.034, 0.004);
   hand.add(thumb);
   thumb.add(thumbTip);
   stickToward(thumb, thumbTip, 0.01, WOOD);
