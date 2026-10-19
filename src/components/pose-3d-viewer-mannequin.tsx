@@ -162,6 +162,28 @@ export function Pose3DMannequinViewer({
         const groundLift = -GROUND_LEVEL;
         mannequin = new Male(1.75) as MannequinFigure;
         scene.add(mannequin);
+        let cameraFramed = false;
+
+        const frameMannequin = () => {
+          if (!mannequin || !camera || !controls) return;
+          mannequin.updateMatrixWorld(true);
+          const box = new THREE.Box3().setFromObject(mannequin);
+          if (box.isEmpty()) return;
+          const center = box.getCenter(new THREE.Vector3());
+          const size = box.getSize(new THREE.Vector3());
+          const span = Math.max(size.x, size.y, size.z, 0.5);
+          controls.target.copy(center);
+          camera.position.set(
+            center.x,
+            center.y + span * 0.12,
+            center.z + span * 1.55,
+          );
+          camera.near = Math.max(0.02, span / 80);
+          camera.far = Math.max(40, span * 20);
+          camera.updateProjectionMatrix();
+          controls.update();
+          cameraFramed = true;
+        };
 
         const rebuildFigure = (
           p: ExtendedCoachPose | null,
@@ -173,10 +195,11 @@ export function Pose3DMannequinViewer({
           >[0];
           if (fig) {
             applyCoachFigurinePoseToMannequin(target, fig, { groundLift });
-            return;
+          } else if (p) {
+            applyCoachPoseToMannequin(target, p, groundLift);
           }
-          if (!p) return;
-          applyCoachPoseToMannequin(target, p, groundLift);
+          mannequin.updateMatrixWorld(true);
+          if (!cameraFramed) frameMannequin();
         };
 
         rebuildRef.current = rebuildFigure;

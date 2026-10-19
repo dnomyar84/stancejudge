@@ -3,7 +3,7 @@
 import "@/lib/motion/disciplines-init";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActiveCuesCard } from "@/components/active-cues-card";
-import { Pose3DCoachMeshViewer } from "@/components/pose-3d-viewer-coach-mesh";
+import { Pose3DMannequinViewer } from "@/components/pose-3d-viewer-mannequin";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -118,8 +118,9 @@ export function WuBuQuanVisualCoach({ onBack }: WuBuQuanVisualCoachProps) {
             <CardDescription>{sampled?.keyframeLabelZh}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3 px-4 pb-4">
-            <Pose3DCoachMeshViewer
+            <Pose3DMannequinViewer
               pose={sampled?.pose ?? null}
+              figurine={sampled?.figurine ?? null}
               horizontalOrbit
               className="h-[min(58vh,480px)] w-full touch-pan-y rounded-lg border border-border/60"
             />
