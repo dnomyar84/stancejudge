@@ -5,7 +5,10 @@ import type * as THREE from "three";
 const JOINT_RADIUS = 0.035;
 const BONE_RADIUS = 0.018;
 
-type Limb = [keyof ReturnType<typeof coachWorldTargets>, keyof ReturnType<typeof coachWorldTargets>];
+type Limb = [
+  keyof ReturnType<typeof coachWorldTargets>,
+  keyof ReturnType<typeof coachWorldTargets>,
+];
 
 const LIMBS: Limb[] = [
   ["leftShoulder", "leftElbow"],
@@ -22,25 +25,27 @@ const LIMBS: Limb[] = [
   ["chest", "nose"],
 ];
 
-export type CoachSceneOverlay = THREE.Group;
+const JOINT_KEYS = [
+  ...new Set(LIMBS.flatMap(([a, b]) => [a, b])),
+] as (keyof ReturnType<typeof coachWorldTargets>)[];
+
+export type CoachSceneOverlay = {
+  root: THREE.Group;
+  joints: Map<string, THREE.Mesh>;
+  bones: THREE.Mesh[];
+  dispose: () => void;
+};
 
 export function createCoachSceneOverlay(
   THREE: typeof import("three"),
 ): CoachSceneOverlay {
-  const group = new THREE.Group();
-  group.name = "coach-scene-overlay";
-  return group;
-}
+  const root = new THREE.Group();
+  root.name = "coach-scene-overlay";
 
-export function updateCoachSceneOverlay(
-  THREE: typeof import("three"),
-  group: CoachSceneOverlay,
-  pose: ExtendedCoachPose | null,
-): void {
-  group.clear();
-  if (!pose) return;
+  const jointGeo = new THREE.SphereGeometry(JOINT_RADIUS, 10, 10);
+  const boneGeo = new THREE.CylinderGeometry(BONE_RADIUS, BONE_RADIUS, 1, 8);
+  boneGeo.translate(0, 0.5, 0);
 
-  const t = coachWorldTargets(THREE, pose);
   const jointMat = new THREE.MeshStandardMaterial({
     color: 0x22d3ee,
     emissive: 0x0a3040,
@@ -54,40 +59,71 @@ export function updateCoachSceneOverlay(
     roughness: 0.5,
   });
 
-  const jointMesh = (pos: THREE.Vector3) => {
-    const m = new THREE.Mesh(
-      new THREE.SphereGeometry(JOINT_RADIUS, 10, 10),
-      jointMat,
-    );
-    m.position.copy(pos);
-    return m;
+  const joints = new Map<string, THREE.Mesh>();
+  for (const key of JOINT_KEYS) {
+    const mesh = new THREE.Mesh(jointGeo, jointMat);
+    root.add(mesh);
+    joints.set(key, mesh);
+  }
+
+  const bones: THREE.Mesh[] = [];
+  for (let i = 0; i < LIMBS.length; i++) {
+    const mesh = new THREE.Mesh(boneGeo, boneMat);
+    root.add(mesh);
+    bones.push(mesh);
+  }
+
+  return {
+    root,
+    joints,
+    bones,
+    dispose: () => {
+      jointGeo.dispose();
+      boneGeo.dispose();
+      jointMat.dispose();
+      boneMat.dispose();
+    },
   };
+}
 
-  const keys = new Set<string>();
-  for (const [a, b] of LIMBS) {
-    keys.add(a);
-    keys.add(b);
+export function updateCoachSceneOverlay(
+  THREE: typeof import("three"),
+  overlay: CoachSceneOverlay,
+  pose: ExtendedCoachPose | null,
+): void {
+  if (!pose) {
+    overlay.root.visible = false;
+    return;
   }
-  for (const key of keys) {
-    const p = t[key as keyof typeof t];
-    if (p instanceof THREE.Vector3) group.add(jointMesh(p));
+  overlay.root.visible = true;
+
+  const t = coachWorldTargets(THREE, pose);
+  const up = new THREE.Vector3(0, 1, 0);
+  const dir = new THREE.Vector3();
+
+  for (const key of JOINT_KEYS) {
+    const mesh = overlay.joints.get(key);
+    const p = t[key];
+    if (mesh && p instanceof THREE.Vector3) {
+      mesh.position.copy(p);
+      mesh.visible = true;
+    }
   }
 
-  for (const [a, b] of LIMBS) {
-    const p0 = t[a as keyof typeof t] as THREE.Vector3;
-    const p1 = t[b as keyof typeof t] as THREE.Vector3;
-    const dir = p1.clone().sub(p0);
+  for (let i = 0; i < LIMBS.length; i++) {
+    const [a, b] = LIMBS[i];
+    const mesh = overlay.bones[i];
+    const p0 = t[a] as THREE.Vector3;
+    const p1 = t[b] as THREE.Vector3;
+    dir.subVectors(p1, p0);
     const len = dir.length();
-    if (len < 1e-4) continue;
-    const cyl = new THREE.Mesh(
-      new THREE.CylinderGeometry(BONE_RADIUS, BONE_RADIUS, len, 8),
-      boneMat,
-    );
-    cyl.position.copy(p0.clone().add(p1).multiplyScalar(0.5));
-    cyl.quaternion.setFromUnitVectors(
-      new THREE.Vector3(0, 1, 0),
-      dir.normalize(),
-    );
-    group.add(cyl);
+    if (len < 1e-4) {
+      mesh.visible = false;
+      continue;
+    }
+    mesh.visible = true;
+    mesh.position.copy(p0).add(p1).multiplyScalar(0.5);
+    mesh.scale.set(1, len, 1);
+    mesh.quaternion.setFromUnitVectors(up, dir.normalize());
   }
 }

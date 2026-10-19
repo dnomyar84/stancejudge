@@ -62,6 +62,7 @@ export function Pose3DViewer({
     let avatar: MixamoAvatar | null = null;
     let coachOverlay: import("@/lib/motion/coach-figure/scene-overlay").CoachSceneOverlay | null =
       null;
+    let cameraFramed = false;
     let THREE: typeof import("three") | null = null;
     let controls: import("three/examples/jsm/controls/OrbitControls.js").OrbitControls | null =
       null;
@@ -153,7 +154,7 @@ export function Pose3DViewer({
         );
 
         coachOverlay = createCoachSceneOverlay(THREE);
-        scene.add(coachOverlay);
+        scene.add(coachOverlay.root);
 
         const animate = () => {
           if (disposed || session !== sessionRef.current) return;
@@ -180,7 +181,7 @@ export function Pose3DViewer({
           if (!THREE || !avatar || !camera || !controls || !coachOverlay) return;
           const box = new THREE.Box3();
           box.expandByObject(avatar.root);
-          box.expandByObject(coachOverlay);
+          box.expandByObject(coachOverlay!.root);
           if (box.isEmpty()) {
             frameAvatarInView(THREE, avatar.root, camera, controls);
             return;
@@ -204,12 +205,18 @@ export function Pose3DViewer({
           if (!THREE || !avatar || !camera || !controls || !coachOverlay) return;
           updateCoachSceneOverlay(THREE, coachOverlay, p);
           retargetCoachPose(THREE, avatar, p);
-          frameScene();
+          if (!cameraFramed) {
+            frameScene();
+            cameraFramed = true;
+          }
         };
 
         rebuildRef.current = rebuildFigure;
         if (poseRef.current) rebuildFigure(poseRef.current);
-        else frameScene();
+        else if (!cameraFramed) {
+          frameScene();
+          cameraFramed = true;
+        }
 
         const onResize = () => {
           if (!mount || !renderer || !camera) return;
@@ -243,6 +250,7 @@ export function Pose3DViewer({
       disposed = true;
       rebuildRef.current = null;
       cancelAnimationFrame(frameId);
+      coachOverlay?.dispose();
       if (renderer) {
         renderer.dispose();
         renderer.forceContextLoss?.();
