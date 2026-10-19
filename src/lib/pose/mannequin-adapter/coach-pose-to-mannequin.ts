@@ -1,3 +1,4 @@
+import { settlePoseOnFloor } from "../coach-figure/gravity";
 import type { ExtendedCoachPose } from "../coach-figure/extended-pose";
 import type { Vec3 } from "../coach-figure/vec3";
 import * as THREE from "three";
@@ -91,7 +92,8 @@ export function applyCoachPoseToMannequin(
   /** Scene floor alignment after stepOnGround (set once per viewer). */
   groundLift = 0,
 ): void {
-  const sk = pose.skeleton;
+  const grounded = settlePoseOnFloor(pose);
+  const sk = grounded.skeleton;
   const hipMid = v3(sk.leftHip).add(v3(sk.rightHip)).multiplyScalar(0.5);
   const shoulderMid = v3(sk.leftShoulder)
     .add(v3(sk.rightShoulder))
@@ -136,8 +138,20 @@ export function applyCoachPoseToMannequin(
   const rShank = v3(sk.rightAnkle).sub(v3(sk.rightKnee));
   man.l_ankle.bend = THREE.MathUtils.clamp(-lShank.y * 30, -25, 35);
   man.r_ankle.bend = THREE.MathUtils.clamp(-rShank.y * 30, -25, 35);
-  man.l_ankle.turn = Math.atan2(pose.leftFoot.toe.lat - pose.leftFoot.heel.lat, pose.leftFoot.toe.fwd - pose.leftFoot.heel.fwd) * (180 / Math.PI) * 0.4;
-  man.r_ankle.turn = Math.atan2(pose.rightFoot.toe.lat - pose.rightFoot.heel.lat, pose.rightFoot.toe.fwd - pose.rightFoot.heel.fwd) * (180 / Math.PI) * 0.4;
+  man.l_ankle.turn =
+    Math.atan2(
+      grounded.leftFoot.toe.lat - grounded.leftFoot.heel.lat,
+      grounded.leftFoot.toe.fwd - grounded.leftFoot.heel.fwd,
+    ) *
+    (180 / Math.PI) *
+    0.4;
+  man.r_ankle.turn =
+    Math.atan2(
+      grounded.rightFoot.toe.lat - grounded.rightFoot.heel.lat,
+      grounded.rightFoot.toe.fwd - grounded.rightFoot.heel.fwd,
+    ) *
+    (180 / Math.PI) *
+    0.4;
 
   const lUpper = v3(sk.leftElbow).sub(v3(sk.leftShoulder));
   const rUpper = v3(sk.rightElbow).sub(v3(sk.rightShoulder));
@@ -160,8 +174,8 @@ export function applyCoachPoseToMannequin(
   man.l_wrist.bend = THREE.MathUtils.clamp(lFore.y * 25, -30, 40);
   man.r_wrist.bend = THREE.MathUtils.clamp(rFore.y * 25, -30, 40);
 
-  setHandShape(man, "left", pose.leftHand.shape);
-  setHandShape(man, "right", pose.rightHand.shape);
+  setHandShape(man, "left", grounded.leftHand.shape);
+  setHandShape(man, "right", grounded.rightHand.shape);
 
   man.position.x = hipMid.x * 0.9;
   man.position.z = hipMid.z * 0.9;
@@ -170,10 +184,6 @@ export function applyCoachPoseToMannequin(
   man.updateMatrixWorld(true);
 
   let rootY = man.position.y;
-  const ankleMid = v3(sk.leftAnkle).add(v3(sk.rightAnkle)).multiplyScalar(0.5);
-  if (ankleMid.y > 0.02) {
-    rootY += ankleMid.y * 0.85;
-  }
   if (groundLift !== 0) {
     rootY += groundLift;
   }

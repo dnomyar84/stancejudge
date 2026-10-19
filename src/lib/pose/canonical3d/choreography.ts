@@ -3,6 +3,7 @@ import {
   getMoveStartPose,
   totalRoutineDurationMs,
 } from "../choreography/move-boundaries";
+import { settlePoseOnFloor } from "../coach-figure/gravity";
 import type { ExtendedCoachPose } from "../coach-figure/extended-pose";
 import { lerpExtendedPose } from "../coach-figure/interpolate-pose";
 import type { StanceConstraintSet } from "./constraints";
@@ -147,7 +148,11 @@ export function sampleMoveChoreography(
   const segT = w > 0 ? (localT - acc) / w : 1;
   const from = kfs[seg];
   const to = kfs[seg + 1];
-  const pose = lerpExtendedPose(from.pose, to.pose, Math.max(0, Math.min(1, segT)));
+  const pose = lerpExtendedPose(
+    from.pose,
+    to.pose,
+    Math.max(0, Math.min(1, segT)),
+  );
   const cueIds = to.activeCueIds ?? [];
   const activeCues = phase.cues.filter((c) => cueIds.includes(c.id));
 
@@ -174,7 +179,7 @@ function frameResult(
   activeCues: ChoreographyCue[],
 ): SampledCoachFrame {
   return {
-    pose: kf.pose,
+    pose: settlePoseOnFloor(kf.pose),
     moveId: spec.moveId,
     moveNameZh: spec.nameZh,
     phaseId: phase.id,

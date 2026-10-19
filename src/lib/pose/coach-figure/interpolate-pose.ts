@@ -1,4 +1,5 @@
 import type { ExtendedCoachPose, FootEndEffector, HandEndEffector } from "./extended-pose";
+import { settlePoseOnFloor } from "./gravity";
 import type { CoachSkeleton } from "./skeleton";
 import { lerp3, type Vec3 } from "./vec3";
 
@@ -46,11 +47,11 @@ export function lerpExtendedPose(
   b: ExtendedCoachPose,
   t: number,
 ): ExtendedCoachPose {
-  return {
+  return settlePoseOnFloor({
     skeleton: lerpSk(a.skeleton, b.skeleton, t),
     leftHand: lerpHand(a.leftHand, b.leftHand, t),
     rightHand: lerpHand(a.rightHand, b.rightHand, t),
     leftFoot: lerpFoot(a.leftFoot, b.leftFoot, t),
     rightFoot: lerpFoot(a.rightFoot, b.rightFoot, t),
-  };
+  });
 }
