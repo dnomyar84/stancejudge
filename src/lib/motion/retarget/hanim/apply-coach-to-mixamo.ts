@@ -8,6 +8,9 @@ import {
 import { indexMixamoBones, type MixamoBoneMap } from "./mixamo-bones";
 import type * as THREE from "three";
 
+/** glTF bind height for Mixamo Xbot in this repo (~0.018 m). */
+export const MIXAMO_TARGET_HEIGHT_M = 1.75;
+
 export type MixamoAvatar = {
   root: THREE.Group;
   mesh: THREE.SkinnedMesh;
@@ -17,7 +20,24 @@ export type MixamoAvatar = {
   leftArm: ReturnType<typeof captureLimbBind>;
   rightArm: ReturnType<typeof captureLimbBind>;
   bindHipsY: number;
+  sceneScale: number;
 };
+
+function brightenAvatarMaterials(root: THREE.Object3D): void {
+  root.traverse((obj) => {
+    const mesh = obj as THREE.Mesh;
+    if (!mesh.isMesh || !mesh.material) return;
+    const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+    for (const mat of mats) {
+      const standard = mat as THREE.MeshStandardMaterial;
+      if (standard.color) {
+        standard.color.offsetHSL(0, 0, 0.08);
+      }
+      standard.metalness = Math.min(standard.metalness ?? 0, 0.15);
+      standard.roughness = Math.max(standard.roughness ?? 0.5, 0.45);
+    }
+  });
+}
 
 export function prepareMixamoAvatar(
   THREE: typeof import("three"),
@@ -32,6 +52,18 @@ export function prepareMixamoAvatar(
   const mesh = skinned;
 
   mesh.frustumCulled = false;
+  brightenAvatarMaterials(scene);
+  scene.updateMatrixWorld(true);
+  const bindBox = new THREE.Box3().setFromObject(scene);
+  const bindSize = bindBox.getSize(new THREE.Vector3());
+  const bindHeight = bindSize.y;
+  let sceneScale = 1;
+  if (bindHeight > 1e-6) {
+    sceneScale = MIXAMO_TARGET_HEIGHT_M / bindHeight;
+    scene.scale.setScalar(sceneScale);
+    scene.updateMatrixWorld(true);
+  }
+
   const bones = indexMixamoBones(mesh.skeleton);
   mesh.skeleton.pose();
 
@@ -71,30 +103,32 @@ export function prepareMixamoAvatar(
     leftArm,
     rightArm,
     bindHipsY,
+    sceneScale,
   };
 }
 
-function aimBoneWorldDirection(
+/** Fit camera to the retargeted figure (world space). */
+export function frameAvatarInView(
   THREE: typeof import("three"),
-  bone: THREE.Bone,
-  bindDirLocal: THREE.Vector3,
-  fromWorld: THREE.Vector3,
-  toWorld: THREE.Vector3,
+  root: THREE.Object3D,
+  camera: THREE.PerspectiveCamera,
+  controls: { target: THREE.Vector3; update: () => void },
 ): void {
-  const dir = toWorld.clone().sub(fromWorld);
-  if (dir.lengthSq() < 1e-10) return;
-  const parent = bone.parent;
-  if (!parent) return;
-  parent.updateMatrixWorld(true);
-  const invParent = new THREE.Quaternion();
-  parent.getWorldQuaternion(invParent).invert();
-  const localDir = dir.normalize().applyQuaternion(invParent);
-  if (bindDirLocal.lengthSq() < 1e-8) return;
-  const q = new THREE.Quaternion().setFromUnitVectors(
-    bindDirLocal.clone().normalize(),
-    localDir,
+  const box = new THREE.Box3().setFromObject(root);
+  if (box.isEmpty()) return;
+  const center = box.getCenter(new THREE.Vector3());
+  const size = box.getSize(new THREE.Vector3());
+  const span = Math.max(size.x, size.y, size.z, 0.5);
+  controls.target.copy(center);
+  camera.position.set(
+    center.x,
+    center.y + span * 0.12,
+    center.z + span * 1.55,
   );
-  bone.quaternion.copy(q);
+  camera.near = Math.max(0.02, span / 50);
+  camera.far = Math.max(50, span * 20);
+  camera.updateProjectionMatrix();
+  controls.update();
 }
 
 export function applyCoachPoseToMixamo(
@@ -106,6 +140,7 @@ export function applyCoachPoseToMixamo(
   const { bones, mesh } = avatar;
 
   avatar.root.position.set(0, 0, 0);
+  avatar.root.rotation.y = Math.PI;
   mesh.skeleton.pose();
 
   const hipsParent = bones.hips.parent;
@@ -150,44 +185,15 @@ export function applyCoachPoseToMixamo(
     "elbow",
   );
 
-  bones.hips.updateMatrixWorld(true);
-  const hipsWorld = new THREE.Vector3();
-  bones.hips.getWorldPosition(hipsWorld);
-  aimBoneWorldDirection(
-    THREE,
-    bones.spine,
-    new THREE.Vector3(0, 1, 0),
-    hipsWorld,
-    t.chest,
-  );
-  bones.spine.updateMatrixWorld(true);
-  const spine1World = new THREE.Vector3();
-  bones.spine1.getWorldPosition(spine1World);
-  aimBoneWorldDirection(
-    THREE,
-    bones.spine1,
-    new THREE.Vector3(0, 1, 0),
-    spine1World,
-    t.chest,
-  );
-  bones.spine1.updateMatrixWorld(true);
-  const neckBase = new THREE.Vector3();
-  bones.spine2.getWorldPosition(neckBase);
-  aimBoneWorldDirection(
-    THREE,
-    bones.neck,
-    new THREE.Vector3(0, 1, 0),
-    neckBase,
-    t.nose,
-  );
-
   mesh.skeleton.update();
   avatar.root.updateMatrixWorld(true);
 
   const box = new THREE.Box3().setFromObject(avatar.root);
-  const floorDelta = -box.min.y;
-  if (Math.abs(floorDelta) > 1e-5) {
-    avatar.root.position.y += floorDelta;
+  if (!box.isEmpty()) {
+    const floorDelta = -box.min.y;
+    if (Math.abs(floorDelta) > 1e-5) {
+      avatar.root.position.y += floorDelta;
+    }
   }
   mesh.skeleton.update();
   avatar.root.updateMatrixWorld(true);

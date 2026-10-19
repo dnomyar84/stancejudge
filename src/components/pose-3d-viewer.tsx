@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { ExtendedCoachPose } from "@/lib/pose/coach-figure/extended-pose";
+import { frameAvatarInView } from "@/lib/motion/retarget/hanim/apply-coach-to-mixamo";
 import {
   loadMixamoAvatar,
   retargetCoachPose,
@@ -25,6 +26,7 @@ export function Pose3DViewer({
   const mountRef = useRef<HTMLDivElement>(null);
   const poseRef = useRef(pose);
   const rebuildRef = useRef<RebuildFn | null>(null);
+  const sessionRef = useRef(0);
   const [viewerState, setViewerState] = useState<"loading" | "ready" | "error">(
     "loading",
   );
@@ -49,11 +51,16 @@ export function Pose3DViewer({
     const mount = mountRef.current;
     if (!mount) return;
 
+    const session = ++sessionRef.current;
     let disposed = false;
     let renderer: import("three").WebGLRenderer | null = null;
     let frameId = 0;
     let avatar: MixamoAvatar | null = null;
     let THREE: typeof import("three") | null = null;
+    let controls: import("three/examples/jsm/controls/OrbitControls.js").OrbitControls | null =
+      null;
+    let camera: import("three").PerspectiveCamera | null = null;
+    let framed = false;
 
     void (async () => {
       try {
@@ -62,7 +69,7 @@ export function Pose3DViewer({
           "three/examples/jsm/controls/OrbitControls.js"
         );
 
-        if (disposed) return;
+        if (disposed || session !== sessionRef.current) return;
 
         let width = mount.clientWidth;
         let height = mount.clientHeight;
@@ -74,7 +81,7 @@ export function Pose3DViewer({
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x0a1218);
 
-        const camera = new THREE.PerspectiveCamera(42, width / height, 0.05, 50);
+        camera = new THREE.PerspectiveCamera(42, width / height, 0.05, 50);
         camera.position.set(0, 1.05, 2.35);
 
         const canvasOpts = { alpha: false, powerPreference: "default" as const };
@@ -92,9 +99,9 @@ export function Pose3DViewer({
         canvas.style.width = "100%";
         canvas.style.height = "100%";
         canvas.style.display = "block";
-        mount.appendChild(canvas);
+        mount.replaceChildren(canvas);
 
-        const controls = new OrbitControls(camera, renderer.domElement);
+        controls = new OrbitControls(camera, renderer.domElement);
         controls.target.set(0, 0.95, 0);
         controls.enableDamping = true;
         controls.enablePan = false;
@@ -107,17 +114,20 @@ export function Pose3DViewer({
         }
         controls.update();
 
-        scene.add(new THREE.HemisphereLight(0xb8e8ff, 0x223344, 1.15));
-        const key = new THREE.DirectionalLight(0xffffff, 1.4);
+        scene.add(new THREE.HemisphereLight(0xb8e8ff, 0x223344, 1.35));
+        const key = new THREE.DirectionalLight(0xffffff, 1.85);
         key.position.set(2, 4, 2);
         key.castShadow = true;
         scene.add(key);
-        scene.add(new THREE.AmbientLight(0x8899aa, 0.5));
+        const fill = new THREE.DirectionalLight(0x88ccff, 0.55);
+        fill.position.set(-2, 2, -1);
+        scene.add(fill);
+        scene.add(new THREE.AmbientLight(0x99aabb, 0.65));
 
         const floor = new THREE.Mesh(
           new THREE.PlaneGeometry(6, 6),
           new THREE.MeshStandardMaterial({
-            color: 0x14202a,
+            color: 0x1a3040,
             roughness: 0.9,
           }),
         );
@@ -125,7 +135,7 @@ export function Pose3DViewer({
         floor.receiveShadow = true;
         scene.add(floor);
 
-        const grid = new THREE.GridHelper(6, 24, 0x2a4a5a, 0x1a2a34);
+        const grid = new THREE.GridHelper(6, 24, 0x3a6a7a, 0x243848);
         grid.position.y = 0.001;
         scene.add(grid);
 
@@ -138,7 +148,18 @@ export function Pose3DViewer({
           ),
         );
 
+        const animate = () => {
+          if (disposed || session !== sessionRef.current) return;
+          controls?.update();
+          renderer?.render(scene, camera!);
+          frameId = requestAnimationFrame(animate);
+        };
+        animate();
+        setViewerState("ready");
+
         avatar = await loadMixamoAvatar(THREE);
+        if (disposed || session !== sessionRef.current) return;
+
         avatar.root.traverse((obj) => {
           const o = obj as import("three").Mesh;
           if (o.isMesh) {
@@ -149,15 +170,25 @@ export function Pose3DViewer({
         scene.add(avatar.root);
 
         const rebuildFigure = (p: ExtendedCoachPose | null) => {
-          if (!THREE || !avatar) return;
+          if (!THREE || !avatar || !camera || !controls) return;
           retargetCoachPose(THREE, avatar, p);
+          if (!framed && p) {
+            frameAvatarInView(THREE, avatar.root, camera, controls);
+            framed = true;
+          }
         };
 
         rebuildRef.current = rebuildFigure;
         if (poseRef.current) rebuildFigure(poseRef.current);
+        else {
+          avatar.mesh.skeleton.pose();
+          avatar.mesh.skeleton.update();
+          frameAvatarInView(THREE, avatar.root, camera, controls);
+          framed = true;
+        }
 
         const onResize = () => {
-          if (!mount || !renderer) return;
+          if (!mount || !renderer || !camera) return;
           const w = mount.clientWidth || 400;
           const h = mount.clientHeight || 360;
           if (w < 8 || h < 8) return;
@@ -170,21 +201,12 @@ export function Pose3DViewer({
         window.addEventListener("resize", onResize);
         onResize();
 
-        const animate = () => {
-          if (disposed) return;
-          controls.update();
-          renderer?.render(scene, camera);
-          frameId = requestAnimationFrame(animate);
-        };
-        animate();
-        setViewerState("ready");
-
         return () => {
           resizeObserver.disconnect();
           window.removeEventListener("resize", onResize);
         };
       } catch (err) {
-        if (disposed) return;
+        if (disposed || session !== sessionRef.current) return;
         const message =
           err instanceof Error ? err.message : "3D avatar failed to load";
         console.error("Pose3DViewer:", err);
@@ -199,10 +221,9 @@ export function Pose3DViewer({
       cancelAnimationFrame(frameId);
       if (renderer) {
         renderer.dispose();
-        if (renderer.domElement.parentElement === mount) {
-          mount.removeChild(renderer.domElement);
-        }
+        renderer.forceContextLoss?.();
       }
+      mount.replaceChildren();
     };
   }, [horizontalOrbit]);
 

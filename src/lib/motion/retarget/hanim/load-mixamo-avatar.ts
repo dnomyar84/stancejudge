@@ -22,7 +22,6 @@ export async function loadMixamoAvatar(
     throw new Error(`${hint} (model: ${url})`);
   }
   const scene = gltf.scene;
-  scene.rotation.y = Math.PI;
   return prepareMixamoAvatar(THREE, scene);
 }
 
@@ -32,5 +31,11 @@ export function retargetCoachPose(
   pose: ExtendedCoachPose | null,
 ): void {
   if (!pose) return;
-  applyCoachPoseToMixamo(THREE, avatar, pose);
+  try {
+    applyCoachPoseToMixamo(THREE, avatar, pose);
+  } catch (err) {
+    console.error("retargetCoachPose:", err);
+    avatar.mesh.skeleton.pose();
+    avatar.mesh.skeleton.update();
+  }
 }
