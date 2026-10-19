@@ -47,10 +47,9 @@ function interiorAngleDeg(a: Vec3, b: Vec3, c: Vec3): number {
 }
 
 /**
- * Map bone direction (hip→knee / shoulder→elbow) to mannequin raise/straddle (degrees).
- * Coach skeleton uses mostly vertical segments (small fwd); atan2(x, z) is unstable there.
+ * Map upper-arm direction to mannequin arm joints (coach +Y = up, +Z = fwd).
  */
-function aimLimb(joint: LimbJoint, dir: THREE.Vector3, side: 1 | -1): void {
+function aimArm(joint: LimbJoint, dir: THREE.Vector3, side: 1 | -1): void {
   const d = dir.clone();
   const mag = d.length();
   if (mag < 1e-8) return;
@@ -65,6 +64,30 @@ function aimLimb(joint: LimbJoint, dir: THREE.Vector3, side: 1 | -1): void {
 
   joint.raise = THREE.MathUtils.clamp(raise * 1.05, -120, 120);
   joint.straddle = THREE.MathUtils.clamp(straddle * 0.9, -75, 75);
+  joint.turn = 0;
+}
+
+/**
+ * Map thigh direction (hip→knee). Standing legs are mostly -Y; generic atan2(y, horiz)
+ * wrongly yields ~-90° raise and folds legs backward. Leg mesh also has a π X flip.
+ */
+function aimLeg(joint: LimbJoint, dir: THREE.Vector3, side: 1 | -1): void {
+  const d = dir.clone();
+  const mag = d.length();
+  if (mag < 1e-8) return;
+  d.divideScalar(mag);
+
+  const down = Math.max(0.06, -d.y);
+  const lateral = d.x * side;
+  const forward = d.z;
+
+  const straddle =
+    Math.atan2(lateral, down) * (180 / Math.PI) * 0.95;
+  const raise =
+    Math.atan2(forward, down) * (180 / Math.PI) * -1;
+
+  joint.straddle = THREE.MathUtils.clamp(straddle, -75, 75);
+  joint.raise = THREE.MathUtils.clamp(raise, -85, 85);
   joint.turn = 0;
 }
 
@@ -120,8 +143,8 @@ export function applyCoachPoseToMannequin(
 
   const lThigh = v3(sk.leftKnee).sub(v3(sk.leftHip));
   const rThigh = v3(sk.rightKnee).sub(v3(sk.rightHip));
-  aimLimb(man.l_leg, lThigh, -1);
-  aimLimb(man.r_leg, rThigh, 1);
+  aimLeg(man.l_leg, lThigh, -1);
+  aimLeg(man.r_leg, rThigh, 1);
 
   man.l_knee.bend = THREE.MathUtils.clamp(
     180 - interiorAngleDeg(sk.leftHip, sk.leftKnee, sk.leftAnkle),
@@ -155,8 +178,8 @@ export function applyCoachPoseToMannequin(
 
   const lUpper = v3(sk.leftElbow).sub(v3(sk.leftShoulder));
   const rUpper = v3(sk.rightElbow).sub(v3(sk.rightShoulder));
-  aimLimb(man.l_arm, lUpper, -1);
-  aimLimb(man.r_arm, rUpper, 1);
+  aimArm(man.l_arm, lUpper, -1);
+  aimArm(man.r_arm, rUpper, 1);
 
   man.l_elbow.bend = THREE.MathUtils.clamp(
     180 - interiorAngleDeg(sk.leftShoulder, sk.leftElbow, sk.leftWrist),
