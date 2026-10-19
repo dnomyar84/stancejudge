@@ -199,11 +199,16 @@ export function Pose3DMannequinViewer({
             applyCoachPoseToMannequin(target, p, groundLift);
           }
           mannequin.updateMatrixWorld(true);
-          if (!cameraFramed) frameMannequin();
+          if (!cameraFramed) {
+            frameMannequin();
+          }
         };
 
         rebuildRef.current = rebuildFigure;
         rebuildFigure(poseRef.current, figurineRef.current);
+        requestAnimationFrame(() => {
+          if (!disposed && !cameraFramed) frameMannequin();
+        });
 
         const onResize = () => {
           if (!mount || !renderer || !camera) return;
@@ -213,6 +218,7 @@ export function Pose3DMannequinViewer({
           camera.aspect = w / h;
           camera.updateProjectionMatrix();
           renderer.setSize(w, h);
+          if (mannequin && cameraFramed) frameMannequin();
         };
         const resizeObserver = new ResizeObserver(onResize);
         resizeObserver.observe(mount);
@@ -245,7 +251,6 @@ export function Pose3DMannequinViewer({
     return () => {
       disposed = true;
       rebuildRef.current = null;
-      removeStrayFullscreenCanvases();
       cancelAnimationFrame(frameId);
       if (mannequin?.parent) mannequin.parent.remove(mannequin);
       if (renderer) {

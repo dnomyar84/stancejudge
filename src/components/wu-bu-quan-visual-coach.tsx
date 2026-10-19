@@ -3,7 +3,6 @@
 import "@/lib/motion/disciplines-init";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActiveCuesCard } from "@/components/active-cues-card";
-import { Pose3DBoneViewer } from "@/components/pose-3d-viewer-bone";
 import { Pose3DMannequinViewer } from "@/components/pose-3d-viewer-mannequin";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,7 +30,6 @@ export function WuBuQuanVisualCoach({ onBack }: WuBuQuanVisualCoachProps) {
 
   const [routineT, setRoutineT] = useState(0);
   const [playing, setPlaying] = useState(false);
-  const [useMannequinFallback, setUseMannequinFallback] = useState(false);
   const rafRef = useRef(0);
   const lastTickRef = useRef(0);
 
@@ -120,23 +118,12 @@ export function WuBuQuanVisualCoach({ onBack }: WuBuQuanVisualCoachProps) {
             <CardDescription>{sampled?.keyframeLabelZh}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3 px-4 pb-4">
-            {useMannequinFallback ? (
-              <Pose3DMannequinViewer
-                pose={sampled?.pose ?? null}
-                figurine={sampled?.figurine ?? null}
-                horizontalOrbit
-                className="h-[min(58vh,480px)] w-full touch-pan-y rounded-lg border border-border/60"
-              />
-            ) : (
-              <Pose3DBoneViewer
-                pose={sampled?.pose ?? null}
-                bone={sampled?.bone ?? null}
-                horizontalOrbit
-                tweenMs={playing ? 0 : 90}
-                onFatalError={() => setUseMannequinFallback(true)}
-                className="h-[min(58vh,480px)] w-full touch-pan-y rounded-lg border border-border/60"
-              />
-            )}
+            <Pose3DMannequinViewer
+              pose={sampled?.pose ?? null}
+              figurine={sampled?.figurine ?? null}
+              horizontalOrbit
+              className="h-[min(58vh,480px)] w-full touch-pan-y rounded-lg border border-border/60"
+            />
 
             <div className="flex flex-wrap gap-2">
               <Button

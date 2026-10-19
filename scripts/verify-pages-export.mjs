@@ -83,10 +83,7 @@ if (coachHtml.includes("3D coach figure preview")) {
   );
   process.exit(1);
 }
-if (
-  !coachHtml.includes("3D coach bone rig preview") &&
-  !coachHtml.includes("3D coach mannequin preview")
-) {
+if (!coachHtml.includes("3D coach mannequin preview")) {
   console.error(
     "verify-pages-export: coach page missing expected 3D viewer aria-label",
   );
