@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { ExtendedCoachPose } from "@/lib/pose/coach-figure/extended-pose";
 import { applyCoachPoseToMannequin } from "@/lib/pose/mannequin-adapter/coach-pose-to-mannequin";
+import { removeStrayFullscreenCanvases } from "@/lib/pose/mannequin-adapter/cleanup-stray-canvas";
 import { cn } from "@/lib/utils";
 
 type Pose3DViewerProps = {
@@ -57,6 +58,8 @@ export function Pose3DViewer({
     let frameId = 0;
     let mannequin: MannequinFigure | null = null;
 
+    removeStrayFullscreenCanvases();
+
     void (async () => {
       try {
       const THREE = await import("three");
@@ -77,11 +80,24 @@ export function Pose3DViewer({
       const camera = new THREE.PerspectiveCamera(42, width / height, 0.05, 20);
       camera.position.set(0, 1.0, 2.2);
 
-      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+      const canvasOpts = { alpha: false, powerPreference: "default" as const };
+      try {
+        renderer = new THREE.WebGLRenderer({ ...canvasOpts, antialias: true });
+      } catch {
+        renderer = new THREE.WebGLRenderer({ ...canvasOpts, antialias: false });
+      }
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.setSize(width, height);
       renderer.shadowMap.enabled = true;
-      mount.appendChild(renderer.domElement);
+      const canvas = renderer.domElement;
+      canvas.style.position = "absolute";
+      canvas.style.inset = "0";
+      canvas.style.width = "100%";
+      canvas.style.height = "100%";
+      canvas.style.display = "block";
+      canvas.style.maxWidth = "100%";
+      canvas.style.maxHeight = "100%";
+      mount.appendChild(canvas);
 
       const controls = new OrbitControls(camera, renderer.domElement);
       controls.target.set(0, 0.9, 0);
@@ -181,6 +197,7 @@ export function Pose3DViewer({
     return () => {
       disposed = true;
       rebuildRef.current = null;
+      removeStrayFullscreenCanvases();
       cancelAnimationFrame(frameId);
       if (mannequin?.parent) mannequin.parent.remove(mannequin);
       if (renderer) {

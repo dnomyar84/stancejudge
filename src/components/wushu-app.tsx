@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useState } from "react";
 import { LiveRoutinePractice } from "@/components/live-routine-practice";
 import { PracticeHome, type PracticeMode } from "@/components/practice-home";
@@ -7,7 +8,20 @@ import { RoutineJudge } from "@/components/routine-judge";
 import { RoutineSyllabusView } from "@/components/routine-syllabus-view";
 import { Pose3DLab } from "@/components/pose-3d-lab";
 import { CoachErrorBoundary } from "@/components/coach-error-boundary";
-import { WuBuQuanVisualCoach } from "@/components/wu-bu-quan-visual-coach";
+const WuBuQuanVisualCoach = dynamic(
+  () =>
+    import("@/components/wu-bu-quan-visual-coach").then(
+      (m) => m.WuBuQuanVisualCoach,
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex min-h-full items-center justify-center bg-gradient-to-b from-background via-background to-cyan-950/25 p-8 text-sm text-muted-foreground">
+        Loading 3D coach…
+      </div>
+    ),
+  },
+);
 import { StanceJudge } from "@/components/stance-judge";
 
 export function WushuApp() {

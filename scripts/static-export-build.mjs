@@ -23,6 +23,10 @@ function restoreApi() {
 }
 
 backupApi();
+spawnSync("node", ["scripts/patch-mannequin-scene.mjs"], {
+  cwd: root,
+  stdio: "inherit",
+});
 rmSync(join(root, ".next"), { recursive: true, force: true });
 const env = { ...process.env };
 const result = spawnSync("next", ["build", "--webpack"], {

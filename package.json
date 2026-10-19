@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "postinstall": "node scripts/patch-mannequin-scene.mjs",
+    "predev": "node scripts/patch-mannequin-scene.mjs",
     "dev": "next dev -p 4317",
     "build": "node scripts/static-export-build.mjs",
     "build:pages": "GITHUB_PAGES=true npm run build && node scripts/verify-pages-export.mjs",

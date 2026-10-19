@@ -31,6 +31,7 @@ const nextConfig: NextConfig = {
     },
     resolveAlias: {
       "mannequin-js/src/scene.js": mannequinSceneStub,
+      [mannequinSceneModule]: mannequinSceneStub,
     },
   },
   webpack: (config) => {

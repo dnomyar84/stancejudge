@@ -18,7 +18,7 @@ export class CoachErrorBoundary extends Component<
   render() {
     if (this.state.error) {
       return (
-        <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 px-6 text-center">
+        <div className="flex min-h-full flex-col items-center justify-center gap-4 bg-gradient-to-b from-background via-background to-cyan-950/25 px-6 py-12 text-center">
           <h2 className="text-lg font-semibold">
             {this.props.title ?? "Coach view failed to load"}
           </h2>
