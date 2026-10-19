@@ -5,8 +5,8 @@ import type { Vec3 } from "@/lib/pose/coach-figure/vec3";
 import { lerp3 } from "@/lib/pose/coach-figure/vec3";
 import type * as THREE from "three";
 
-/** Coach skeleton height (nose up) ≈ 0.92 → Xbot ~1.75 m in scene. */
-export const COACH_SCENE_SCALE = 1.88;
+/** Coach stature (chin up) → meters in Three.js (`MIXAMO_TARGET_HEIGHT_M` / chin). */
+export const COACH_SCENE_SCALE = 1.75 / 0.92;
 
 export function coachToWorld(
   THREE: typeof import("three"),

@@ -6,7 +6,7 @@ import {
   handBaoQuanAtSide,
   type ExtendedCoachPose,
 } from "@/lib/pose/coach-figure/extended-pose";
-import { ANATOMY } from "@/lib/pose/coach-figure/anatomy";
+import { ANATOMY, statureUnits } from "@/lib/pose/coach-figure/anatomy";
 import {
   baseStandingTorso,
   legsFeetTogether,
@@ -29,13 +29,14 @@ function armsHangPalmsIn(): Partial<
 }
 
 function poseWideBingBuStart(): ExtendedCoachPose {
+  const stepHalf = ANATOMY.shoulderHalfWidth + statureUnits(0.02);
   const sk = mergeSkeleton([
     baseStandingTorso(),
     {
-      leftKnee: v(-0.2, 0, 0.28),
-      rightKnee: v(0.2, 0, 0.28),
-      leftAnkle: v(-0.22, 0.02, 0),
-      rightAnkle: v(0.22, 0.02, 0),
+      leftKnee: v(-stepHalf, 0, ANATOMY.kneeUp),
+      rightKnee: v(stepHalf, 0, ANATOMY.kneeUp),
+      leftAnkle: v(-stepHalf, 0.02, ANATOMY.ankleUp),
+      rightAnkle: v(stepHalf, 0.02, ANATOMY.ankleUp),
     },
     armsHangPalmsIn(),
   ]);

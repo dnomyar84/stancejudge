@@ -1,4 +1,4 @@
-import { ANATOMY } from "./anatomy";
+import { ANATOMY, statureUnits } from "./anatomy";
 import { lerp3, v, type Vec3 } from "./vec3";
 
 export type CoachSkeleton = {
@@ -53,10 +53,11 @@ export function legsFeetTogether(): Pick<
   CoachSkeleton,
   "leftKnee" | "rightKnee" | "leftAnkle" | "rightAnkle"
 > {
-  const lk = v(-0.06, 0, ANATOMY.kneeUp);
-  const rk = v(0.06, 0, ANATOMY.kneeUp);
-  const la = v(-0.06, 0.02, ANATOMY.ankleUp);
-  const ra = v(0.06, 0.02, ANATOMY.ankleUp);
+  const footHalf = statureUnits(0.045);
+  const lk = v(-footHalf, 0, ANATOMY.kneeUp);
+  const rk = v(footHalf, 0, ANATOMY.kneeUp);
+  const la = v(-footHalf, 0.02, ANATOMY.ankleUp);
+  const ra = v(footHalf, 0.02, ANATOMY.ankleUp);
   return { leftKnee: lk, rightKnee: rk, leftAnkle: la, rightAnkle: ra };
 }
 
@@ -100,7 +101,7 @@ export function legsMaBu(): Pick<
   CoachSkeleton,
   "leftKnee" | "rightKnee" | "leftAnkle" | "rightAnkle"
 > {
-  const spread = 0.32;
+  const spread = statureUnits(0.34);
   const lk = v(-spread, 0, ANATOMY.kneeUp + 0.02);
   const rk = v(spread, 0, ANATOMY.kneeUp + 0.02);
   const la = v(-spread - 0.02, 0, ANATOMY.ankleUp);
