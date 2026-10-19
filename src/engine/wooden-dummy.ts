@@ -191,12 +191,22 @@ function buildHand(
     stickDown(tip, len * 0.75, 0.0075, SKIN);
   }
 
-  const thumb = mk(`${side}_thumb` as JointId, lateral * 0.032, -0.035, 0.01);
-  const thumbTip = mk(`${side}_thumb_tip` as JointId, lateral * 0.004, -0.034, 0.004);
+  const thumb = mk(`${side}_thumb` as JointId, lateral * 0.036, -0.026, 0.004);
+  const thumbTip = mk(`${side}_thumb_tip` as JointId, 0, -0.038, 0);
   hand.add(thumb);
   thumb.add(thumbTip);
-  stickToward(thumb, thumbTip, 0.01, WOOD);
-  stickDown(thumbTip, 0.03, 0.008, WOOD);
+  // Local −Y points along the thumb. +flex rotates about local X and
+  // swings the thumb from beside the index across the palm (opposition).
+  const openDir = new THREE.Vector3(lateral * 0.32, -0.92, 0.18).normalize();
+  const closedDir = new THREE.Vector3(lateral * -0.22, -0.28, 0.9).normalize();
+  const localX = new THREE.Vector3().crossVectors(openDir, closedDir).normalize().multiplyScalar(-1);
+  const localY = openDir.clone().multiplyScalar(-1);
+  const localZ = new THREE.Vector3().crossVectors(localX, localY).normalize();
+  const localYOrtho = new THREE.Vector3().crossVectors(localZ, localX).normalize();
+  thumb.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(localX, localYOrtho, localZ));
+  thumb.userData.oppose = true;
+  stickToward(thumb, thumbTip, 0.011, WOOD);
+  stickDown(thumbTip, 0.03, 0.009, WOOD);
 }
 
 export function createWoodenDummy(): WoodenDummy {
@@ -324,7 +334,10 @@ export function createWoodenDummy(): WoodenDummy {
   seg("r_shin", "r_foot", 0.05, 0.04);
 
   const restRotations = new Map<THREE.Bone, THREE.Euler>();
-  for (const b of boneList) restRotations.set(b, b.rotation.clone());
+  for (const b of boneList) {
+    if (b.userData.oppose) b.userData.restQuat = b.quaternion.clone();
+    restRotations.set(b, b.rotation.clone());
+  }
 
   const angles = {} as Record<JointId, JointAnglesDeg>;
   for (const id of Object.keys(JOINT_CATALOG) as JointId[]) {
@@ -340,6 +353,24 @@ function applyAnglesToBone(
   angles: JointAnglesDeg,
   rest: THREE.Euler,
 ): void {
+  if (bone.userData.oppose) {
+    const restQ = bone.userData.restQuat as THREE.Quaternion;
+    const q = restQ.clone();
+    q.multiply(
+      new THREE.Quaternion().setFromAxisAngle(
+        new THREE.Vector3(1, 0, 0),
+        angles.flex * entry.flexSign * DEG,
+      ),
+    );
+    q.multiply(
+      new THREE.Quaternion().setFromAxisAngle(
+        new THREE.Vector3(0, 0, 1),
+        angles.abduct * entry.abductSign * DEG,
+      ),
+    );
+    bone.quaternion.copy(q);
+    return;
+  }
   const euler = new THREE.Euler(rest.x, rest.y, rest.z, "XYZ");
   const add = (axis: 0 | 1 | 2, deg: number) => {
     if (axis === 0) euler.x += deg * DEG;
