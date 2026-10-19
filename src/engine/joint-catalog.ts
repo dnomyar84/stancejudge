@@ -85,6 +85,12 @@ function leftLimb(id: JointId): JointCatalogEntry {
   };
 }
 
+/** Knee hinge: +flex folds the heel toward the thigh, not forward into hyperextension. */
+function knee(id: JointId, side: "left" | "right"): JointCatalogEntry {
+  const base = side === "left" ? leftLimb(id) : rightLimb(id);
+  return { ...base, flexSign: -base.flexSign };
+}
+
 /** Figure's right (−X, viewer's left). +abduct swings away from the midline. */
 function rightLimb(id: JointId): JointCatalogEntry {
   return {
@@ -115,11 +121,11 @@ export const JOINT_CATALOG: Record<JointId, JointCatalogEntry> = {
   r_hand: rightLimb("r_hand"),
   l_hip: leftLimb("l_hip"),
   l_thigh: leftLimb("l_thigh"),
-  l_shin: leftLimb("l_shin"),
+  l_shin: knee("l_shin", "left"),
   l_foot: leftLimb("l_foot"),
   r_hip: rightLimb("r_hip"),
   r_thigh: rightLimb("r_thigh"),
-  r_shin: rightLimb("r_shin"),
+  r_shin: knee("r_shin", "right"),
   r_foot: rightLimb("r_foot"),
   l_thumb: leftLimb("l_thumb"),
   l_thumb_tip: leftLimb("l_thumb_tip"),
