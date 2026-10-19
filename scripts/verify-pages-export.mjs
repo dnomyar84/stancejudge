@@ -69,4 +69,10 @@ if (!existsSync(modelPath)) {
   process.exit(1);
 }
 
+const coachIndex = join(out, "coach", "wu-bu-quan", "index.html");
+if (!existsSync(coachIndex)) {
+  console.error("verify-pages-export: missing out/coach/wu-bu-quan/index.html");
+  process.exit(1);
+}
+
 console.log("verify-pages-export: ok");

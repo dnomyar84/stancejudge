@@ -116,17 +116,16 @@ export function PracticeHome({ onSelect }: PracticeHomeProps) {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <a
+            <Link
               href="/coach/wu-bu-quan/"
               data-testid="open-wu-bu-coach"
               className={cn(
                 buttonVariants({ size: "lg" }),
                 "min-h-12 w-full sm:w-auto",
               )}
-              onClick={() => onSelect("wu-bu-coach")}
             >
               Watch &amp; rotate
-            </a>
+            </Link>
           </CardContent>
         </Card>
 
