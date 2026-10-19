@@ -34,6 +34,7 @@ import {
 import {
   getMoveChoreography,
   getRoutineVisualCoach,
+  routineVisualCoachDurationMs,
 } from "@/lib/pose/choreography/registry";
 import { ROUTINES } from "@/lib/wushu/routines";
 import { ArrowLeft, Box, Pause, Play } from "lucide-react";
@@ -104,8 +105,9 @@ export function Pose3DLab({ onBack }: Pose3DLabProps) {
     const tickMs = 40;
     const id = window.setInterval(() => {
       if (coachMode && visualCoach) {
+        const total = routineVisualCoachDurationMs(visualCoach);
         setRoutineT((t) => {
-          const next = t + tickMs / visualCoach.moves.reduce((s, m) => s + m.durationMs, 0);
+          const next = t + tickMs / total;
           if (next >= 1) {
             setPlaying(false);
             return 1;
@@ -228,6 +230,7 @@ export function Pose3DLab({ onBack }: Pose3DLabProps) {
             <CardContent className="space-y-3 p-4 pt-0">
               <Pose3DViewer
                 pose={sampled?.pose ?? null}
+                horizontalOrbit
                 className="h-[min(52vh,420px)] w-full rounded-lg border border-border/60"
               />
               <label className="block text-xs text-muted-foreground">

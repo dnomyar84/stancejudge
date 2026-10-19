@@ -221,8 +221,12 @@ Derive from syllabus + common coaching text; each becomes an E-item when priorit
 - [x] **Choreography framework** — phases, cues, keyframes ([choreography-framework.md](./choreography-framework.md))  
 - [x] **Extended rig** — hands (wrist/knuckle/palm) + feet (heel/toe) in 3D mesh  
 - [x] **wbq-01 起势** — 并步 + 抱拳 flow (owner spec); visual coach timeline stub for full 五步拳  
-- [ ] Owner: review 起势 scrub + correct 抱拳 elbow / 并步 width  
-- [ ] Next: wbq-02 冲拳 3-keyframe flow; author remaining 五步拳 phases  
+- [x] **五步拳 visual coach** UI (`wu-bu-coach`) — full playback + move markers  
+- [x] Choreography wbq-01…06 + 600ms inter-move transitions  
+- [x] Horizontal orbit / swipe rotate on 3D viewer  
+- [ ] Owner: review full 五步拳 playback (poses + timing)  
+- [ ] Refine per-move keyframes from visual feedback  
+- [ ] 四段剑 / 三段长拳 visual coach (later)  
 
 ---
 

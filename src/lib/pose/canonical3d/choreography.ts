@@ -1,3 +1,8 @@
+import {
+  getMoveEndPose,
+  getMoveStartPose,
+  totalRoutineDurationMs,
+} from "../choreography/move-boundaries";
 import type { ExtendedCoachPose } from "../coach-figure/extended-pose";
 import { lerpExtendedPose } from "../coach-figure/interpolate-pose";
 import type { StanceConstraintSet } from "./constraints";
@@ -67,6 +72,8 @@ export type RoutineVisualCoachSpec = {
   routineId: string;
   nameZh: string;
   moves: MoveChoreographySpec[];
+  /** Cross-fade between moves (ms). */
+  transitionMs: number;
 };
 
 export type SampledCoachFrame = {
@@ -186,17 +193,44 @@ export function sampleRoutineVisualCoach(
   routineT: number,
 ): SampledCoachFrame {
   const t = Math.max(0, Math.min(1, routineT));
-  const totalMs = spec.moves.reduce((s, m) => s + m.durationMs, 0);
+  const totalMs = totalRoutineDurationMs(spec.moves, spec.transitionMs);
   let ms = t * totalMs;
-  for (const move of spec.moves) {
+  const moves = spec.moves;
+
+  for (let i = 0; i < moves.length; i++) {
+    const move = moves[i];
     if (ms <= move.durationMs) {
       const moveT = move.durationMs > 0 ? ms / move.durationMs : 1;
       const frame = sampleMoveChoreography(move, moveT);
       return { ...frame, routineT: t };
     }
     ms -= move.durationMs;
+
+    if (i < moves.length - 1 && spec.transitionMs > 0) {
+      if (ms <= spec.transitionMs) {
+        const from = getMoveEndPose(move);
+        const to = getMoveStartPose(moves[i + 1]);
+        const blend = ms / spec.transitionMs;
+        const pose = lerpExtendedPose(from, to, blend);
+        const next = moves[i + 1];
+        return {
+          pose,
+          moveId: next.moveId,
+          moveNameZh: next.nameZh,
+          phaseId: null,
+          phaseNameZh: "过渡",
+          keyframeLabelZh: "动作衔接",
+          activeCues: [],
+          stanceConstraints: null,
+          moveT: 0,
+          routineT: t,
+        };
+      }
+      ms -= spec.transitionMs;
+    }
   }
-  const last = spec.moves[spec.moves.length - 1];
+
+  const last = moves[moves.length - 1];
   const frame = sampleMoveChoreography(last, 1);
   return { ...frame, routineT: 1 };
 }

@@ -9,7 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { BookOpen, Box, Camera, FileVideo, Sparkles } from "lucide-react";
+import { BookOpen, Box, Camera, FileVideo, Sparkles, UserRound } from "lucide-react";
 
 export type PracticeMode =
   | "home"
@@ -17,7 +17,8 @@ export type PracticeMode =
   | "live-stance"
   | "live-routine"
   | "syllabus"
-  | "pose-3d-lab";
+  | "pose-3d-lab"
+  | "wu-bu-coach";
 
 type PracticeHomeProps = {
   onSelect: (mode: Exclude<PracticeMode, "home">) => void;
@@ -100,10 +101,30 @@ export function PracticeHome({ onSelect }: PracticeHomeProps) {
         </Card>
       </div>
 
-      <Card
-        className="cursor-pointer border-cyan-500/25 transition hover:border-cyan-400/50 hover:bg-cyan-950/15"
-        onClick={() => onSelect("pose-3d-lab")}
-      >
+        <Card
+          className="cursor-pointer border-cyan-400/40 bg-cyan-950/15 transition hover:border-cyan-400/70 hover:bg-cyan-950/25 sm:col-span-2"
+          onClick={() => onSelect("wu-bu-coach")}
+        >
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <UserRound className="h-5 w-5 text-cyan-400" />
+              五步拳 3D coach
+            </CardTitle>
+            <CardDescription>
+              Full form playback with transitions. Swipe horizontally to view side and back.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button type="button" className="min-h-12 w-full sm:w-auto" size="lg">
+              Watch &amp; rotate
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card
+          className="cursor-pointer border-cyan-500/25 transition hover:border-cyan-400/50 hover:bg-cyan-950/15"
+          onClick={() => onSelect("pose-3d-lab")}
+        >
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <Box className="h-5 w-5 text-cyan-400" />

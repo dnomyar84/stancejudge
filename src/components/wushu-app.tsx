@@ -6,6 +6,7 @@ import { PracticeHome, type PracticeMode } from "@/components/practice-home";
 import { RoutineJudge } from "@/components/routine-judge";
 import { RoutineSyllabusView } from "@/components/routine-syllabus-view";
 import { Pose3DLab } from "@/components/pose-3d-lab";
+import { WuBuQuanVisualCoach } from "@/components/wu-bu-quan-visual-coach";
 import { StanceJudge } from "@/components/stance-judge";
 
 export function WushuApp() {
@@ -37,6 +38,10 @@ export function WushuApp() {
 
   if (mode === "pose-3d-lab") {
     return <Pose3DLab onBack={() => setMode("home")} />;
+  }
+
+  if (mode === "wu-bu-coach") {
+    return <WuBuQuanVisualCoach onBack={() => setMode("home")} />;
   }
 
   return null;

@@ -10,11 +10,17 @@ import {
 type Pose3DViewerProps = {
   pose: ExtendedCoachPose | null;
   className?: string;
+  /** Lock camera to horizontal ring — swipe/drag rotates around figure. */
+  horizontalOrbit?: boolean;
 };
 
 type RebuildFn = (mesh: CoachMeshSpec) => void;
 
-export function Pose3DViewer({ pose, className }: Pose3DViewerProps) {
+export function Pose3DViewer({
+  pose,
+  className,
+  horizontalOrbit = false,
+}: Pose3DViewerProps) {
   const mountRef = useRef<HTMLDivElement>(null);
   const poseRef = useRef(pose);
   const rebuildRef = useRef<RebuildFn | null>(null);
@@ -60,6 +66,14 @@ export function Pose3DViewer({ pose, className }: Pose3DViewerProps) {
       const controls = new OrbitControls(camera, renderer.domElement);
       controls.target.set(0, 0.35, 0);
       controls.enableDamping = true;
+      controls.enablePan = false;
+      if (horizontalOrbit) {
+        const elev = Math.PI / 2 - 0.38;
+        controls.minPolarAngle = elev;
+        controls.maxPolarAngle = elev + 0.06;
+        controls.rotateSpeed = 0.85;
+        renderer.domElement.style.touchAction = "pan-y";
+      }
       controls.update();
 
       scene.add(new THREE.HemisphereLight(0xb8e8ff, 0x223344, 1.1));
@@ -259,7 +273,7 @@ export function Pose3DViewer({ pose, className }: Pose3DViewerProps) {
         }
       }
     };
-  }, []);
+  }, [horizontalOrbit]);
 
   return (
     <div
