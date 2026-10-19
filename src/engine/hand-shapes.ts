@@ -19,14 +19,14 @@ const SHAPES: Record<HandShape, Record<(typeof DIGITS)[number], { prox: Curl; ti
     pinky: { prox: { flex: 0 }, tip: { flex: 0 } },
   },
   fist: {
-    thumb: { prox: { flex: 86 }, tip: { flex: 80 } },
+    thumb: { prox: { flex: 72 }, tip: { flex: 70 } },
     index: { prox: { flex: 95 }, tip: { flex: 100 } },
     middle: { prox: { flex: 95 }, tip: { flex: 100 } },
     ring: { prox: { flex: 95 }, tip: { flex: 100 } },
     pinky: { prox: { flex: 95 }, tip: { flex: 100 } },
   },
   sword: {
-    thumb: { prox: { flex: 64 }, tip: { flex: 48 } },
+    thumb: { prox: { flex: 58 }, tip: { flex: 50 } },
     index: { prox: { flex: 0 }, tip: { flex: 0 } },
     middle: { prox: { flex: 0 }, tip: { flex: 0 } },
     ring: { prox: { flex: 95 }, tip: { flex: 100 } },

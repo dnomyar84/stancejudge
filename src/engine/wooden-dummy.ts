@@ -232,10 +232,10 @@ function buildHand(
   const thumbTip = mk(`${side}_thumb_tip` as JointId, 0, -0.038, 0);
   hand.add(thumb);
   thumb.add(thumbTip);
-  // Local −Y points along the thumb. +flex rotates about local X and
-  // swings the thumb from beside the index across the palm (opposition).
-  const openDir = new THREE.Vector3(lateral * 0.32, -0.92, 0.18).normalize();
-  const closedDir = new THREE.Vector3(lateral * -0.22, -0.28, 0.9).normalize();
+  // Local −Y points along the thumb. +flex curls it onto the palm,
+  // staying on the thumb side of the hand — not across toward the torso.
+  const openDir = new THREE.Vector3(lateral * 0.42, -0.88, 0.12).normalize();
+  const closedDir = new THREE.Vector3(lateral * 0.1, -0.45, 0.82).normalize();
   const localX = new THREE.Vector3().crossVectors(openDir, closedDir).normalize().multiplyScalar(-1);
   const localY = openDir.clone().multiplyScalar(-1);
   const localZ = new THREE.Vector3().crossVectors(localX, localY).normalize();
