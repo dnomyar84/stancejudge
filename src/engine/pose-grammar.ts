@@ -91,8 +91,8 @@ function gongBuPunch(front: "left" | "right", punch: "left" | "right"): PoseStmt
     jointAt(`${lead}_foot`, 4),
     jointAt(`${punchSide}_upper_arm`, 80, -4, -80),
     jointAt(`${punchSide}_forearm`, 10, 0, -85),
-    jointAt(`${chamber}_upper_arm`, -10, 0, 0),
-    jointAt(`${chamber}_forearm`, 95),
+    jointAt(`${chamber}_upper_arm`, -50, 0, 0),
+    jointAt(`${chamber}_forearm`, 105),
     { kind: "hand", side: punch, shape: "fist" },
     { kind: "hand", side: punch === "left" ? "right" : "left", shape: "fist" },
   ];
