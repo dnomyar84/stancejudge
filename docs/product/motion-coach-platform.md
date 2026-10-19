@@ -16,9 +16,9 @@ Stance Judge treats **motion coaching** as a small platform: shared rig, retarge
 1. Add `src/lib/disciplines/<discipline>/choreography/` with `MoveChoreographySpec` data.
 2. Add `visual-coach/<routine>.ts` to build a `RoutineVisualCoachSpec` (chain 定势 between moves when needed).
 3. Call `registerVisualCoachRoutine` from `disciplines/<discipline>/register.ts`.
-4. Import that register from `src/lib/motion/bootstrap.ts`.
+4. Import `@/lib/motion/disciplines-init` from the app entry or coach UI (side-effect registration).
 
-Wushu reference: `disciplines/wushu/register.ts` registers **五步拳** (`wu-bu-quan`).
+Wushu reference: `disciplines/wushu/register.ts` registers **五步拳** (`wu-bu-quan`). Registration uses `registry-core.ts` to avoid circular imports with the public `visual-coach/registry` barrel.
 
 ## Retargeting
 
