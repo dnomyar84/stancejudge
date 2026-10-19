@@ -19,8 +19,6 @@ type MannequinFigure = import("three").Object3D & {
 
 type RebuildFn = (pose: ExtendedCoachPose | null) => void;
 
-const MANNEQUIN_GROUND_OFFSET = 0.71;
-
 export function Pose3DViewer({
   pose,
   className,
@@ -146,7 +144,8 @@ export function Pose3DViewer({
       const figureGroup = new THREE.Group();
       scene.add(figureGroup);
 
-      const groundLift = MANNEQUIN_GROUND_OFFSET - GROUND_LEVEL;
+      /** mannequin-js stepOnGround() targets GROUND_LEVEL (-0.7); scene floor is y=0. */
+      const groundLift = -GROUND_LEVEL;
 
       mannequin = new Male(1.75) as MannequinFigure;
       figureGroup.add(mannequin);

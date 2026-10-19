@@ -45,14 +45,25 @@ function interiorAngleDeg(a: Vec3, b: Vec3, c: Vec3): number {
   return (Math.acos(cos) * 180) / Math.PI;
 }
 
-/** Map thigh direction (hip→knee) to mannequin leg raise/straddle/turn (degrees). */
+/**
+ * Map bone direction (hip→knee / shoulder→elbow) to mannequin raise/straddle (degrees).
+ * Coach skeleton uses mostly vertical segments (small fwd); atan2(x, z) is unstable there.
+ */
 function aimLimb(joint: LimbJoint, dir: THREE.Vector3, side: 1 | -1): void {
-  const d = dir.clone().normalize();
+  const d = dir.clone();
+  const mag = d.length();
+  if (mag < 1e-8) return;
+  d.divideScalar(mag);
+
   const horiz = Math.sqrt(d.x * d.x + d.z * d.z);
   const raise = Math.atan2(d.y, horiz) * (180 / Math.PI);
-  const straddle = Math.atan2(d.x, d.z) * (180 / Math.PI) * side;
-  joint.raise = THREE.MathUtils.clamp(raise * 1.15, -120, 120);
-  joint.straddle = THREE.MathUtils.clamp(straddle * 0.85, -90, 90);
+  const spreadPlane = Math.hypot(d.z, -d.y);
+  const spreadDenom = Math.max(spreadPlane, horiz * 0.2, 0.06);
+  const straddle =
+    Math.atan2(d.x, spreadDenom) * (180 / Math.PI) * side;
+
+  joint.raise = THREE.MathUtils.clamp(raise * 1.05, -120, 120);
+  joint.straddle = THREE.MathUtils.clamp(straddle * 0.9, -75, 75);
   joint.turn = 0;
 }
 
