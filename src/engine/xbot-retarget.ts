@@ -180,17 +180,26 @@ export function loadXbotBody(url: string): Promise<XbotBody> {
       (gltf) => {
         const model = gltf.scene;
         model.name = "xbot";
-        const joints = model.getObjectByName("Beta_Joints");
-        if (joints) joints.visible = false;
-        const surface = model.getObjectByName("Beta_Surface");
-        if (!(surface instanceof THREE.SkinnedMesh)) {
+        const skinned: THREE.SkinnedMesh[] = [];
+        model.traverse((obj) => {
+          if (obj instanceof THREE.SkinnedMesh) {
+            obj.castShadow = true;
+            obj.frustumCulled = false;
+            skinned.push(obj);
+          }
+        });
+        // Beta_Surface is the limb shells. Beta_Joints is the waist and the caps
+        // that close the gaps at the shoulders, elbows, hips, and knees.
+        const surface = skinned.find((mesh) => mesh.name === "Beta_Surface");
+        if (!surface) {
           reject(new Error("Xbot is missing its surface mesh."));
           return;
         }
-        surface.castShadow = true;
-        surface.frustumCulled = false;
-        const sole = collectSoleVertices(surface.geometry);
-        const position = surface.geometry.getAttribute("position");
+        const soles = skinned.map((mesh) => ({
+          mesh,
+          position: mesh.geometry.getAttribute("position"),
+          indices: collectSoleVertices(mesh.geometry),
+        }));
 
         resolve({
           object: model,
@@ -199,11 +208,13 @@ export function loadXbotBody(url: string): Promise<XbotBody> {
             model.position.y = 0;
             model.updateMatrixWorld(true);
             let lowest = Infinity;
-            for (const index of sole) {
-              _sole.fromBufferAttribute(position, index);
-              surface.applyBoneTransform(index, _sole);
-              surface.localToWorld(_sole);
-              if (_sole.y < lowest) lowest = _sole.y;
+            for (const sole of soles) {
+              for (const index of sole.indices) {
+                _sole.fromBufferAttribute(sole.position, index);
+                sole.mesh.applyBoneTransform(index, _sole);
+                sole.mesh.localToWorld(_sole);
+                if (_sole.y < lowest) lowest = _sole.y;
+              }
             }
             if (Number.isFinite(lowest)) model.position.y = SOLE_CLEARANCE - lowest;
             model.updateMatrixWorld(true);
