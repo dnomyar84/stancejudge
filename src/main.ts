@@ -22,7 +22,7 @@ app.innerHTML = `
     <aside class="panel">
       <h1>Wushu pose studio</h1>
       <p class="lede">
-        Review 30 editable stances, techniques, keyframes, and hand gestures. Every change moves over 500 ms.
+        Review 30 editable stances, techniques, keyframes, and hand gestures on a human figure. Every change moves over 500 ms.
       </p>
       <section class="pose-browser" aria-labelledby="pose-browser-title">
         <div class="section-heading">
@@ -65,6 +65,7 @@ app.innerHTML = `
     </aside>
     <div class="viewport-wrap" id="viewport">
       <span class="viewport-hint">Drag to orbit · scroll to zoom</span>
+      <span class="figure-state" id="figure-state">Loading the human figure…</span>
     </div>
   </div>
 `;
@@ -83,11 +84,20 @@ const restorePoseButton = document.querySelector<HTMLButtonElement>("#restore-po
 
 const dummy = createWoodenDummy();
 const viewer = createDummyViewer();
+const figureState = document.querySelector<HTMLElement>("#figure-state")!;
 viewer.mount(viewportEl);
 resetPoseAngles(dummy);
 syncBonesFromAngles(dummy);
 viewer.setDummy(dummy);
 groundDummy(dummy);
+viewer.useHumanFigure("./models/Xbot.glb").then(
+  () => {
+    figureState.hidden = true;
+  },
+  () => {
+    figureState.textContent = "The human figure did not load. Joint lines stay visible.";
+  },
+);
 
 function setStatus(ok: boolean, message: string) {
   statusEl.textContent = message;

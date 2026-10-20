@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import type { WoodenDummy } from "./wooden-dummy";
 import { groundDummy } from "./wooden-dummy";
+import { loadXbotBody, type XbotBody } from "./xbot-retarget";
 
 export type DummyViewer = {
   scene: THREE.Scene;
@@ -10,6 +11,8 @@ export type DummyViewer = {
   controls: OrbitControls;
   mount: (el: HTMLElement) => void;
   setDummy: (dummy: WoodenDummy) => void;
+  /** Drive the Mixamo body from the studio pose. Lines stay up until the mesh is ready. */
+  useHumanFigure: (url: string) => Promise<void>;
   resize: () => void;
   dispose: () => void;
 };
@@ -55,11 +58,13 @@ export function createDummyViewer(): DummyViewer {
   let mountEl: HTMLElement | null = null;
   let dummyRef: WoodenDummy | null = null;
   let boneLines: THREE.SkeletonHelper | null = null;
+  let figure: XbotBody | null = null;
   let frameId = 0;
 
   const animate = () => {
     frameId = requestAnimationFrame(animate);
     controls.update();
+    if (figure && dummyRef) figure.apply(dummyRef);
     renderer.render(scene, camera);
   };
 
@@ -103,6 +108,23 @@ export function createDummyViewer(): DummyViewer {
       scene.add(boneLines);
       const center = new THREE.Vector3();
       dummy.bones.hips.getWorldPosition(center);
+      controls.target.copy(center);
+      controls.update();
+    },
+    async useHumanFigure(url) {
+      const body = await loadXbotBody(url);
+      if (!dummyRef) return;
+      if (figure) dummyRef.root.remove(figure.object);
+      figure = body;
+      dummyRef.root.add(body.object);
+      body.apply(dummyRef);
+      if (boneLines) {
+        scene.remove(boneLines);
+        boneLines.dispose();
+        boneLines = null;
+      }
+      const center = new THREE.Vector3();
+      dummyRef.bones.hips.getWorldPosition(center);
       controls.target.copy(center);
       controls.update();
     },

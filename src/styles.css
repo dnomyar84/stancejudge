@@ -290,6 +290,15 @@ button:hover {
   pointer-events: none;
 }
 
+.figure-state {
+  position: absolute;
+  left: 0.75rem;
+  bottom: 0.75rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+  pointer-events: none;
+}
+
 .joint-list {
   font-size: 0.72rem;
   color: var(--muted);
