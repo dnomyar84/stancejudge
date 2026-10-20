@@ -214,13 +214,16 @@ function buildHand(
   // Thumb is radial / lateral: +X on the figure's left hand, −X on the right.
   // Index sits beside the thumb; pinky is toward the midline.
   const lateral = side === "l" ? 1 : -1;
-  box(hand, 0.08, 0.095, 0.022, 0, -0.05, 0, WOOD);
+  const palmLength = 0.076;
+  const palmWrist = -0.0025;
+  box(hand, 0.08, palmLength, 0.022, 0, palmWrist - palmLength / 2, 0, WOOD);
+  const palmEnd = palmWrist - palmLength;
 
   const fingers: Array<[string, number, number, number]> = [
-    ["index", lateral * 0.016, -0.095, 0.052],
-    ["middle", 0, -0.098, 0.058],
-    ["ring", lateral * -0.014, -0.094, 0.05],
-    ["pinky", lateral * -0.028, -0.088, 0.042],
+    ["index", lateral * 0.016, palmEnd + 0.0025, 0.052],
+    ["middle", 0, palmEnd, 0.058],
+    ["ring", lateral * -0.014, palmEnd + 0.0035, 0.05],
+    ["pinky", lateral * -0.028, palmEnd + 0.0095, 0.042],
   ];
   for (const [name, x, y, len] of fingers) {
     const prox = mk(`${side}_${name}` as JointId, x, y, 0.006);
