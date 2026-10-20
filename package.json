@@ -11,6 +11,7 @@
     "ship": "npm run build && git push -u github main && npm run deploy:pages"
   },
   "devDependencies": {
+    "@types/three": "^0.186.0",
     "typescript": "^5.7.3",
     "vite": "^6.0.7"
   },

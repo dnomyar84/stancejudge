@@ -105,6 +105,7 @@ function normalizePhrase(line: string): string {
     .replace(/\b(the|a|an|please|to)\b/g, " ")
     .replace(/\bpalms\b/g, "palm")
     .replace(/\bfists\b/g, "fist")
+    .replace(/\bhooks\b/g, "hook")
     .replace(/\bsword fingers\b/g, "sword")
     .replace(/\bsword finger\b/g, "sword")
     .replace(/\bopen palm\b/g, "palm")
@@ -112,7 +113,7 @@ function normalizePhrase(line: string): string {
     .trim();
 }
 
-const SHAPE_WORD = "(palm|zhang|fist|quan|sword|jianzhi)";
+const SHAPE_WORD = "(palm|zhang|fist|quan|sword|jianzhi|hook|gou)";
 
 function shapeFromWord(word: string): HandShape | null {
   return parseHandShapeToken(word);
@@ -185,7 +186,7 @@ function compilePhrase(line: string): { statements: PoseStmt[] } | { error: stri
     };
   }
 
-  if (/^(stand|neutral|raise|lift|bend|flex|arms|hands|bring|left|right|both|palm|fist|sword|make|open)\b/.test(text)) {
+  if (/^(stand|neutral|raise|lift|bend|flex|arms|hands|bring|left|right|both|palm|fist|sword|hook|make|open)\b/.test(text)) {
     return {
       error:
         'Try "stand", "raise left knee", "right gong bu left punch", "hands by the ears", "both palms", or "sword fingers"',
@@ -234,7 +235,7 @@ export function parsePoseGrammar(source: string): ParseResult {
       if (!side || !shape || parts.length !== 3) {
         return {
           ok: false,
-          error: 'Use "hand left|right palm|fist|sword" (aliases: zhang, quan, jianzhi)',
+          error: 'Use "hand left|right palm|fist|sword|hook" (aliases: zhang, quan, jianzhi, gou)',
           line: lineNo,
         };
       }

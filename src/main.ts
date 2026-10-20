@@ -6,46 +6,59 @@ import {
   syncBonesFromAngles,
 } from "./engine/wooden-dummy";
 import {
-  EXAMPLE_FIST,
-  EXAMPLE_GONGBU,
-  EXAMPLE_HANDS_BY_EARS,
-  EXAMPLE_LEFT_KNEE,
-  EXAMPLE_NEUTRAL,
-  EXAMPLE_PALM,
-  EXAMPLE_SWORD,
   parsePoseGrammar,
 } from "./engine/pose-grammar";
 import { JOINT_IDS, type AxisName, type JointId } from "./engine/joint-catalog";
 import { listAdjustableAxes } from "./engine/joint-limits";
 import type { JointAnglesDeg } from "./engine/wooden-dummy";
 import { createDummyViewer } from "./engine/viewer";
+import { POSE_LIBRARY, type PoseDefinition } from "./pose-library";
 
 const app = document.querySelector<HTMLDivElement>("#app")!;
 
 app.innerHTML = `
   <div class="layout">
     <aside class="panel">
-      <h1>Wooden dummy — pose grammar</h1>
+      <h1>Wushu pose studio</h1>
       <p class="lede">
-        Write a pose in plain lines, then apply. A button eases the figurine from the pose it is in into the next one.
+        Review 30 editable stances, techniques, keyframes, and hand gestures. Every change moves over 500 ms.
       </p>
+      <section class="pose-browser" aria-labelledby="pose-browser-title">
+        <div class="section-heading">
+          <h2 id="pose-browser-title">Pose library</h2>
+          <span id="pose-count">1 / ${POSE_LIBRARY.length}</span>
+        </div>
+        <label for="pose-select">Destination or keyframe</label>
+        <select id="pose-select"></select>
+        <div class="pose-title">
+          <strong id="pose-name"></strong>
+          <span id="pose-chinese"></span>
+          <span class="keyframe-badge" id="keyframe-badge">Tween keyframe</span>
+        </div>
+        <p class="pose-description" id="pose-description"></p>
+        <div class="toolbar pose-actions">
+          <button type="button" id="previous-pose">← Previous</button>
+          <button type="button" class="primary" id="next-pose">Next →</button>
+          <button type="button" id="save-pose">Save edits</button>
+          <button type="button" id="restore-pose">Restore default</button>
+        </div>
+        <p class="save-note">Edits are saved in this browser as a complete 126-angle snapshot.</p>
+      </section>
+      <details class="grammar-editor">
+        <summary>Pose grammar</summary>
       <label for="grammar">Pose program</label>
       <textarea id="grammar" class="grammar" spellcheck="false"></textarea>
       <div class="toolbar">
         <button type="button" class="primary" id="apply">Apply pose</button>
-        <button type="button" id="ex-neutral">Neutral</button>
-        <button type="button" id="ex-ears">Hands by ears</button>
-        <button type="button" id="ex-knee">Left knee</button>
-        <button type="button" id="ex-palm">掌 Palm</button>
-        <button type="button" id="ex-fist">拳 Fist</button>
-        <button type="button" id="ex-sword">剑指 Sword</button>
-        <button type="button" id="ex-gongbu">右弓步冲拳</button>
       </div>
+      </details>
       <p id="status" class="status" aria-live="polite"></p>
-      <p class="joint-list">stand · right gong bu left punch · raise left knee · hands by the ears · arms forward · both palms · left fist · sword fingers · or joint lines (${JOINT_IDS.length} joints)</p>
       <section class="sliders">
-        <h2>Joint sliders</h2>
-        <p class="hint">Each slider is one movable axis, limited to human range. Dragging it changes the figurine immediately.</p>
+        <div class="section-heading">
+          <h2>Joint sliders</h2>
+          <span>95 movable axes</span>
+        </div>
+        <p class="hint">Drag any slider, then use “Save edits” to replace this pose in your browser.</p>
         <div class="slider-scroll" id="sliders"></div>
       </section>
     </aside>
@@ -58,8 +71,14 @@ app.innerHTML = `
 const grammarEl = document.querySelector<HTMLTextAreaElement>("#grammar")!;
 const statusEl = document.querySelector<HTMLParagraphElement>("#status")!;
 const viewportEl = document.querySelector<HTMLDivElement>("#viewport")!;
-
-grammarEl.value = EXAMPLE_GONGBU;
+const poseSelect = document.querySelector<HTMLSelectElement>("#pose-select")!;
+const poseNameEl = document.querySelector<HTMLElement>("#pose-name")!;
+const poseChineseEl = document.querySelector<HTMLElement>("#pose-chinese")!;
+const poseDescriptionEl = document.querySelector<HTMLParagraphElement>("#pose-description")!;
+const poseCountEl = document.querySelector<HTMLElement>("#pose-count")!;
+const keyframeBadgeEl = document.querySelector<HTMLElement>("#keyframe-badge")!;
+const savePoseButton = document.querySelector<HTMLButtonElement>("#save-pose")!;
+const restorePoseButton = document.querySelector<HTMLButtonElement>("#restore-pose")!;
 
 const dummy = createWoodenDummy();
 const viewer = createDummyViewer();
@@ -74,8 +93,14 @@ function setStatus(ok: boolean, message: string) {
   statusEl.className = ok ? "status ok" : "status err";
 }
 
-const POSE_BLEND_MS = 800;
+const POSE_BLEND_MS = 500;
+const STORAGE_KEY = "wushu-pose-studio-edits-v1";
 let blendToken = 0;
+let currentPoseIndex = 0;
+
+type PoseSnapshot = Record<JointId, JointAnglesDeg>;
+const defaultSnapshots = new Map<string, PoseSnapshot>();
+const savedSnapshots = new Map<string, PoseSnapshot>();
 
 function copyAngles(): Record<JointId, JointAnglesDeg> {
   const out = {} as Record<JointId, JointAnglesDeg>;
@@ -85,6 +110,94 @@ function copyAngles(): Record<JointId, JointAnglesDeg> {
 
 function writeAngles(src: Record<JointId, JointAnglesDeg>) {
   for (const id of JOINT_IDS) dummy.angles[id] = { ...src[id] };
+}
+
+function cloneSnapshot(src: PoseSnapshot): PoseSnapshot {
+  const out = {} as PoseSnapshot;
+  for (const id of JOINT_IDS) out[id] = { ...src[id] };
+  return out;
+}
+
+function isSnapshot(value: unknown): value is PoseSnapshot {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<PoseSnapshot>;
+  return JOINT_IDS.every((id) => {
+    const angles = candidate[id];
+    return angles
+      && Number.isFinite(angles.flex)
+      && Number.isFinite(angles.abduct)
+      && Number.isFinite(angles.twist);
+  });
+}
+
+function buildDefaultSnapshots() {
+  for (const pose of POSE_LIBRARY) {
+    const parsed = parsePoseGrammar(pose.program);
+    if (!parsed.ok) throw new Error(`Invalid library pose "${pose.name}": ${parsed.error}`);
+    executePoseProgram(dummy, parsed.program);
+    defaultSnapshots.set(pose.id, copyAngles());
+  }
+  resetPoseAngles(dummy);
+  syncBonesFromAngles(dummy);
+  groundDummy(dummy);
+}
+
+function loadSavedSnapshots() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}") as Record<string, unknown>;
+    for (const pose of POSE_LIBRARY) {
+      const candidate = stored[pose.id];
+      if (isSnapshot(candidate)) savedSnapshots.set(pose.id, cloneSnapshot(candidate));
+    }
+  } catch {
+    localStorage.removeItem(STORAGE_KEY);
+  }
+}
+
+function persistSavedSnapshots() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(Object.fromEntries(savedSnapshots)));
+}
+
+function snapshotFor(pose: PoseDefinition): PoseSnapshot {
+  return cloneSnapshot(savedSnapshots.get(pose.id) ?? defaultSnapshots.get(pose.id)!);
+}
+
+function updatePoseOptionLabels() {
+  for (const option of poseSelect.options) {
+    const pose = POSE_LIBRARY[Number(option.dataset.index)];
+    option.textContent = `${pose.chinese} · ${pose.name}${savedSnapshots.has(pose.id) ? " • Edited" : ""}`;
+  }
+}
+
+function updateDirtyState(dirty: boolean) {
+  savePoseButton.classList.toggle("unsaved", dirty);
+  savePoseButton.textContent = dirty ? "Save edits *" : "Save edits";
+}
+
+function showPose(index: number, animate = true) {
+  currentPoseIndex = (index + POSE_LIBRARY.length) % POSE_LIBRARY.length;
+  const pose = POSE_LIBRARY[currentPoseIndex];
+  poseSelect.value = pose.id;
+  poseNameEl.textContent = pose.name;
+  poseChineseEl.textContent = pose.chinese;
+  poseDescriptionEl.textContent = pose.description;
+  poseCountEl.textContent = `${currentPoseIndex + 1} / ${POSE_LIBRARY.length}`;
+  keyframeBadgeEl.hidden = !pose.transitional;
+  grammarEl.value = `${pose.program}\n`;
+
+  const from = copyAngles();
+  const to = snapshotFor(pose);
+  updateDirtyState(false);
+  if (animate) {
+    blendPose(from, to);
+    setStatus(true, `${pose.name} · moving for ${POSE_BLEND_MS} ms.`);
+  } else {
+    writeAngles(to);
+    syncBonesFromAngles(dummy);
+    groundDummy(dummy);
+    refreshSliders();
+    setStatus(true, `${pose.name} loaded.`);
+  }
 }
 
 function blendPose(from: Record<JointId, JointAnglesDeg>, to: Record<JointId, JointAnglesDeg>): number {
@@ -124,6 +237,7 @@ function applyGrammar(animate = true) {
   writeAngles(from);
   syncBonesFromAngles(dummy);
   groundDummy(dummy);
+  updateDirtyState(true);
   const finish = () => {
     if (clamped.length === 0) {
       setStatus(true, `Applied ${parsed.program.statements.length} statement(s).`);
@@ -151,42 +265,38 @@ function applyGrammar(animate = true) {
   }, POSE_BLEND_MS + 40);
 }
 
-document.querySelector("#apply")!.addEventListener("click", applyGrammar);
-
-document.querySelector("#ex-neutral")!.addEventListener("click", () => {
-  grammarEl.value = EXAMPLE_NEUTRAL;
-  applyGrammar();
-});
-document.querySelector("#ex-ears")!.addEventListener("click", () => {
-  grammarEl.value = EXAMPLE_HANDS_BY_EARS;
-  applyGrammar();
-});
-document.querySelector("#ex-knee")!.addEventListener("click", () => {
-  grammarEl.value = EXAMPLE_LEFT_KNEE;
-  applyGrammar();
-});
-document.querySelector("#ex-palm")!.addEventListener("click", () => {
-  grammarEl.value = EXAMPLE_PALM;
-  applyGrammar();
-});
-document.querySelector("#ex-fist")!.addEventListener("click", () => {
-  grammarEl.value = EXAMPLE_FIST;
-  applyGrammar();
-});
-document.querySelector("#ex-sword")!.addEventListener("click", () => {
-  grammarEl.value = EXAMPLE_SWORD;
-  applyGrammar();
-});
-document.querySelector("#ex-gongbu")!.addEventListener("click", () => {
-  grammarEl.value = EXAMPLE_GONGBU;
-  applyGrammar();
-});
+document.querySelector("#apply")!.addEventListener("click", () => applyGrammar());
 
 grammarEl.addEventListener("keydown", (e) => {
   if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
     e.preventDefault();
     applyGrammar();
   }
+});
+
+poseSelect.addEventListener("change", () => {
+  showPose(POSE_LIBRARY.findIndex((pose) => pose.id === poseSelect.value));
+});
+
+document.querySelector("#previous-pose")!.addEventListener("click", () => showPose(currentPoseIndex - 1));
+document.querySelector("#next-pose")!.addEventListener("click", () => showPose(currentPoseIndex + 1));
+
+savePoseButton.addEventListener("click", () => {
+  const pose = POSE_LIBRARY[currentPoseIndex];
+  savedSnapshots.set(pose.id, copyAngles());
+  persistSavedSnapshots();
+  updatePoseOptionLabels();
+  updateDirtyState(false);
+  setStatus(true, `${pose.name} saved locally as a complete pose snapshot.`);
+});
+
+restorePoseButton.addEventListener("click", () => {
+  const pose = POSE_LIBRARY[currentPoseIndex];
+  savedSnapshots.delete(pose.id);
+  persistSavedSnapshots();
+  updatePoseOptionLabels();
+  showPose(currentPoseIndex);
+  setStatus(true, `${pose.name} restored to the library default.`);
 });
 
 const SLIDER_GROUPS: Array<{ title: string; test: (joint: JointId) => boolean }> = [
@@ -243,6 +353,8 @@ function mountSliders() {
         syncBonesFromAngles(dummy);
         groundDummy(dummy);
         out.textContent = `${input.value}°`;
+        updateDirtyState(true);
+        setStatus(true, "Pose adjusted. Save edits to keep this version.");
       });
       label.append(name, out, input);
       details.appendChild(label);
@@ -252,5 +364,26 @@ function mountSliders() {
   }
 }
 
+function mountPoseLibrary() {
+  const groups = new Map<string, HTMLOptGroupElement>();
+  POSE_LIBRARY.forEach((pose, index) => {
+    let group = groups.get(pose.category);
+    if (!group) {
+      group = document.createElement("optgroup");
+      group.label = pose.category;
+      groups.set(pose.category, group);
+      poseSelect.appendChild(group);
+    }
+    const option = document.createElement("option");
+    option.value = pose.id;
+    option.dataset.index = String(index);
+    group.appendChild(option);
+  });
+  updatePoseOptionLabels();
+}
+
+buildDefaultSnapshots();
+loadSavedSnapshots();
+mountPoseLibrary();
 mountSliders();
-applyGrammar(false);
+showPose(POSE_LIBRARY.findIndex((pose) => pose.id === "right-gongbu-left-punch"), false);

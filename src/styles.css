@@ -44,7 +44,7 @@ body {
 
 @media (min-width: 900px) {
   .layout {
-    grid-template-columns: minmax(280px, 380px) 1fr;
+    grid-template-columns: minmax(320px, 420px) 1fr;
   }
 }
 
@@ -79,6 +79,115 @@ body {
   line-height: 1.45;
 }
 
+.section-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.section-heading h2 {
+  margin: 0;
+}
+
+.section-heading > span {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.pose-browser {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #0d161f;
+}
+
+.pose-browser h2 {
+  font-size: 0.95rem;
+}
+
+.pose-browser select {
+  width: 100%;
+  padding: 0.55rem 2rem 0.55rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #17232e;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.84rem;
+}
+
+.pose-browser select:focus {
+  outline: 2px solid color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.pose-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.55rem;
+}
+
+.pose-title strong {
+  font-size: 0.95rem;
+}
+
+.pose-title > span:not(.keyframe-badge) {
+  color: var(--accent);
+  font-size: 0.85rem;
+}
+
+.keyframe-badge {
+  padding: 0.16rem 0.38rem;
+  border-radius: 999px;
+  background: #4c1d95;
+  color: #ddd6fe;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.pose-description,
+.save-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
+.save-note {
+  font-size: 0.68rem;
+}
+
+.pose-actions button {
+  flex: 1 1 auto;
+}
+
+button.unsaved {
+  border-color: #fbbf24;
+  color: #fde68a;
+}
+
+.grammar-editor {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.6rem;
+}
+
+.grammar-editor summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.grammar-editor[open] {
+  display: grid;
+  gap: 0.55rem;
+}
+
 .panel label {
   font-size: 0.75rem;
   font-weight: 600;
@@ -89,8 +198,7 @@ body {
 
 textarea.grammar {
   width: 100%;
-  min-height: 220px;
-  flex: 1;
+  min-height: 190px;
   resize: vertical;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 0.8rem;

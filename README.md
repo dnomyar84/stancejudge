@@ -1,6 +1,6 @@
 # stancejudge
 
-Frontend pose engine: procedural **wooden dummy** (Three.js `Bone` + `SkinnedMesh` cylinders) driven by a small **text pose grammar**.
+Frontend Wushu pose studio: a procedural **wooden dummy** (Three.js `Bone` + `SkinnedMesh` cylinders), a 30-pose review library, full joint controls, and a small **text pose grammar**.
 
 ## Stack
 
@@ -18,7 +18,11 @@ Open http://127.0.0.1:4321/
 
 ## Pose grammar
 
-One line per action. `#` starts a comment. Applying a pose eases the figurine from where it is into the new pose, instead of snapping.
+Choose any library pose to move into it over the standard 500 ms transition. The library includes foundational positions, Wushu stances and techniques, explicit transitional keyframes, and hand gestures.
+
+Every library entry is materialized as a complete snapshot of all 126 joint-axis values (42 joints × flex/abduct/twist). Adjust any of the 95 movable axes and select **Save edits** to persist the complete edited snapshot in browser `localStorage`. **Restore default** removes the local override.
+
+The optional grammar editor accepts one action per line. `#` starts a comment. Applying a program also uses the 500 ms transition.
 
 The joint sliders list every axis that can move. Root and the hip locator bones are locked, so they have no slider. Dragging a slider changes that axis on the pose currently shown.
 
@@ -52,6 +56,7 @@ The precise form still works: `joint l_upper_arm flex 58 abduct 16` and `hand le
 | `palm`, `zhang` | 掌 open palm |
 | `fist`, `quan` | 拳 closed fist |
 | `sword`, `jianzhi` | 剑指 index + middle straight, ring + pinky curled |
+| `hook`, `gou` | 勾手 gathered fingers with a flexed wrist |
 
 Angles are in anatomical coordinates, then clamped to human range of motion before they are written onto a `THREE.Bone`. Three.js itself does not enforce joint limits. See `src/engine/joint-limits.ts`.
 

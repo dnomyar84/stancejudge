@@ -3,7 +3,7 @@ import type { JointId } from "./joint-catalog";
 type Angles = { flex: number; abduct: number; twist: number };
 
 export type HandSide = "left" | "right";
-export type HandShape = "palm" | "fist" | "sword";
+export type HandShape = "palm" | "fist" | "sword" | "hook";
 
 const DIGITS = ["thumb", "index", "middle", "ring", "pinky"] as const;
 
@@ -31,6 +31,13 @@ const SHAPES: Record<HandShape, Record<(typeof DIGITS)[number], { prox: Curl; ti
     middle: { prox: { flex: 0 }, tip: { flex: 0 } },
     ring: { prox: { flex: 95 }, tip: { flex: 100 } },
     pinky: { prox: { flex: 95 }, tip: { flex: 100 } },
+  },
+  hook: {
+    thumb: { prox: { flex: 70, abduct: -10 }, tip: { flex: 78 } },
+    index: { prox: { flex: 28, abduct: -6 }, tip: { flex: 88 } },
+    middle: { prox: { flex: 24 }, tip: { flex: 88 } },
+    ring: { prox: { flex: 28, abduct: -4 }, tip: { flex: 90 } },
+    pinky: { prox: { flex: 34, abduct: -8 }, tip: { flex: 92 } },
   },
 };
 
@@ -69,6 +76,10 @@ const SHAPE_ALIASES: Record<string, HandShape> = {
   jianzhi: "sword",
   swordfinger: "sword",
   "sword-finger": "sword",
+  hook: "hook",
+  gou: "hook",
+  hookhand: "hook",
+  "hook-hand": "hook",
 };
 
 const SIDE_ALIASES: Record<string, HandSide> = {
