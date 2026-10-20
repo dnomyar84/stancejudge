@@ -37,14 +37,17 @@ body {
 .layout {
   display: grid;
   grid-template-columns: 1fr;
+  grid-template-rows: minmax(360px, 52vh) auto;
   gap: 0;
   flex: 1;
-  min-height: 0;
+  min-height: 100vh;
 }
 
 @media (min-width: 900px) {
   .layout {
     grid-template-columns: minmax(320px, 420px) 1fr;
+    grid-template-rows: minmax(0, 1fr);
+    min-height: 0;
   }
 }
 
@@ -56,13 +59,14 @@ body {
   flex-direction: column;
   gap: 0.75rem;
   min-height: 0;
-  overflow: auto;
+  overflow: visible;
 }
 
 @media (min-width: 900px) {
   .panel {
     border-bottom: none;
     border-right: 1px solid var(--border);
+    overflow: auto;
   }
 }
 
@@ -262,6 +266,13 @@ button:hover {
   position: relative;
   min-height: 320px;
   flex: 1;
+  order: -1;
+}
+
+@media (min-width: 900px) {
+  .viewport-wrap {
+    order: 0;
+  }
 }
 
 .viewport-wrap canvas {
