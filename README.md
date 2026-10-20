@@ -20,7 +20,7 @@ Open http://127.0.0.1:4321/
 
 Choose any library pose to move into it over the standard 500 ms transition. The library includes foundational positions, Wushu stances and techniques, explicit transitional keyframes, and hand gestures.
 
-Every library entry is materialized as a complete snapshot of all 126 joint-axis values (42 joints × flex/abduct/twist). Adjust any of the 95 movable axes and select **Save edits** to persist the complete edited snapshot in browser `localStorage`. **Restore default** removes the local override.
+Every library entry is materialized as a complete snapshot of all 126 joint-axis values (42 joints × flex/abduct/twist). Adjust any of the 95 movable axes and select **Save edits** while the dev server is running. That writes the complete snapshot to `data/pose-edits.json`, commits it, and publishes the studio. **Restore default** removes that pose from the same file. The feet are kept on the floor after rotation, and every hinge is capped with a joint ball.
 
 The optional grammar editor accepts one action per line. `#` starts a comment. Applying a program also uses the 500 ms transition.
 

@@ -13,6 +13,7 @@ import { listAdjustableAxes } from "./engine/joint-limits";
 import type { JointAnglesDeg } from "./engine/wooden-dummy";
 import { createDummyViewer } from "./engine/viewer";
 import { POSE_LIBRARY, type PoseDefinition } from "./pose-library";
+import rawPoseEdits from "../data/pose-edits.json";
 
 const app = document.querySelector<HTMLDivElement>("#app")!;
 
@@ -42,7 +43,7 @@ app.innerHTML = `
           <button type="button" id="save-pose">Save edits</button>
           <button type="button" id="restore-pose">Restore default</button>
         </div>
-        <p class="save-note">Edits are saved in this browser as a complete 126-angle snapshot.</p>
+        <p class="save-note">Save edits writes the complete 126-angle pose into the project.</p>
       </section>
       <details class="grammar-editor">
         <summary>Pose grammar</summary>
@@ -58,7 +59,7 @@ app.innerHTML = `
           <h2>Joint sliders</h2>
           <span>95 movable axes</span>
         </div>
-        <p class="hint">Drag a slider, then mirror that arm or leg onto the other side. Save edits keeps the whole pose in this browser.</p>
+        <p class="hint">Drag a slider, then mirror that arm or leg onto the other side. Save edits stores the whole pose in the project.</p>
         <div class="slider-scroll" id="sliders"></div>
       </section>
     </aside>
@@ -94,7 +95,6 @@ function setStatus(ok: boolean, message: string) {
 }
 
 const POSE_BLEND_MS = 500;
-const STORAGE_KEY = "wushu-pose-studio-edits-v1";
 let blendToken = 0;
 let currentPoseIndex = 0;
 
@@ -143,19 +143,29 @@ function buildDefaultSnapshots() {
 }
 
 function loadSavedSnapshots() {
-  try {
-    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}") as Record<string, unknown>;
-    for (const pose of POSE_LIBRARY) {
-      const candidate = stored[pose.id];
-      if (isSnapshot(candidate)) savedSnapshots.set(pose.id, cloneSnapshot(candidate));
-    }
-  } catch {
-    localStorage.removeItem(STORAGE_KEY);
+  const stored = rawPoseEdits as Record<string, unknown>;
+  for (const pose of POSE_LIBRARY) {
+    const candidate = stored[pose.id];
+    if (isSnapshot(candidate)) savedSnapshots.set(pose.id, cloneSnapshot(candidate));
   }
 }
 
-function persistSavedSnapshots() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(Object.fromEntries(savedSnapshots)));
+async function writePoseEdit(pose: PoseDefinition, angles: PoseSnapshot | null) {
+  const response = await fetch("/api/pose-edits", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(
+      angles
+        ? { id: pose.id, name: pose.name, angles }
+        : { id: pose.id, name: pose.name, remove: true },
+    ),
+  });
+  const body = (await response.json().catch(() => ({}))) as { error?: string };
+  if (response.ok) return;
+  if (response.status === 404) {
+    throw new Error("This published page cannot write the project. Save from the running studio.");
+  }
+  throw new Error(body.error || `Could not write the pose (${response.status}).`);
 }
 
 function snapshotFor(pose: PoseDefinition): PoseSnapshot {
@@ -281,22 +291,43 @@ poseSelect.addEventListener("change", () => {
 document.querySelector("#previous-pose")!.addEventListener("click", () => showPose(currentPoseIndex - 1));
 document.querySelector("#next-pose")!.addEventListener("click", () => showPose(currentPoseIndex + 1));
 
-savePoseButton.addEventListener("click", () => {
+savePoseButton.addEventListener("click", async () => {
   const pose = POSE_LIBRARY[currentPoseIndex];
-  savedSnapshots.set(pose.id, copyAngles());
-  persistSavedSnapshots();
-  updatePoseOptionLabels();
-  updateDirtyState(false);
-  setStatus(true, `${pose.name} saved locally as a complete pose snapshot.`);
+  const angles = copyAngles();
+  savePoseButton.disabled = true;
+  restorePoseButton.disabled = true;
+  setStatus(true, `Saving ${pose.name} into the project…`);
+  try {
+    await writePoseEdit(pose, angles);
+    savedSnapshots.set(pose.id, angles);
+    updatePoseOptionLabels();
+    updateDirtyState(false);
+    setStatus(true, `${pose.name} saved into the project.`);
+  } catch (error) {
+    setStatus(false, error instanceof Error ? error.message : "Could not save this pose into the project.");
+  } finally {
+    savePoseButton.disabled = false;
+    restorePoseButton.disabled = false;
+  }
 });
 
-restorePoseButton.addEventListener("click", () => {
+restorePoseButton.addEventListener("click", async () => {
   const pose = POSE_LIBRARY[currentPoseIndex];
-  savedSnapshots.delete(pose.id);
-  persistSavedSnapshots();
-  updatePoseOptionLabels();
-  showPose(currentPoseIndex);
-  setStatus(true, `${pose.name} restored to the library default.`);
+  savePoseButton.disabled = true;
+  restorePoseButton.disabled = true;
+  setStatus(true, `Restoring ${pose.name} in the project…`);
+  try {
+    await writePoseEdit(pose, null);
+    savedSnapshots.delete(pose.id);
+    updatePoseOptionLabels();
+    showPose(currentPoseIndex);
+    setStatus(true, `${pose.name} restored in the project.`);
+  } catch (error) {
+    setStatus(false, error instanceof Error ? error.message : "Could not restore this pose.");
+  } finally {
+    savePoseButton.disabled = false;
+    restorePoseButton.disabled = false;
+  }
 });
 
 const SLIDER_GROUPS: Array<{ title: string; test: (joint: JointId) => boolean }> = [

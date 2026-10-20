@@ -182,6 +182,8 @@ function footWedge(parent: THREE.Object3D) {
   const mesh = new THREE.Mesh(geom, WOOD);
   mesh.castShadow = true;
   mesh.receiveShadow = true;
+  // The foot bone is the ankle. Keep the wedge below it so the shin ends in the ankle ball.
+  mesh.position.y = -0.07;
   parent.add(mesh);
   return mesh;
 }
@@ -225,6 +227,8 @@ function buildHand(
     const tip = mk(`${side}_${name}_tip` as JointId, 0, -len, 0);
     hand.add(prox);
     prox.add(tip);
+    ball(prox, 0.013);
+    ball(tip, 0.011);
     stickToward(prox, tip, 0.009, SKIN);
     stickDown(tip, len * 0.75, 0.0075, SKIN);
   }
@@ -244,6 +248,8 @@ function buildHand(
   const localYOrtho = new THREE.Vector3().crossVectors(localZ, localX).normalize();
   thumb.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(localX, localYOrtho, localZ));
   thumb.userData.oppose = true;
+  ball(thumb, 0.015);
+  ball(thumbTip, 0.012);
   stickToward(thumb, thumbTip, 0.011, WOOD);
   stickDown(thumbTip, 0.03, 0.009, WOOD);
 }
@@ -317,8 +323,6 @@ export function createWoodenDummy(): WoodenDummy {
 
   // Solid parts that must keep their shape (not skinned).
   box(hips, 0.28, 0.14, 0.18, 0, -0.02, 0);
-  ball(chest, 0.05, -0.2, 0.02, 0);
-  ball(chest, 0.05, 0.2, 0.02, 0);
   ball(head, 0.11, 0, 0.06, 0, SKIN);
   ball(head, 0.018, -0.035, 0.08, 0.09, EYE);
   ball(head, 0.018, 0.035, 0.08, 0.09, EYE);
@@ -326,14 +330,21 @@ export function createWoodenDummy(): WoodenDummy {
   buildHand(rHand, "r", mk);
   footWedge(lFoot);
   footWedge(rFoot);
-  ball(lUpper, 0.04, 0, 0, 0);
-  ball(rUpper, 0.04, 0, 0, 0);
-  ball(lFore, 0.035, 0, 0, 0);
-  ball(rFore, 0.035, 0, 0, 0);
-  ball(lThigh, 0.05, 0, 0, 0);
-  ball(rThigh, 0.05, 0, 0, 0);
-  ball(lShin, 0.04, 0, 0, 0);
-  ball(rShin, 0.04, 0, 0, 0);
+  // Each hinge is a ball a little wider than the tube that meets it.
+  ball(spine, 0.12);
+  ball(neck, 0.062);
+  ball(lUpper, 0.064);
+  ball(rUpper, 0.064);
+  ball(lFore, 0.05);
+  ball(rFore, 0.05);
+  ball(lHand, 0.04);
+  ball(rHand, 0.04);
+  ball(lThigh, 0.082);
+  ball(rThigh, 0.082);
+  ball(lShin, 0.064);
+  ball(rShin, 0.064);
+  ball(lFoot, 0.052);
+  ball(rFoot, 0.052);
 
   rootGroup.add(root);
   rootGroup.updateMatrixWorld(true);
@@ -469,16 +480,18 @@ export function executePoseProgram(dummy: WoodenDummy, program: PoseProgram): Cl
   return syncBonesFromAngles(dummy);
 }
 
-/** Drop the lower sole onto y = 0. Foot wedges sit on the foot bone origin. */
+/** Keep every part of both feet on or above the floor, including a rotated sole. */
+const SOLE_CLEARANCE = 0.008;
+
 export function groundDummy(dummy: WoodenDummy): void {
-  dummy.root.position.y = 0;
   dummy.root.updateMatrixWorld(true);
-  const footY = (id: JointId) => {
-    const p = new THREE.Vector3();
-    dummy.bones[id].getWorldPosition(p);
-    return p.y;
-  };
-  const lowest = Math.min(footY("l_foot"), footY("r_foot"));
-  dummy.root.position.y -= lowest;
+  const bounds = new THREE.Box3();
+  const footBounds = new THREE.Box3();
+  for (const id of ["l_foot", "r_foot"] as const) {
+    footBounds.setFromObject(dummy.bones[id]);
+    bounds.union(footBounds);
+  }
+  if (!Number.isFinite(bounds.min.y)) return;
+  dummy.root.position.y += SOLE_CLEARANCE - bounds.min.y;
   dummy.root.updateMatrixWorld(true);
 }
