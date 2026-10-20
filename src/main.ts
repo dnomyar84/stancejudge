@@ -58,7 +58,7 @@ app.innerHTML = `
           <h2>Joint sliders</h2>
           <span>95 movable axes</span>
         </div>
-        <p class="hint">Drag any slider, then use “Save edits” to replace this pose in your browser.</p>
+        <p class="hint">Drag a slider, then mirror that arm or leg onto the other side. Save edits keeps the whole pose in this browser.</p>
         <div class="slider-scroll" id="sliders"></div>
       </section>
     </aside>
@@ -309,10 +309,56 @@ const SLIDER_GROUPS: Array<{ title: string; test: (joint: JointId) => boolean }>
   { title: "Right leg", test: (id) => /^r_(thigh|shin|foot)$/.test(id) },
 ];
 
+const ARM_JOINTS = [
+  "shoulder",
+  "upper_arm",
+  "forearm",
+  "hand",
+  "thumb",
+  "thumb_tip",
+  "index",
+  "index_tip",
+  "middle",
+  "middle_tip",
+  "ring",
+  "ring_tip",
+  "pinky",
+  "pinky_tip",
+] as const;
+const LEG_JOINTS = ["thigh", "shin", "foot"] as const;
+
+const MIRROR_ACTIONS: Record<string, { kind: "arm" | "leg"; from: "l" | "r"; label: string }> = {
+  "Left arm": { kind: "arm", from: "l", label: "Mirror to right arm" },
+  "Right arm": { kind: "arm", from: "r", label: "Mirror to left arm" },
+  "Left leg": { kind: "leg", from: "l", label: "Mirror to right leg" },
+  "Right leg": { kind: "leg", from: "r", label: "Mirror to left leg" },
+};
+
 const sliderInputs = new Map<string, { input: HTMLInputElement; out: HTMLOutputElement }>();
 
 function sliderKey(joint: JointId, axis: AxisName) {
   return `${joint}:${axis}`;
+}
+
+function mirrorLimb(kind: "arm" | "leg", from: "l" | "r") {
+  const to = from === "l" ? "r" : "l";
+  const names = kind === "arm" ? ARM_JOINTS : LEG_JOINTS;
+  blendToken += 1;
+  for (const name of names) {
+    const src = dummy.angles[`${from}_${name}`];
+    const dst = dummy.angles[`${to}_${name}`];
+    dst.flex = src.flex;
+    dst.abduct = src.abduct;
+    dst.twist = src.twist;
+  }
+  syncBonesFromAngles(dummy);
+  groundDummy(dummy);
+  refreshSliders();
+  updateDirtyState(true);
+  const source = from === "l" ? "left" : "right";
+  const target = from === "l" ? "right" : "left";
+  const hand = kind === "arm" ? ", including the hand" : "";
+  setStatus(true, `Mirrored the ${source} ${kind} onto the ${target}${hand}. Save edits to keep it.`);
 }
 
 function refreshSliders() {
@@ -335,6 +381,15 @@ function mountSliders() {
     const summary = document.createElement("summary");
     summary.textContent = `${group.title} (${mine.length})`;
     details.appendChild(summary);
+    const mirror = MIRROR_ACTIONS[group.title];
+    if (mirror) {
+      const action = document.createElement("button");
+      action.type = "button";
+      action.className = "mirror-action";
+      action.textContent = mirror.label;
+      action.addEventListener("click", () => mirrorLimb(mirror.kind, mirror.from));
+      details.appendChild(action);
+    }
     for (const axis of mine) {
       const label = document.createElement("label");
       label.className = "slider-row";

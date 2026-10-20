@@ -330,6 +330,15 @@ button:hover {
   padding: 0.45rem 0 0.2rem;
 }
 
+.mirror-action {
+  display: block;
+  width: 100%;
+  margin: 0.35rem 0 0.55rem;
+  padding: 0.38rem 0.6rem;
+  font-size: 0.78rem;
+  text-align: left;
+}
+
 .slider-row {
   display: grid;
   grid-template-columns: 1fr auto;
