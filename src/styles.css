@@ -139,19 +139,27 @@ body {
   font-size: 0.95rem;
 }
 
-.pose-title > span:not(.keyframe-badge) {
+.pose-title > span:not(.pose-badge) {
   color: var(--accent);
   font-size: 0.85rem;
 }
 
-.keyframe-badge {
+.pose-badge {
   padding: 0.16rem 0.38rem;
   border-radius: 999px;
-  background: #4c1d95;
-  color: #ddd6fe;
   font-size: 0.65rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+.keyframe-badge {
+  background: #4c1d95;
+  color: #ddd6fe;
+}
+
+.key-pose-badge {
+  background: #134e4a;
+  color: #ccfbf1;
 }
 
 .pose-description,

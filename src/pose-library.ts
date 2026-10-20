@@ -1,4 +1,11 @@
-export type PoseCategory = "Foundations" | "Stances & techniques" | "Transition keyframes" | "Hand gestures";
+import { WUBUQUAN } from "./routines/wubuquan";
+
+export type PoseCategory =
+  | "五步拳"
+  | "Foundations"
+  | "Stances & techniques"
+  | "Transition keyframes"
+  | "Hand gestures";
 
 export type PoseDefinition = {
   id: string;
@@ -8,6 +15,10 @@ export type PoseDefinition = {
   description: string;
   program: string;
   transitional?: boolean;
+  /** Named routine this pose belongs to. Previous and Next follow library order. */
+  routine?: string;
+  /** Short label inside the routine, such as "起势", "3", or "收势". */
+  step?: string;
 };
 
 const pose = (
@@ -55,6 +66,7 @@ hand left palm
 hand right palm`;
 
 export const POSE_LIBRARY: PoseDefinition[] = [
+  ...WUBUQUAN,
   pose("wuji", "Neutral stance", "无极式", "Foundations", "Relaxed standing reference pose.", `stand`),
   pose("kaibu", "Ready stance", "开步预备式", "Foundations", "Open ready stance with fists chambered by the waist.", `
     stand
@@ -261,6 +273,9 @@ export const POSE_LIBRARY: PoseDefinition[] = [
     hand right hook`),
 ];
 
-if (POSE_LIBRARY.length !== 30) {
-  throw new Error(`Expected 30 review poses, got ${POSE_LIBRARY.length}`);
+const poseIds = new Set<string>();
+for (const entry of POSE_LIBRARY) {
+  if (poseIds.has(entry.id)) throw new Error(`Duplicate pose id ${entry.id}`);
+  poseIds.add(entry.id);
 }
+if (WUBUQUAN.length < 8) throw new Error("五步拳 is missing postures");

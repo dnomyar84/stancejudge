@@ -1,6 +1,6 @@
 # stancejudge
 
-Frontend Wushu pose studio: the Mixamo Xbot body driven by the same joint angles, a 30-pose review library, full joint controls, and a small **text pose grammar**. Joint lines show only if the figure fails to load.
+Frontend Wushu pose studio: the Mixamo Xbot body driven by the same joint angles, the 五步拳 routine (key poses and teaching transitions), full joint controls, and a small **text pose grammar**. Joint lines show only if the figure fails to load.
 
 ## Stack
 
@@ -18,7 +18,7 @@ Open http://127.0.0.1:4321/
 
 ## Pose grammar
 
-Choose any library pose to move into it over the standard 500 ms transition. The library includes foundational positions, Wushu stances and techniques, explicit transitional keyframes, and hand gestures.
+Choose any library pose to move into it over the standard 500 ms transition. **Next** walks 五步拳 in order: the named postures (并步抱拳, 拗弓步冲拳, 弹腿冲拳, 马步架打, 歇步盖打, 仆步穿掌, 虚步挑掌, 收势) and the teaching steps between them. Reference stances and hand gestures follow the form.
 
 Every library entry is materialized as a complete snapshot of all 126 joint-axis values (42 joints × flex/abduct/twist). Adjust any of the 95 movable axes and select **Save edits** while the dev server is running. That writes the complete snapshot to `data/pose-edits.json`, commits it, and publishes the studio. **Restore default** removes that pose from the same file. The feet are kept on the floor after rotation. Xbot’s own Mixamo bones are driven from those angles; the glTF clips are not played.
 

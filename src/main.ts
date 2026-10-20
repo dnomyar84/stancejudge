@@ -22,19 +22,20 @@ app.innerHTML = `
     <aside class="panel">
       <h1>Wushu pose studio</h1>
       <p class="lede">
-        Review 30 editable stances, techniques, keyframes, and hand gestures on a human figure. Every change moves over 500 ms.
+        Step through 五步拳. Named postures are the form’s key poses. The steps between them are the teaching transitions. Every change moves over 500 ms.
       </p>
       <section class="pose-browser" aria-labelledby="pose-browser-title">
         <div class="section-heading">
           <h2 id="pose-browser-title">Pose library</h2>
           <span id="pose-count">1 / ${POSE_LIBRARY.length}</span>
         </div>
-        <label for="pose-select">Destination or keyframe</label>
+        <label for="pose-select">Form step</label>
         <select id="pose-select"></select>
         <div class="pose-title">
           <strong id="pose-name"></strong>
           <span id="pose-chinese"></span>
-          <span class="keyframe-badge" id="keyframe-badge">Tween keyframe</span>
+          <span class="pose-badge key-pose-badge" id="key-pose-badge" hidden>Key pose</span>
+          <span class="pose-badge keyframe-badge" id="keyframe-badge" hidden>Transition</span>
         </div>
         <p class="pose-description" id="pose-description"></p>
         <div class="toolbar pose-actions">
@@ -79,6 +80,7 @@ const poseChineseEl = document.querySelector<HTMLElement>("#pose-chinese")!;
 const poseDescriptionEl = document.querySelector<HTMLParagraphElement>("#pose-description")!;
 const poseCountEl = document.querySelector<HTMLElement>("#pose-count")!;
 const keyframeBadgeEl = document.querySelector<HTMLElement>("#keyframe-badge")!;
+const keyPoseBadgeEl = document.querySelector<HTMLElement>("#key-pose-badge")!;
 const savePoseButton = document.querySelector<HTMLButtonElement>("#save-pose")!;
 const restorePoseButton = document.querySelector<HTMLButtonElement>("#restore-pose")!;
 
@@ -182,10 +184,19 @@ function snapshotFor(pose: PoseDefinition): PoseSnapshot {
   return cloneSnapshot(savedSnapshots.get(pose.id) ?? defaultSnapshots.get(pose.id)!);
 }
 
+function poseMenuLabel(pose: PoseDefinition) {
+  const edited = savedSnapshots.has(pose.id) ? " • Edited" : "";
+  if (pose.routine && pose.step) {
+    const kind = pose.transitional ? "过渡" : "定式";
+    return `${pose.step} ${kind} · ${pose.chinese}${edited}`;
+  }
+  return `${pose.chinese} · ${pose.name}${edited}`;
+}
+
 function updatePoseOptionLabels() {
   for (const option of poseSelect.options) {
     const pose = POSE_LIBRARY[Number(option.dataset.index)];
-    option.textContent = `${pose.chinese} · ${pose.name}${savedSnapshots.has(pose.id) ? " • Edited" : ""}`;
+    option.textContent = poseMenuLabel(pose);
   }
 }
 
@@ -201,8 +212,15 @@ function showPose(index: number, animate = true) {
   poseNameEl.textContent = pose.name;
   poseChineseEl.textContent = pose.chinese;
   poseDescriptionEl.textContent = pose.description;
-  poseCountEl.textContent = `${currentPoseIndex + 1} / ${POSE_LIBRARY.length}`;
+  if (pose.routine) {
+    const routine = POSE_LIBRARY.filter((entry) => entry.routine === pose.routine);
+    const place = routine.findIndex((entry) => entry.id === pose.id) + 1;
+    poseCountEl.textContent = `${pose.routine} ${place} / ${routine.length}`;
+  } else {
+    poseCountEl.textContent = `${currentPoseIndex + 1} / ${POSE_LIBRARY.length}`;
+  }
   keyframeBadgeEl.hidden = !pose.transitional;
+  keyPoseBadgeEl.hidden = !(pose.routine && !pose.transitional);
   grammarEl.value = `${pose.program}\n`;
 
   const from = copyAngles();
@@ -482,4 +500,4 @@ buildDefaultSnapshots();
 loadSavedSnapshots();
 mountPoseLibrary();
 mountSliders();
-showPose(POSE_LIBRARY.findIndex((pose) => pose.id === "right-gongbu-left-punch"), false);
+showPose(POSE_LIBRARY.findIndex((pose) => pose.id === "wbq-ready"), false);
