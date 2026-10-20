@@ -1,6 +1,6 @@
 # stancejudge
 
-Frontend Wushu pose studio: a procedural **wooden dummy** (Three.js `Bone` + `SkinnedMesh` cylinders), a 30-pose review library, full joint controls, and a small **text pose grammar**.
+Frontend Wushu pose studio: a line skeleton driven by the same joint angles, a 30-pose review library, full joint controls, and a small **text pose grammar**.
 
 ## Stack
 
