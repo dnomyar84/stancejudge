@@ -54,6 +54,7 @@ export function createDummyViewer(): DummyViewer {
 
   let mountEl: HTMLElement | null = null;
   let dummyRef: WoodenDummy | null = null;
+  let boneLines: THREE.SkeletonHelper | null = null;
   let frameId = 0;
 
   const animate = () => {
@@ -89,15 +90,19 @@ export function createDummyViewer(): DummyViewer {
       ro.observe(el);
     },
     setDummy(dummy) {
-      if (dummyRef) {
-        scene.remove(dummyRef.root);
+      if (boneLines) {
+        scene.remove(boneLines);
+        boneLines.dispose();
       }
+      if (dummyRef) scene.remove(dummyRef.root);
       dummyRef = dummy;
       groundDummy(dummy);
       scene.add(dummy.root);
-      dummy.root.updateMatrixWorld(true);
-      const box = new THREE.Box3().setFromObject(dummy.root);
-      const center = box.getCenter(new THREE.Vector3());
+      boneLines = new THREE.SkeletonHelper(dummy.root);
+      boneLines.frustumCulled = false;
+      scene.add(boneLines);
+      const center = new THREE.Vector3();
+      dummy.bones.hips.getWorldPosition(center);
       controls.target.copy(center);
       controls.update();
     },
