@@ -1,1 +1,214 @@
-{}
+{
+  "wuji": {
+    "root": {
+      "flex": 0,
+      "abduct": 0,
+      "twist": 0
+    },
+    "hips": {
+      "flex": 0,
+      "abduct": 0,
+      "twist": 0
+    },
+    "spine": {
+      "flex": 0,
+      "abduct": 0,
+      "twist": 0
+    },
+    "chest": {
+      "flex": 0,
+      "abduct": 0,
+      "twist": 0
+    },
+    "neck": {
+      "flex": 0,
+      "abduct": 0,
+      "twist": 0
+    },
+    "head": {
+      "flex": 0,
+      "abduct": 0,
+      "twist": 0
+    },
+    "l_shoulder": {
+      "flex": 0,
+      "abduct": 0,
+      "twist": 0
+    },
+    "l_upper_arm": {
+      "flex": 4,
+      "abduct": 8,
+      "twist": 0
+    },
+    "l_forearm": {
+      "flex": 42,
+      "abduct": 0,
+      "twist": 0
+    },
+    "l_hand": {
+      "flex": 0,
+      "abduct": 0,
+      "twist": 0
+    },
+    "r_shoulder": {
+      "flex": 0,
+      "abduct": 0,
+      "twist": 0
+    },
+    "r_upper_arm": {
+      "flex": 4,
+      "abduct": 8,
+      "twist": 0
+    },
+    "r_forearm": {
+      "flex": 8,
+      "abduct": 0,
+      "twist": 0
+    },
+    "r_hand": {
+      "flex": 0,
+      "abduct": 0,
+      "twist": 0
+    },
+    "l_hip": {
+      "flex": 0,
+      "abduct": 0,
+      "twist": 0
+    },
+    "l_thigh": {
+      "flex": 0,
+      "abduct": 6,
+      "twist": 0
+    },
+    "l_shin": {
+      "flex": 0,
+      "abduct": 0,
+      "twist": 0
+    },
+    "l_foot": {
+      "flex": 0,
+      "abduct": 0,
+      "twist": 0
+    },
+    "r_hip": {
+      "flex": 0,
+      "abduct": 0,
+      "twist": 0
+    },
+    "r_thigh": {
+      "flex": 0,
+      "abduct": 6,
+      "twist": 0
+    },
+    "r_shin": {
+      "flex": 0,
+      "abduct": 0,
+      "twist": 0
+    },
+    "r_foot": {
+      "flex": 0,
+      "abduct": 0,
+      "twist": 0
+    },
+    "l_thumb": {
+      "flex": 0,
+      "abduct": 0,
+      "twist": 0
+    },
+    "l_thumb_tip": {
+      "flex": 0,
+      "abduct": 0,
+      "twist": 0
+    },
+    "l_index": {
+      "flex": 0,
+      "abduct": 0,
+      "twist": 0
+    },
+    "l_index_tip": {
+      "flex": 0,
+      "abduct": 0,
+      "twist": 0
+    },
+    "l_middle": {
+      "flex": 0,
+      "abduct": 0,
+      "twist": 0
+    },
+    "l_middle_tip": {
+      "flex": 0,
+      "abduct": 0,
+      "twist": 0
+    },
+    "l_ring": {
+      "flex": 0,
+      "abduct": 0,
+      "twist": 0
+    },
+    "l_ring_tip": {
+      "flex": 0,
+      "abduct": 0,
+      "twist": 0
+    },
+    "l_pinky": {
+      "flex": 0,
+      "abduct": 0,
+      "twist": 0
+    },
+    "l_pinky_tip": {
+      "flex": 0,
+      "abduct": 0,
+      "twist": 0
+    },
+    "r_thumb": {
+      "flex": 0,
+      "abduct": 0,
+      "twist": 0
+    },
+    "r_thumb_tip": {
+      "flex": 0,
+      "abduct": 0,
+      "twist": 0
+    },
+    "r_index": {
+      "flex": 0,
+      "abduct": 0,
+      "twist": 0
+    },
+    "r_index_tip": {
+      "flex": 0,
+      "abduct": 0,
+      "twist": 0
+    },
+    "r_middle": {
+      "flex": 0,
+      "abduct": 0,
+      "twist": 0
+    },
+    "r_middle_tip": {
+      "flex": 0,
+      "abduct": 0,
+      "twist": 0
+    },
+    "r_ring": {
+      "flex": 0,
+      "abduct": 0,
+      "twist": 0
+    },
+    "r_ring_tip": {
+      "flex": 0,
+      "abduct": 0,
+      "twist": 0
+    },
+    "r_pinky": {
+      "flex": 0,
+      "abduct": 0,
+      "twist": 0
+    },
+    "r_pinky_tip": {
+      "flex": 0,
+      "abduct": 0,
+      "twist": 0
+    }
+  }
+}
