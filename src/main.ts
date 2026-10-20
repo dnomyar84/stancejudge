@@ -43,7 +43,7 @@ app.innerHTML = `
           <button type="button" id="save-pose">Save edits</button>
           <button type="button" id="restore-pose">Restore default</button>
         </div>
-        <p class="save-note">Save edits writes the complete 126-angle pose into the project.</p>
+        <p class="save-note">Save edits writes the pose into the project when this studio server is running. The published page is a static copy and cannot save.</p>
       </section>
       <details class="grammar-editor">
         <summary>Pose grammar</summary>
@@ -162,10 +162,10 @@ async function writePoseEdit(pose: PoseDefinition, angles: PoseSnapshot | null) 
   });
   const body = (await response.json().catch(() => ({}))) as { error?: string };
   if (response.ok) return;
-  if (response.status === 404) {
-    throw new Error("This published page cannot write the project. Save from the running studio.");
+  if (response.status === 404 || response.status === 405 || !body.error) {
+    throw new Error("This published page has no save server. Open the running studio to write the pose into the project.");
   }
-  throw new Error(body.error || `Could not write the pose (${response.status}).`);
+  throw new Error(body.error);
 }
 
 function snapshotFor(pose: PoseDefinition): PoseSnapshot {
