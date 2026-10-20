@@ -1,15 +1,13 @@
 import { JOINT_IDS, type AxisName, type JointId } from "./joint-catalog";
 
 /**
- * Anatomical range of motion for grammar angles (degrees from the standing pose).
+ * Pose range for grammar angles, in degrees from the standing pose.
  *
  * Three.js `Bone` is only a transform. It will accept any Euler angle.
- * This table is the constraint layer: clinical-style active ROM, applied
- * before a bone is rotated. +flex is forward / into the palm, +abduct is
- * away from the midline, +twist is axial rotation.
- *
- * Ranges are approximate active limits (shoulder flexion ~170°, elbow 0–145°,
- * knee 0–140°, and so on). They are a software clamp, not a medical model.
+ * This table stops a joint short of folding through itself. +flex is forward
+ * or into the palm, +abduct is away from the midline, and +twist is axial
+ * rotation. The spans are wider than everyday active motion so a stance can
+ * reach, point, and turn without the slider dying at the cap.
  */
 export type AxisLimit = readonly [min: number, max: number];
 
@@ -23,25 +21,25 @@ const LOCKED: Rom = { flex: [0, 0], abduct: [0, 0], twist: [0, 0] };
 
 const ROM: Record<string, Rom> = {
   root: LOCKED,
-  hips: { flex: [-15, 30], abduct: [-15, 15], twist: [-25, 25] },
-  spine: { flex: [-25, 45], abduct: [-25, 25], twist: [-35, 35] },
-  chest: { flex: [-20, 35], abduct: [-20, 20], twist: [-30, 30] },
-  neck: { flex: [-55, 50], abduct: [-40, 40], twist: [-70, 70] },
-  head: { flex: [-25, 25], abduct: [-15, 15], twist: [-30, 30] },
-  shoulder: { flex: [-10, 20], abduct: [-10, 15], twist: [-15, 15] },
-  upper_arm: { flex: [-50, 170], abduct: [-30, 175], twist: [-90, 90] },
-  forearm: { flex: [0, 145], abduct: [0, 0], twist: [-85, 85] },
-  hand: { flex: [-70, 80], abduct: [-25, 35], twist: [-20, 20] },
+  hips: { flex: [-35, 50], abduct: [-25, 25], twist: [-45, 45] },
+  spine: { flex: [-40, 60], abduct: [-35, 35], twist: [-45, 45] },
+  chest: { flex: [-30, 45], abduct: [-30, 30], twist: [-50, 50] },
+  neck: { flex: [-70, 60], abduct: [-45, 45], twist: [-80, 80] },
+  head: { flex: [-40, 40], abduct: [-25, 25], twist: [-45, 45] },
+  shoulder: { flex: [-20, 40], abduct: [-20, 30], twist: [-25, 25] },
+  upper_arm: { flex: [-70, 180], abduct: [-50, 180], twist: [-100, 100] },
+  forearm: { flex: [-5, 160], abduct: [0, 0], twist: [-90, 90] },
+  hand: { flex: [-80, 90], abduct: [-35, 45], twist: [-30, 30] },
   hip: LOCKED,
-  thigh: { flex: [-20, 125], abduct: [-25, 45], twist: [-40, 45] },
-  shin: { flex: [0, 140], abduct: [-5, 5], twist: [-10, 10] },
-  foot: { flex: [-20, 50], abduct: [-20, 25], twist: [-15, 15] },
+  thigh: { flex: [-40, 145], abduct: [-35, 80], twist: [-50, 60] },
+  shin: { flex: [-5, 155], abduct: [-12, 12], twist: [-20, 20] },
+  foot: { flex: [-35, 70], abduct: [-35, 35], twist: [-30, 30] },
 };
 
-const FINGER: Rom = { flex: [-15, 95], abduct: [-12, 20], twist: [-5, 5] };
-const FINGER_TIP: Rom = { flex: [0, 100], abduct: [0, 0], twist: [0, 0] };
-const THUMB: Rom = { flex: [0, 90], abduct: [-25, 25], twist: [-20, 20] };
-const THUMB_TIP: Rom = { flex: [0, 90], abduct: [0, 0], twist: [0, 0] };
+const FINGER: Rom = { flex: [-25, 110], abduct: [-20, 30], twist: [-15, 15] };
+const FINGER_TIP: Rom = { flex: [0, 110], abduct: [0, 0], twist: [0, 0] };
+const THUMB: Rom = { flex: [0, 100], abduct: [-40, 40], twist: [-30, 30] };
+const THUMB_TIP: Rom = { flex: [0, 100], abduct: [0, 0], twist: [0, 0] };
 
 function romFor(id: JointId): Rom {
   const name = id.replace(/^[lr]_/, "");
